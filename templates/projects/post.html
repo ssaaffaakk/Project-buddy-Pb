@@ -1,0 +1,886 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="csrf-token" content="{{ csrf_token() }}">
+<title>ProjectBuddy — Post a Project</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+html{scrollbar-gutter:stable;overflow-y:scroll;}
+:root{
+  color-scheme:dark;
+  --bg:#080808;--bg2:#0f0e0d;--bg3:#181614;--card:rgba(255,255,255,0.025);--card-h:rgba(255,255,255,0.045);
+  --accent:#FFD700;--accent-dim:rgba(255,215,0,0.1);--accent-glow:rgba(255,215,0,0.18);--red:#c0392b;
+  --text:#ede8df;--muted:#6e6a64;--soft:#c8c2ba;
+  --border:rgba(255,255,255,0.055);--border-gold:rgba(255,215,0,0.12);--r:10px;
+}
+html.light-mode{color-scheme:light;--bg:#ffffff;--bg2:#f5f5f5;--bg3:#eeeeee;--card:rgba(0,0,0,0.03);--card-h:rgba(0,0,0,0.06);--accent:#d4a817;--accent-dim:rgba(212,168,23,0.12);--accent-glow:rgba(212,168,23,0.18);--red:#c0392b;--blue:#4a7fa5;--green:#5a8a6a;--text:#1a1a1a;--muted:#6b6b6b;--soft:#505050;--border:rgba(0,0,0,0.1);--border-gold:rgba(212,168,23,0.12);}
+html.light-mode input[type=text],html.light-mode input[type=email],html.light-mode input[type=password],html.light-mode input[type=date],html.light-mode input[type=number],html.light-mode input[type=search],html.light-mode input[type=url],html.light-mode textarea,html.light-mode select{background:rgba(0,0,0,0.04);}
+body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;display:flex;min-height:100vh;position:relative;}
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");pointer-events:none;z-index:0;opacity:0.6;}
+#cursor-glow{position:fixed;width:700px;height:700px;border-radius:50%;background:radial-gradient(circle,rgba(255,215,0,0.035) 0%,transparent 70%);pointer-events:none;transform:translate(-50%,-50%);z-index:1;}
+
+/* SIDEBAR */
+.sidebar{width:220px;flex-shrink:0;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:28px 14px;position:fixed;top:0;left:0;bottom:0;z-index:50;overflow:hidden;}
+.sidebar::before{content:'';position:absolute;top:0;left:0;right:0;height:200px;background:radial-gradient(ellipse at 50% 0%,rgba(255,215,0,0.06) 0%,transparent 70%);pointer-events:none;}
+.sidebar::after{content:'';position:absolute;bottom:0;left:0;right:0;height:120px;background:radial-gradient(ellipse at 30% 100%,rgba(255,215,0,0.04) 0%,transparent 70%);pointer-events:none;}
+.logo{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--text);font-family:'DM Serif Display',serif;font-size:1.08rem;font-weight:400;margin-bottom:36px;padding:0 8px;position:relative;z-index:1;}
+.logo-icon{width:28px;height:28px;border-radius:6px;object-fit:contain;flex-shrink:0;}
+.logo span{color:var(--accent);font-style:italic;}
+.nav-mark{display:none;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:var(--r);text-decoration:none;color:var(--muted);font-size:0.83rem;font-weight:500;transition:all 0.2s ease-out;margin-bottom:1px;border-left:2px solid transparent;position:relative;z-index:1;letter-spacing:0.01em;}
+.nav-item:hover{background:rgba(255,255,255,0.03);color:var(--soft);border-left-color:rgba(255,215,0,0.3);}
+.nav-item.active{background:rgba(255,215,0,0.06);color:var(--accent);border-left-color:var(--accent);}
+.sidebar-footer{margin-top:auto;padding:0 4px;position:relative;z-index:1;}
+.user-card{display:flex;align-items:center;gap:10px;padding:12px;background:rgba(255,255,255,0.025);border:1px solid var(--border);border-top-color:rgba(255,255,255,0.09);border-radius:var(--r);}
+.user-av{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#8a6530);color:var(--bg);display:flex;align-items:center;justify-content:center;font-size:0.72rem;font-weight:500;flex-shrink:0;}
+.user-name{font-size:0.83rem;font-weight:500;color:var(--text);}
+.user-role{font-size:0.68rem;color:var(--muted);font-family:'DM Mono',monospace;}
+
+/* MAIN */
+.main{margin-left:220px;flex:1;padding:40px;display:flex;gap:36px;}
+.form-area{flex:1;max-width:660px;}
+
+/* TITLE */
+.page-title{font-family:'DM Serif Display',serif;font-size:1.5rem;font-weight:400;letter-spacing:-0.01em;margin-bottom:6px;}
+.page-sub{color:var(--text);font-size:0.82rem;margin-bottom:32px;font-family:'DM Mono',monospace;letter-spacing:0.06em;text-transform:uppercase;opacity:0.9;}
+
+/* STEP PROGRESS */
+.steps{display:flex;margin-bottom:36px;border-bottom:1px solid var(--border);}
+.step{flex:1;padding:14px 16px;display:flex;align-items:center;gap:10px;
+  border-bottom:2px solid transparent;margin-bottom:-1px;cursor:pointer;transition:border-color 0.2s,color 0.2s;}
+.step.active{border-bottom-color:var(--accent);}
+.step.done{border-bottom-color:rgba(255,215,0,0.3);}
+.step-dot{width:28px;height:28px;border-radius:50%;border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  font-size:0.7rem;font-weight:600;color:var(--muted);flex-shrink:0;transition:background-color 0.3s,color 0.3s,border-color 0.3s;font-family:'DM Mono',monospace;}
+.step.active .step-dot{background:var(--accent);color:var(--bg);border-color:var(--accent);}
+.step.done .step-dot{background:rgba(255,215,0,0.15);color:var(--accent);border-color:rgba(255,215,0,0.3);}
+.step-text{font-size:0.76rem;font-weight:500;color:var(--soft);transition:color 0.3s;font-family:'DM Mono',monospace;letter-spacing:0.08em;text-transform:uppercase;}
+.step.active .step-text,.step.done .step-text{color:var(--text);}
+
+/* PANELS */
+.panel{display:none;}
+.panel.active{display:block;}
+
+/* FORM FIELDS */
+.form-group{margin-bottom:22px;}
+.form-group label{display:block;font-size:0.76rem;font-weight:500;color:var(--text);
+  margin-bottom:8px;letter-spacing:0.08em;text-transform:uppercase;font-family:'DM Mono',monospace;}
+.form-group label .req{color:var(--red);}
+/* FORM ELEMENTS */
+input[type=text],input[type=email],input[type=password],input[type=date],
+input[type=number],input[type=search],input[type=url],textarea,select{
+  width:100%;padding:11px 14px;background:rgba(255,255,255,0.04);
+  border:1px solid var(--border);border-radius:var(--r);
+  color:var(--text);font-family:'Outfit',sans-serif;font-size:0.88rem;
+  outline:none;transition:border-color 0.18s,box-shadow 0.18s;
+  appearance:none;-webkit-appearance:none;}
+input[type=text]:focus,input[type=email]:focus,input[type=password]:focus,
+input[type=date]:focus,input[type=number]:focus,input[type=search]:focus,
+input[type=url]:focus,textarea:focus,select:focus{
+  border-color:rgba(255,215,0,0.4);box-shadow:0 0 0 3px rgba(255,215,0,0.07);}
+::placeholder{color:var(--muted);opacity:1;}
+textarea{resize:vertical;min-height:100px;line-height:1.6;}
+select{
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236e6a64' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 12px center;padding-right:36px;}
+textarea{resize:vertical;min-height:120px;line-height:1.6;}
+.char-count{font-size:0.72rem;color:var(--muted);text-align:right;margin-top:4px;font-family:'DM Mono',monospace;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.hint{font-size:0.72rem;color:var(--soft);margin-top:5px;line-height:1.5;font-family:'DM Mono',monospace;}
+
+/* TAG SELECTORS */
+.tags-wrap{display:flex;flex-wrap:wrap;gap:8px;}
+.sel-tag{padding:8px 12px;border-radius:var(--r);font-size:0.76rem;font-weight:500;
+  cursor:pointer;transition:border-color 0.2s,color 0.2s,background-color 0.2s;border:1px solid var(--border);
+  background:var(--card);color:var(--soft);user-select:none;font-family:'DM Mono',monospace;}
+.sel-tag:hover{border-color:rgba(255,215,0,0.2);color:var(--text);}
+.sel-tag.selected{background:var(--accent-dim);border-color:rgba(255,215,0,0.3);color:var(--accent);}
+.tag-count{font-size:0.72rem;color:var(--muted);margin-top:10px;font-family:'DM Mono',monospace;}
+.tag-count span{color:var(--accent);font-weight:600;}
+
+/* TEAM SIZE */
+.size-opts{display:flex;gap:8px;}
+.size-opt{width:48px;height:48px;border-radius:var(--r);display:flex;align-items:center;
+  justify-content:center;font-family:'DM Mono',monospace;font-size:0.9rem;font-weight:600;
+  cursor:pointer;transition:border-color 0.2s,color 0.2s,background-color 0.2s;border:1px solid var(--border);
+  background:var(--card);color:var(--soft);}
+.size-opt:hover{border-color:rgba(255,215,0,0.2);color:var(--text);}
+.size-opt.active{background:var(--accent-dim);border-color:rgba(255,215,0,0.3);color:var(--accent);}
+
+/* BUTTONS */
+.btn-row{display:flex;gap:12px;margin-top:28px;}
+.btn-next{flex:1;padding:13px;background:linear-gradient(135deg,#FFD700 0%,#C8960C 100%);border:none;border-radius:var(--r);
+  color:var(--bg);font-family:'DM Mono',monospace;font-size:0.76rem;font-weight:600;
+  cursor:pointer;transition:background-color 0.2s,box-shadow 0.2s;letter-spacing:0.08em;text-transform:uppercase;
+  box-shadow:0 0 20px rgba(255,215,0,0.2);}
+.btn-next:hover{box-shadow:0 0 24px rgba(255,215,0,0.3);}
+.btn-back{padding:12px 24px;background:var(--card);border:1px solid var(--border);border-radius:var(--r);
+  color:var(--soft);font-family:'DM Mono',monospace;font-size:0.76rem;font-weight:600;
+  cursor:pointer;transition:border-color 0.2s,color 0.2s,background-color 0.2s;letter-spacing:0.08em;text-transform:uppercase;}
+.btn-back:hover{border-color:rgba(255,255,255,0.12);color:var(--text);}
+
+/* REVIEW */
+.review-block{background:var(--card);border:1px solid var(--border);border-radius:var(--r);
+  padding:20px;margin-bottom:16px;}
+.review-block h4{font-family:'DM Serif Display',serif;font-size:0.92rem;font-weight:400;
+  margin-bottom:12px;color:var(--text);}
+.review-row{display:flex;justify-content:space-between;align-items:center;
+  padding:7px 0;border-bottom:1px solid var(--border);}
+.review-row:last-child{border-bottom:none;}
+.review-key{font-size:0.76rem;color:var(--muted);font-family:'DM Mono',monospace;letter-spacing:0.06em;}
+.review-val{font-size:0.8rem;color:var(--text);font-weight:500;}
+.checklist-item{display:flex;align-items:center;gap:8px;font-size:0.8rem;color:var(--text);padding:4px 0;font-family:'DM Mono',monospace;}
+
+/* PREVIEW */
+.preview-area{width:300px;flex-shrink:0;}
+.preview-label{font-size:0.68rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;
+  color:var(--muted);margin-bottom:14px;font-family:'DM Mono',monospace;}
+.preview-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);
+  padding:24px;position:sticky;top:40px;}
+.preview-card-icon{width:36px;height:36px;border-radius:6px;background:var(--accent-dim);
+  display:flex;align-items:center;justify-content:center;font-size:1rem;margin-bottom:14px;color:var(--accent);}
+.preview-title{font-family:'DM Serif Display',serif;font-size:0.95rem;font-weight:400;
+  margin-bottom:8px;min-height:1.4em;color:var(--text);}
+.preview-desc{font-size:0.78rem;color:var(--text);line-height:1.65;margin-bottom:12px;min-height:2em;}
+.preview-tags{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:14px;min-height:22px;}
+.ptag{padding:3px 8px;border-radius:4px;font-size:0.68rem;font-weight:600;
+  background:var(--accent-dim);color:var(--accent);font-family:'DM Mono',monospace;}
+.preview-footer{display:flex;align-items:center;justify-content:space-between;
+  padding-top:12px;border-top:1px solid var(--border);}
+.preview-owner{font-size:0.74rem;color:var(--soft);font-family:'DM Mono',monospace;}
+.preview-slots{font-size:0.72rem;color:var(--muted);font-family:'DM Mono',monospace;}
+.preview-tip{margin-top:14px;padding:12px;background:var(--accent-dim);
+  border:1px solid rgba(255,215,0,0.15);border-radius:var(--r);
+  font-size:0.76rem;color:var(--soft);line-height:1.65;font-family:'DM Mono',monospace;}
+.preview-tip strong{color:var(--accent);}
+
+/* ── TOAST NOTIFICATIONS ─────────────────────────────── */
+#toast-container{position:fixed;top:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:10px;pointer-events:none;}
+.toast{display:flex;align-items:flex-start;gap:12px;padding:14px 18px;border-radius:var(--r);min-width:320px;max-width:420px;pointer-events:all;backdrop-filter:blur(20px);border:1px solid transparent;box-shadow:0 8px 32px rgba(0,0,0,0.4),0 2px 8px rgba(0,0,0,0.3);animation:none;position:relative;overflow:hidden;font-family:'Outfit',sans-serif;}
+.toast.success{background:rgba(13,12,11,0.92);border-color:rgba(255,215,0,0.2);color:#ede8df;}
+.toast.success .toast-icon{color:#FFD700;}.toast.success .toast-progress{background:#FFD700;}
+.toast.error{background:rgba(35,20,20,0.92);border-color:rgba(192,57,43,0.3);color:#ede8df;}
+.toast.error .toast-icon{color:#dc2626;}.toast.error .toast-progress{background:#dc2626;}
+.toast.warning{background:rgba(25,18,0,0.92);border-color:rgba(255,215,0,0.2);color:#ede8df;}
+.toast.warning .toast-icon{color:#FFD700;}.toast.warning .toast-progress{background:#FFD700;}
+.toast-icon{font-size:1.1rem;flex-shrink:0;margin-top:1px;}
+.toast-body{flex:1;}
+.toast-title{font-family:'DM Serif Display',serif;font-size:0.85rem;font-weight:400;margin-bottom:2px;}
+.toast-msg{font-size:0.82rem;color:#8a8078;line-height:1.5;}
+.toast-close{background:none;border:none;color:#4a4540;cursor:pointer;font-size:0.9rem;padding:0;flex-shrink:0;transition:color 0.2s;margin-top:1px;}
+.toast-close:hover{color:#ede8df;}
+.toast-progress{position:absolute;bottom:0;left:0;height:2px;width:100%;transform-origin:left;opacity:0.7;}
+
+
+/* ── GLOBAL POLISH ───────────────────────────────────── */
+/* Scrollbar */
+::-webkit-scrollbar{width:4px;height:4px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:rgba(255,215,0,0.2);border-radius:99px;}
+::-webkit-scrollbar-thumb:hover{background:rgba(255,215,0,0.3);}
+
+/* Selection */
+::selection{background:rgba(255,215,0,0.2);color:#ede8df;}
+
+/* Smooth focus rings */
+*:focus-visible{outline:2px solid rgba(255,215,0,0.4);outline-offset:2px;border-radius:6px;}
+
+/* Link glow on nav items */
+.nav-item.active{
+  box-shadow:inset 0 0 20px rgba(255,215,0,0.04);
+}
+
+/* Card glow on hover */
+.project-card:hover,.rec-card:hover,.stat-card:hover,.proj-item:hover,.feedback-item:hover,.badge-item:hover,.badge-card:hover{
+  box-shadow:0 4px 24px rgba(0,0,0,0.3),0 0 0 1px rgba(255,215,0,0.08);
+}
+
+/* Subtle gradient noise on body */
+body::after{
+  content:'';
+  position:fixed;inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events:none;z-index:0;opacity:0.5;
+}
+.sidebar,.main,aside{position:relative;z-index:1;}
+
+/* Button micro-interactions */
+.btn-primary,.btn-post,.btn-next,.apply-btn,.apply-link,.btn-apply,.modal-apply{
+  transition:all 0.2s cubic-bezier(0.34,1.56,0.64,1) !important;
+}
+
+/* Sidebar glow accent */
+.sidebar::after{
+  content:'';position:absolute;bottom:0;left:0;right:0;height:200px;
+  background:linear-gradient(to top,rgba(255,215,0,0.02),transparent);
+  pointer-events:none;
+}
+
+/* Logo icon pulse */
+.logo-icon{
+  box-shadow:0 0 16px rgba(255,215,0,0.2);
+  transition:box-shadow 0.3s;
+}
+.logo:hover .logo-icon{box-shadow:0 0 28px rgba(255,215,0,0.4);}
+
+/* Avatar glow */
+.user-av,.user-avatar,.avatar-big{
+  box-shadow:0 0 12px rgba(255,215,0,0.12);
+}
+
+/* Section/card entry animations removed to keep layout stable */
+
+</style>
+<script>if(localStorage.getItem('theme')==='light')document.documentElement.classList.add('light-mode');document.addEventListener('DOMContentLoaded',function(){var t=document.getElementById('themeToggle');if(t)t.textContent=document.documentElement.classList.contains('light-mode')?'Dark':'Light';});</script>
+</head>
+<body>
+<div id="toast-container"></div>
+{% set _msgs = get_flashed_messages(with_categories=true) %}
+{% if _msgs %}
+<div id="flask-messages" data-messages="{{ _msgs | tojson }}"></div>
+{% endif %}
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <a href="/" class="logo">
+    
+    Project<span>Buddy</span>
+  </a>
+  <a href="/dashboard" class="nav-item"><span class="nav-mark">&#8212;</span> Dashboard</a>
+  <a href="/projects-page" class="nav-item"><span class="nav-mark">&#8212;</span> Browse Projects</a>
+  <a href="/community" class="nav-item"><span class="nav-mark">&#8212;</span> Community</a>
+  <a href="/study-groups" class="nav-item"><span class="nav-mark">&#8212;</span> Study Groups</a>
+  <a href="/chatbot" class="nav-item"><span class="nav-mark">&#8212;</span> AI Assistant</a>
+  <a href="/post-project-page" class="nav-item active"><span class="nav-mark">&#8212;</span> Post a Project</a>
+  <a href="/my-projects" class="nav-item"><span class="nav-mark">&#8212;</span> My Projects</a>
+  <a href="/profile" class="nav-item"><span class="nav-mark">&#8212;</span> My Profile</a>
+  <a href="/report-issue" class="nav-item"><span class="nav-mark">&#8212;</span> Report Issue</a>
+  <a href="#" id="themeToggle" class="nav-item" onclick="var h=document.documentElement;h.classList.toggle('light-mode');var l=h.classList.contains('light-mode');localStorage.setItem('theme',l?'light':'dark');this.textContent=l?'Dark':'Light';return false;"><span class="nav-mark">&#8212;</span> Light</a>
+  <a href="/auth/logout" class="nav-item"><span class="nav-mark">&#8212;</span> Log Out</a>
+  <div style="padding:0 6px;margin-bottom:6px;">
+    <button onclick="toggleNotifs()" id="notif-btn" style="width:100%;display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:var(--r);background:none;border:1px solid transparent;cursor:pointer;color:var(--soft);font-family:'Outfit',sans-serif;font-size:0.84rem;font-weight:500;transition:all 0.18s;">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      Notifications
+      <span id="notif-badge" style="display:none;background:#c0392b;color:#fff;border-radius:99px;font-size:0.65rem;font-family:'DM Mono',monospace;padding:1px 6px;margin-left:auto;">0</span>
+    </button>
+  </div>
+  <div class="sidebar-footer">
+    <div class="user-card">
+      <div class="user-av" style="overflow:hidden;">
+        {% if current_user.avatar_url %}
+          <img src="{{ current_user.avatar_url }}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;">
+        {% else %}{{ current_user.first_name[0] }}{{ current_user.last_name[0] }}{% endif %}
+      </div>
+      <div>
+        <div class="user-name">{{ current_user.first_name }} {{ current_user.last_name }}</div>
+        <div class="user-role">{{ current_user.department or 'IUS' }} &middot; {{ current_user.role.title() }}</div>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="form-area">
+    <div class="page-title">Post a Project</div>
+    <div class="page-sub">Fill in the details — 3 steps to find your perfect team.</div>
+
+    <!-- STEP INDICATORS -->
+    <div class="steps">
+      <div class="step active" id="sp1"><div class="step-dot">1</div><div class="step-text">Basics</div></div>
+      <div class="step" id="sp2"><div class="step-dot">2</div><div class="step-text">Requirements</div></div>
+      <div class="step" id="sp3"><div class="step-dot">3</div><div class="step-text">Review & Post</div></div>
+    </div>
+
+    <!-- STEP 1: BASICS -->
+    <div class="panel active" id="step1">
+      <div class="form-group">
+        <label>Project Title <span class="req">*</span></label>
+        <input type="text" id="titleInput" placeholder="e.g., E-Commerce Platform for Local Business" oninput="updatePreview()">
+      </div>
+      <div class="form-group">
+        <label>Description <span class="req">*</span></label>
+        <textarea id="descInput" placeholder="What are you building? What problem does it solve? What kind of teammate are you looking for?" oninput="updatePreview();updateChar()"></textarea>
+        <div class="char-count"><span id="charCount">0</span> / 500</div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Project Type <span class="req">*</span></label>
+          <select id="typeInput" onchange="updatePreview()">
+            <option value="" disabled selected>Select type</option>
+            <option>Personal / Portfolio</option>
+            <option>Course Project</option>
+            <option>Research</option>
+            <option>Open Source</option>
+            <option>Startup Idea</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Course (optional)</label>
+          <select id="courseInput" onchange="onCourseChange()">
+            <option value="">Not course-related</option>
+            <optgroup label="Computer Science (CS)">
+              <option>CS101 — Introduction to Programming</option>
+              <option>CS102 — Introduction to Computers</option>
+              <option>CS121 — Discrete Mathematics</option>
+              <option>CS201 — Data Structures</option>
+              <option>CS202 — Algorithms</option>
+              <option>CS203 — Object-Oriented Programming</option>
+              <option>CS204 — Computer Organization & Architecture</option>
+              <option>CS205 — Digital Logic Design</option>
+              <option>CS210 — Database Systems</option>
+              <option>CS211 — Operating Systems</option>
+              <option>CS220 — Computer Networks</option>
+              <option>CS230 — Software Engineering</option>
+              <option>CS301 — Artificial Intelligence</option>
+              <option>CS302 — Web Programming</option>
+              <option>CS303 — Mobile Application Development</option>
+              <option>CS304 — Computer Graphics</option>
+              <option>CS305 — Human-Computer Interaction</option>
+              <option>CS310 — Compiler Design</option>
+              <option>CS315 — Cybersecurity</option>
+              <option>CS320 — Machine Learning</option>
+              <option>CS321 — Deep Learning</option>
+              <option>CS325 — Natural Language Processing</option>
+              <option>CS330 — Distributed Systems</option>
+              <option>CS340 — Cloud Computing</option>
+              <option>CS401 — Senior Project I</option>
+              <option>CS402 — Senior Project II</option>
+            </optgroup>
+            <optgroup label="Software Engineering (SE)">
+              <option>SE101 — Introduction to Software Engineering</option>
+              <option>SE201 — Requirements Engineering</option>
+              <option>SE202 — Software Design & Architecture</option>
+              <option>SE203 — Software Testing & Quality Assurance</option>
+              <option>SE301 — Agile Development Methodologies</option>
+              <option>SE302 — Software Project Management</option>
+              <option>SE303 — DevOps & Continuous Integration</option>
+              <option>SE401 — Enterprise Software Development</option>
+              <option>SE402 — Senior Project I</option>
+              <option>SE403 — Senior Project II</option>
+            </optgroup>
+            <optgroup label="Electrical & Electronics Engineering (EEE)">
+              <option>EEE101 — Circuit Theory I</option>
+              <option>EEE102 — Circuit Theory II</option>
+              <option>EEE201 — Electronics I</option>
+              <option>EEE202 — Electronics II</option>
+              <option>EEE203 — Digital Logic Design</option>
+              <option>EEE204 — Signals & Systems</option>
+              <option>EEE301 — Microprocessors & Microcontrollers</option>
+              <option>EEE302 — Control Systems</option>
+              <option>EEE303 — Power Electronics</option>
+              <option>EEE304 — Communication Systems</option>
+              <option>EEE401 — VLSI Design</option>
+              <option>EEE402 — Robotics & Automation</option>
+              <option>EEE403 — Senior Project I</option>
+              <option>EEE404 — Senior Project II</option>
+            </optgroup>
+            <optgroup label="Industrial Engineering (IE)">
+              <option>IE101 — Introduction to Industrial Engineering</option>
+              <option>IE201 — Operations Research I</option>
+              <option>IE202 — Operations Research II</option>
+              <option>IE203 — Production Planning & Control</option>
+              <option>IE204 — Probability & Statistics for Engineers</option>
+              <option>IE301 — Quality Management</option>
+              <option>IE302 — Supply Chain Management</option>
+              <option>IE303 — Simulation Modeling</option>
+              <option>IE304 — Ergonomics & Work Design</option>
+              <option>IE401 — Lean Manufacturing</option>
+              <option>IE402 — Senior Project I</option>
+              <option>IE403 — Senior Project II</option>
+            </optgroup>
+            <optgroup label="Architecture (ARCH)">
+              <option>ARCH101 — Design Studio I</option>
+              <option>ARCH102 — Design Studio II</option>
+              <option>ARCH201 — Design Studio III</option>
+              <option>ARCH202 — Design Studio IV</option>
+              <option>ARCH203 — History of Architecture I</option>
+              <option>ARCH204 — History of Architecture II</option>
+              <option>ARCH301 — Structural Systems</option>
+              <option>ARCH302 — Environmental Control Systems</option>
+              <option>ARCH303 — Urban Design</option>
+              <option>ARCH401 — Thesis Project I</option>
+              <option>ARCH402 — Thesis Project II</option>
+            </optgroup>
+            <optgroup label="Biomedical Engineering (BME)">
+              <option>BME101 — Introduction to Biomedical Engineering</option>
+              <option>BME201 — Biomechanics</option>
+              <option>BME202 — Biomedical Signals & Systems</option>
+              <option>BME301 — Medical Imaging</option>
+              <option>BME302 — Biomedical Instrumentation</option>
+              <option>BME303 — Biomaterials</option>
+              <option>BME401 — Neural Engineering</option>
+              <option>BME402 — Senior Project I</option>
+              <option>BME403 — Senior Project II</option>
+            </optgroup>
+            <optgroup label="Genetics & Bioengineering (GBE)">
+              <option>GBE101 — Introduction to Genetics</option>
+              <option>GBE201 — Molecular Biology</option>
+              <option>GBE202 — Cell Biology</option>
+              <option>GBE301 — Bioinformatics</option>
+              <option>GBE302 — Genomics</option>
+              <option>GBE401 — Genetic Engineering</option>
+              <option>GBE402 — Senior Project I</option>
+            </optgroup>
+            <optgroup label="Business Administration (BA)">
+              <option>BA101 — Principles of Management</option>
+              <option>BA102 — Introduction to Business</option>
+              <option>BA201 — Marketing Management</option>
+              <option>BA202 — Financial Accounting</option>
+              <option>BA203 — Managerial Accounting</option>
+              <option>BA301 — Organizational Behavior</option>
+              <option>BA302 — Strategic Management</option>
+              <option>BA303 — Corporate Finance</option>
+              <option>BA304 — Business Law</option>
+              <option>BA401 — Entrepreneurship & Innovation</option>
+              <option>BA402 — Business Ethics</option>
+            </optgroup>
+            <optgroup label="International Relations (IR)">
+              <option>IR101 — Introduction to International Relations</option>
+              <option>IR201 — International Law</option>
+              <option>IR202 — European Union Studies</option>
+              <option>IR203 — Political Theory</option>
+              <option>IR301 — Foreign Policy Analysis</option>
+              <option>IR302 — Conflict Resolution</option>
+              <option>IR401 — Diplomacy & Negotiation</option>
+              <option>IR402 — Thesis Project</option>
+            </optgroup>
+            <optgroup label="Economics (ECON)">
+              <option>ECON101 — Microeconomics</option>
+              <option>ECON102 — Macroeconomics</option>
+              <option>ECON201 — Intermediate Microeconomics</option>
+              <option>ECON202 — Intermediate Macroeconomics</option>
+              <option>ECON203 — Money & Banking</option>
+              <option>ECON301 — Econometrics</option>
+              <option>ECON302 — Development Economics</option>
+              <option>ECON401 — International Trade & Finance</option>
+            </optgroup>
+            <optgroup label="Tourism & Hotel Management (THM)">
+              <option>THM101 — Introduction to Tourism</option>
+              <option>THM102 — Introduction to Hospitality</option>
+              <option>THM201 — Hotel Operations Management</option>
+              <option>THM202 — Food & Beverage Management</option>
+              <option>THM301 — Tourism Marketing</option>
+              <option>THM302 — Event Management</option>
+              <option>THM401 — Strategic Hospitality Management</option>
+            </optgroup>
+            <optgroup label="Psychology (PSY)">
+              <option>PSY101 — Introduction to Psychology</option>
+              <option>PSY201 — Social Psychology</option>
+              <option>PSY202 — Developmental Psychology</option>
+              <option>PSY301 — Research Methods in Psychology</option>
+              <option>PSY302 — Abnormal Psychology</option>
+              <option>PSY401 — Clinical Psychology</option>
+              <option>PSY402 — Cognitive Psychology</option>
+            </optgroup>
+            <optgroup label="Communication & Design (COMM)">
+              <option>COMM101 — Introduction to Communication</option>
+              <option>COMM201 — Media & Communication</option>
+              <option>COMM202 — Graphic Design Principles</option>
+              <option>COMM301 — Digital Media Production</option>
+              <option>COMM302 — Advertising & Public Relations</option>
+              <option>COMM401 — Visual Communication</option>
+              <option>COMM402 — Documentary & Film</option>
+            </optgroup>
+            <optgroup label="Translation & Interpreting (TRIN)">
+              <option>TRIN101 — Introduction to Translation</option>
+              <option>TRIN201 — Translation Theory</option>
+              <option>TRIN202 — Interpreting I</option>
+              <option>TRIN301 — Specialized Translation</option>
+              <option>TRIN302 — Interpreting II</option>
+              <option>TRIN401 — Conference Interpreting</option>
+            </optgroup>
+            <optgroup label="Law (LAW)">
+              <option>LAW101 — Introduction to Law</option>
+              <option>LAW201 — Constitutional Law</option>
+              <option>LAW202 — Civil Law</option>
+              <option>LAW301 — Criminal Law</option>
+              <option>LAW302 — Commercial Law</option>
+              <option>LAW401 — International Law</option>
+              <option>LAW402 — European Union Law</option>
+            </optgroup>
+            <optgroup label="Common Courses">
+              <option>MATH101 — Calculus I</option>
+              <option>MATH102 — Calculus II</option>
+              <option>MATH201 — Linear Algebra</option>
+              <option>MATH202 — Statistics & Probability</option>
+              <option>MATH203 — Differential Equations</option>
+              <option>PHYS101 — Physics I</option>
+              <option>PHYS102 — Physics II</option>
+              <option>ENG101 — Academic English I</option>
+              <option>ENG102 — Academic English II</option>
+              <option>ENG201 — Academic Writing</option>
+              <option>TUR101 — Turkish I</option>
+              <option>TUR102 — Turkish II</option>
+            </optgroup>
+            <option value="__custom__">✏ Enter custom course...</option>
+          </select>
+          <div id="courseCustomWrap" style="display:none;margin-top:8px;">
+            <input type="text" id="courseCustomInput" placeholder="e.g. CS408 — Special Topics" oninput="updatePreview()">
+          </div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Deadline (optional)</label>
+        <input type="date" id="deadlineInput">
+      </div>
+      <div class="btn-row">
+        <button class="btn-next" onclick="goStep(2)">Continue to Requirements →</button>
+      </div>
+    </div>
+
+    <!-- STEP 2: REQUIREMENTS -->
+    <div class="panel" id="step2">
+      <div class="form-group">
+        <label>Required Skills <span class="req">*</span></label>
+        <div class="hint" style="margin-bottom:10px;">Select the skills your ideal teammate needs.</div>
+        <div class="tags-wrap" id="skillTagsWrap">
+          <div class="sel-tag" onclick="toggleSkill(this)">Python</div>
+          <div class="sel-tag" onclick="toggleSkill(this)">SQL / Database</div>
+          <div class="sel-tag" onclick="toggleSkill(this)">Java</div>
+          <div class="sel-tag" onclick="toggleSkill(this)">C++</div>
+          <div class="sel-tag" onclick="toggleSkill(this)">React</div>
+          <div class="sel-tag" onclick="toggleSkill(this)">Node.js</div>
+          <div class="sel-tag" onclick="toggleSkill(this)">Flask / Django</div>
+          <div class="sel-tag" onclick="toggleSkill(this)">Machine Learning</div>
+          <div class="sel-tag" onclick="toggleSkill(this)">UI/UX Design</div>
+          <div class="sel-tag" onclick="toggleSkill(this)">Figma</div>
+          <div class="sel-tag" onclick="toggleSkill(this)">Flutter</div>
+          <div class="sel-tag" onclick="toggleSkill(this)">DevOps / Docker</div>
+          <div class="sel-tag" onclick="toggleSkill(this)">Cybersecurity</div>
+          <div class="sel-tag" onclick="toggleSkill(this)">Data Analysis</div>
+          <div class="sel-tag" onclick="toggleSkill(this)">REST API</div>
+          <div class="sel-tag" onclick="toggleSkill(this)">Firebase</div>
+        </div>
+      </div>
+
+      <div class="form-group" style="margin-top:24px;">
+        <label>Topic Tags <span class="req">*</span></label>
+        <div class="hint" style="margin-bottom:10px;">Select <strong>exactly 5</strong> topic tags — these power the recommendation engine.</div>
+        <div class="tags-wrap" id="topicTagsWrap">
+          <div class="sel-tag" onclick="toggleTopic(this)">Frontend</div>
+          <div class="sel-tag" onclick="toggleTopic(this)">Backend</div>
+          <div class="sel-tag" onclick="toggleTopic(this)">Databases</div>
+          <div class="sel-tag" onclick="toggleTopic(this)">AI / ML</div>
+          <div class="sel-tag" onclick="toggleTopic(this)">Mobile</div>
+          <div class="sel-tag" onclick="toggleTopic(this)">Design</div>
+          <div class="sel-tag" onclick="toggleTopic(this)">Cloud</div>
+          <div class="sel-tag" onclick="toggleTopic(this)">Security</div>
+          <div class="sel-tag" onclick="toggleTopic(this)">Data</div>
+          <div class="sel-tag" onclick="toggleTopic(this)">Research</div>
+          <div class="sel-tag" onclick="toggleTopic(this)">Networking</div>
+          <div class="sel-tag" onclick="toggleTopic(this)">Game Dev</div>
+        </div>
+        <div class="tag-count"><span id="topicCount">0</span> / 5 topics selected</div>
+      </div>
+
+      <div class="form-group" style="margin-top:24px;">
+        <label>Maximum Team Size <span class="req">*</span></label>
+        <div class="hint" style="margin-bottom:12px;">Including yourself. Min 2, max 6.</div>
+        <div class="size-opts">
+          <div class="size-opt" onclick="selectSize(this,2)">2</div>
+          <div class="size-opt active" onclick="selectSize(this,3)">3</div>
+          <div class="size-opt" onclick="selectSize(this,4)">4</div>
+          <div class="size-opt" onclick="selectSize(this,5)">5</div>
+          <div class="size-opt" onclick="selectSize(this,6)">6</div>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn-back" onclick="goStep(1)">← Back</button>
+        <button class="btn-next" onclick="goStep(3)">Review Project →</button>
+      </div>
+    </div>
+
+    <!-- STEP 3: REVIEW -->
+    <div class="panel" id="step3">
+      <div style="padding:16px;background:var(--accent-dim);border:1px solid rgba(0,229,176,0.2);border-radius:14px;margin-bottom:24px;">
+        <div style="font-size:0.88rem;font-weight:600;color:var(--accent);">Review your listing before posting.</div>
+        <div style="font-size:0.78rem;color:var(--soft);margin-top:2px;">You can edit the project after posting too.</div>
+      </div>
+
+      <div class="review-block">
+        <h4>Project Details</h4>
+        <div class="review-row"><div class="review-key">Title</div><div class="review-val" id="rv-title">—</div></div>
+        <div class="review-row"><div class="review-key">Type</div><div class="review-val" id="rv-type">—</div></div>
+        <div class="review-row"><div class="review-key">Course</div><div class="review-val" id="rv-course">—</div></div>
+        <div class="review-row"><div class="review-key">Team size</div><div class="review-val" id="rv-size">3 members</div></div>
+        <div class="review-row"><div class="review-key">Deadline</div><div class="review-val" id="rv-deadline">Not set</div></div>
+      </div>
+
+      <div class="review-block">
+        <h4>Checklist</h4>
+        <div class="checklist-item"><span>&#10003;</span> Title filled in</div>
+        <div class="checklist-item"><span>&#10003;</span> Description written</div>
+        <div class="checklist-item"><span>&#10003;</span> Skills selected</div>
+        <div class="checklist-item"><span id="chk-topics"></span> <span id="chk-topics-lbl">5 topic tags chosen</span></div>
+        <div class="checklist-item"><span>&#10003;</span> Team size set</div>
+      </div>
+
+      <!-- The actual form that POSTs to Flask -->
+      <form method="POST" action="/projects/" id="postForm">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="title"       id="f-title">
+        <input type="hidden" name="description" id="f-desc">
+        <input type="hidden" name="course"      id="f-course">
+        <input type="hidden" name="team_size"   id="f-size" value="3">
+        <input type="hidden" name="deadline"    id="f-deadline">
+        <div id="f-skills-container"></div>
+        <div id="f-topics-container"></div>
+
+        <div class="btn-row">
+          <button type="button" class="btn-back" onclick="goStep(2)">← Back</button>
+          <button type="submit" class="btn-next" id="submitBtn" onclick="prepareForm()">Post Project</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- SUCCESS (shown after redirect back if needed) -->
+    <div class="panel" id="step-success">
+      <div style="text-align:center;padding:60px 20px;">
+        <h2 style="font-family:'DM Serif Display',serif;font-size:1.8rem;font-weight:400;margin-bottom:12px;">Project posted!</h2>
+        <p style="color:var(--soft);margin-bottom:32px;line-height:1.7;">Your project is now live and visible to matching students.</p>
+        <div style="display:flex;gap:12px;justify-content:center;">
+          <a href="/dashboard" style="padding:12px 28px;background:linear-gradient(135deg,#FFD700 0%,#C8960C 100%);border-radius:12px;color:#080808;font-weight:700;text-decoration:none;">Go to Dashboard</a>
+          <a href="/projects-page" style="padding:12px 28px;background:var(--card);border:1px solid var(--border);border-radius:12px;color:var(--soft);text-decoration:none;">Browse Projects</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LIVE PREVIEW -->
+  <div class="preview-area">
+    <div class="preview-label">Live Preview</div>
+    <div class="preview-card">
+      <div class="preview-title" id="pv-title">Your project title...</div>
+      <div class="preview-desc"  id="pv-desc">Description will appear here...</div>
+      <div class="preview-tags"  id="pv-tags"></div>
+      <div class="preview-footer">
+        <div class="preview-owner">You</div>
+        <div class="preview-slots" id="pv-slots">3 members max</div>
+      </div>
+    </div>
+    <div class="preview-tip">
+      <strong>Tip:</strong> Projects with all 5 topic tags get significantly more views from the recommendation engine.
+    </div>
+  </div>
+</div>
+
+<script>
+/* ── CSRF helper — reads Flask-WTF token from meta tag ──────────────────── */
+function _getCsrf(){
+  var m=document.querySelector('meta[name="csrf-token"]');
+  return m?m.getAttribute('content'):'';
+}
+/* Patch all fetch() POST calls to include the CSRF token header automatically */
+(function(){
+  var _origFetch=window.fetch;
+  window.fetch=function(url,opts){
+    opts=opts||{};
+    if(opts.method&&opts.method.toUpperCase()==='POST'){
+      opts.headers=Object.assign({'X-CSRFToken':_getCsrf()},opts.headers||{});
+    }
+    return _origFetch.call(this,url,opts);
+  };
+})();
+</script><script>
+var topicCount = 0;
+var teamSize   = 3;
+
+function goStep(n) {
+  if (n === 2) {
+    if (!document.getElementById('titleInput').value.trim()) { alert('Please enter a project title.'); return; }
+    if (!document.getElementById('descInput').value.trim())  { alert('Please enter a project description.'); return; }
+    if (!document.getElementById('typeInput').value)         { alert('Please select a project type.'); return; }
+  }
+  if (n === 3) {
+    if (topicCount !== 5) { alert('Please select exactly 5 topic tags.'); return; }
+    // populate review
+    document.getElementById('rv-title').textContent   = document.getElementById('titleInput').value || '—';
+    document.getElementById('rv-type').textContent    = document.getElementById('typeInput').value  || '—';
+    document.getElementById('rv-course').textContent  = document.getElementById('courseInput').value || 'None';
+    document.getElementById('rv-size').textContent    = teamSize + ' members';
+    var dl = document.getElementById('deadlineInput').value;
+    document.getElementById('rv-deadline').textContent = dl || 'Not set';
+    // checklist
+    var ok = topicCount === 5;
+    document.getElementById('chk-topics').textContent     = ok ? 'v' : '○';
+    document.getElementById('chk-topics-lbl').textContent = ok ? '5 topic tags chosen' : 'Need 5 topic tags (' + topicCount + '/5)';
+  }
+  ['step1','step2','step3','step-success'].forEach(function(id,i){
+    var el = document.getElementById(id);
+    if (el) el.classList.toggle('active', i+1 === n || (n === 4 && id === 'step-success'));
+  });
+  ['sp1','sp2','sp3'].forEach(function(id,i){
+    var el = document.getElementById(id);
+    if (!el) return;
+    el.classList.remove('active','done');
+    if (i+1 === n)      el.classList.add('active');
+    else if (i+1 < n)   el.classList.add('done');
+  });
+}
+
+function updatePreview() {
+  var t = document.getElementById('titleInput').value;
+  var d = document.getElementById('descInput').value;
+  var pTitle = document.getElementById('pv-title');
+  var pDesc  = document.getElementById('pv-desc');
+  pTitle.textContent = t || 'Your project title...';
+  pTitle.style.color = t ? 'var(--text)' : 'var(--muted)';
+  pDesc.textContent  = d ? (d.length > 90 ? d.substring(0,90)+'...' : d) : 'Description will appear here...';
+  pDesc.style.color  = d ? 'var(--soft)' : 'var(--muted)';
+}
+
+function updateChar() {
+  document.getElementById('charCount').textContent = document.getElementById('descInput').value.length;
+}
+
+function toggleSkill(el) { el.classList.toggle('selected'); }
+
+function toggleTopic(el) {
+  if (el.classList.contains('selected')) {
+    el.classList.remove('selected');
+    topicCount--;
+  } else if (topicCount < 5) {
+    el.classList.add('selected');
+    topicCount++;
+  }
+  document.getElementById('topicCount').textContent = topicCount;
+  // update preview tags
+  var tags = Array.from(document.querySelectorAll('#topicTagsWrap .sel-tag.selected')).map(function(t){return t.textContent.trim();});
+  var wrap = document.getElementById('pv-tags');
+  wrap.innerHTML = tags.slice(0,4).map(function(t){return '<span class="ptag">'+t+'</span>';}).join('');
+}
+
+function selectSize(el, n) {
+  document.querySelectorAll('.size-opt').forEach(function(o){o.classList.remove('active');});
+  el.classList.add('active');
+  teamSize = n;
+  document.getElementById('pv-slots').textContent = n + ' members max';
+  document.getElementById('f-size').value = n;
+}
+
+function prepareForm() {
+  document.getElementById('f-title').value    = document.getElementById('titleInput').value;
+  document.getElementById('f-desc').value     = document.getElementById('descInput').value;
+  document.getElementById('f-course').value   = document.getElementById('courseInput').value;
+  document.getElementById('f-deadline').value = document.getElementById('deadlineInput').value;
+  document.getElementById('f-size').value     = teamSize;
+
+  // Skills
+  var sc = document.getElementById('f-skills-container');
+  sc.innerHTML = '';
+  document.querySelectorAll('#skillTagsWrap .sel-tag.selected').forEach(function(t){
+    var inp = document.createElement('input');
+    inp.type = 'hidden'; inp.name = 'required_skills'; inp.value = t.textContent.trim();
+    sc.appendChild(inp);
+  });
+
+  // Topics
+  var tc = document.getElementById('f-topics-container');
+  tc.innerHTML = '';
+  document.querySelectorAll('#topicTagsWrap .sel-tag.selected').forEach(function(t){
+    var inp = document.createElement('input');
+    inp.type = 'hidden'; inp.name = 'topic_tags'; inp.value = t.textContent.trim();
+    tc.appendChild(inp);
+  });
+}
+</script>
+
+
+<script>
+var TOAST_ICONS={success:'v',error:'×',warning:'!',info:'i'};
+var TOAST_TITLES={success:'Done',error:'Error',warning:'Warning',info:'Note'};
+function showToast(message,type,duration){
+  type=type||'info';duration=duration||4000;
+  var c=document.getElementById('toast-container');
+  var t=document.createElement('div');
+  t.className='toast '+type;
+  t.innerHTML='<div class="toast-icon">'+TOAST_ICONS[type]+'</div>'+
+    '<div class="toast-body"><div class="toast-title">'+TOAST_TITLES[type]+'</div>'+
+    '<div class="toast-msg">'+message+'</div></div>'+
+    '<button class="toast-close" onclick="dismissToast(this.parentElement)">×</button>'+
+    '<div class="toast-progress"></div>';
+  c.appendChild(t);
+  setTimeout(function(){dismissToast(t);},duration);
+}
+function dismissToast(t){
+  if(!t||t._d)return;t._d=true;
+  t.style.animation='toastOut 0.3s ease forwards';
+  setTimeout(function(){if(t.parentElement)t.parentElement.removeChild(t);},300);
+}
+document.addEventListener('DOMContentLoaded',function(){
+  var el=document.getElementById('flask-messages');
+  if(!el)return;
+  try{
+    var msgs=JSON.parse(el.getAttribute('data-messages'));
+    msgs.forEach(function(m){
+      var type=m[0]==='error'?'error':m[0]==='warning'?'warning':'success';
+      showToast(m[1],type);
+    });
+  }catch(e){}
+});
+</script>
+
+<div id="notif-panel" style="display:none;position:fixed;left:228px;bottom:80px;width:320px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);box-shadow:0 8px 32px rgba(0,0,0,0.6);z-index:200;overflow:hidden;">
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:1px solid var(--border);">
+    <span style="font-family:'DM Serif Display',serif;font-size:0.9rem;">Notifications</span>
+    <button onclick="markAllRead()" style="background:none;border:none;color:var(--muted);font-size:0.72rem;cursor:pointer;font-family:'DM Mono',monospace;">mark all read</button>
+  </div>
+  <div id="notif-list" style="max-height:320px;overflow-y:auto;"></div>
+</div>
+<script>
+function _esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#x27;');}
+function toggleNotifs(){
+  var p=document.getElementById('notif-panel');
+  p.style.display=p.style.display==='none'?'block':'none';
+  if(p.style.display==='block') fetchNotifs();
+}
+async function fetchNotifs(){
+  try{
+    var r=await fetch('/notifications/unread');
+    var d=await r.json();
+    var badge=document.getElementById('notif-badge');
+    var list=document.getElementById('notif-list');
+    if(d.count>0){badge.textContent=d.count;badge.style.display='inline';}
+    else{badge.style.display='none';}
+    if(!list)return;
+    if(d.notifications.length===0){
+      list.innerHTML='<div style="padding:20px;text-align:center;color:var(--muted);font-size:0.8rem;">No new notifications</div>';
+      return;
+    }
+    list.innerHTML=d.notifications.map(function(n){return(
+      '<a href="'+(n.link||'#')+'" onclick="readNotif('+n.id+')" style="display:block;padding:12px 14px;border-bottom:1px solid var(--border);text-decoration:none;color:var(--text);transition:background 0.15s;" onmouseover="this.style.background=\'rgba(255,255,255,0.04)\'" onmouseout="this.style.background=\'none\'">'+
+      '<div style="font-size:0.82rem;line-height:1.4;">'+n.message+'</div>'+
+      '<div style="font-size:0.7rem;color:var(--muted);margin-top:4px;font-family:\'DM Mono\',monospace;">'+n.time_ago+'</div>'+
+      '</a>'
+    );}).join('');
+  }catch(e){}
+}
+async function readNotif(id){
+  await fetch('/notifications/'+id+'/read',{method:'POST'});
+  fetchNotifs();
+}
+async function markAllRead(){
+  await fetch('/notifications/read-all',{method:'POST'});
+  fetchNotifs();
+}
+document.addEventListener('click',function(e){
+  var panel=document.getElementById('notif-panel');
+  var btn=document.getElementById('notif-btn');
+  if(panel&&btn&&!panel.contains(e.target)&&!btn.contains(e.target)){
+    panel.style.display='none';
+  }
+});
+setInterval(fetchNotifs,30000);
+fetchNotifs();
+</script>
+<div id="cursor-glow"></div>
+<script>var cg=document.getElementById('cursor-glow');document.addEventListener('mousemove',function(e){cg.style.left=e.clientX+'px';cg.style.top=e.clientY+'px';});</script>
+</body>
+</html>

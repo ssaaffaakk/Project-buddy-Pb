@@ -1,0 +1,171 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="csrf-token" content="{{ csrf_token() }}">
+<title>Admin Messages — ProjectBuddy</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+html{scrollbar-gutter:stable;overflow-y:scroll;}
+:root{
+  color-scheme:dark;--bg:#0d0c0b;--bg2:#141210;--bg3:#1c1915;--card:rgba(255,255,255,0.03);--card-h:rgba(255,255,255,0.055);--accent:#FFD700;--accent-dim:rgba(255,215,0,0.12);--red:#c0392b;--text:#ede8df;--muted:#9a9490;--soft:#d4cec8;--border:rgba(255,255,255,0.06);--r:8px;}
+html.light-mode{color-scheme:light;--bg:#ffffff;--bg2:#f5f5f5;--bg3:#eeeeee;--card:rgba(0,0,0,0.03);--card-h:rgba(0,0,0,0.06);--accent:#d4a817;--accent-dim:rgba(212,168,23,0.12);--red:#c0392b;--text:#1a1a1a;--muted:#6b6b6b;--soft:#505050;--border:rgba(0,0,0,0.1);}
+html.light-mode .nav-item:hover{background:rgba(0,0,0,0.04);}
+body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;display:flex;min-height:100vh;margin:0;}
+
+{% include 'admin/_sidebar_styles.html' %}
+
+.main{margin-left:220px;flex:1;padding:40px;display:grid;grid-template-columns:300px 1fr;gap:24px;}
+
+.page-header{grid-column:1/-1;margin-bottom:24px;padding-bottom:24px;border-bottom:1px solid var(--border);}
+.page-title{font-family:'DM Serif Display',serif;font-size:1.5rem;font-weight:400;margin-bottom:6px;}
+.page-sub{font-family:'DM Mono',monospace;font-size:0.7rem;letter-spacing:0.06em;color:var(--muted);text-transform:uppercase;}
+
+.conversations{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:0;max-height:700px;overflow-y:auto;}
+.conversation-item{padding:12px;border-bottom:1px solid var(--border);cursor:pointer;transition:all 0.2s;}
+.conversation-item:hover{background:var(--card);}
+.conversation-item.active{background:var(--accent-dim);}
+.conv-name{font-weight:600;font-size:0.85rem;margin-bottom:4px;}
+.conv-preview{font-size:0.75rem;color:var(--soft);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.conv-time{font-size:0.7rem;color:var(--muted);}
+
+.chat-container{display:flex;flex-direction:column;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);height:700px;overflow:hidden;}
+
+.chat-header{padding:16px;border-bottom:1px solid var(--border);font-weight:600;}
+.chat-messages{flex:1;padding:16px;overflow-y:auto;display:flex;flex-direction:column;gap:12px;}
+.message{display:flex;flex-direction:column;gap:4px;margin-bottom:8px;}
+.message.sent{align-items:flex-end;}
+.message.sent .msg-bubble{background:var(--accent-dim);color:var(--accent);}
+.message.received .msg-bubble{background:var(--bg3);border:1px solid var(--border);}
+.msg-author{font-size:0.7rem;color:var(--muted);font-weight:600;}
+.msg-bubble{padding:10px 12px;border-radius:8px 8px 2px 8px;max-width:250px;word-wrap:break-word;font-size:0.85rem;}
+
+.chat-input{padding:12px;border-top:1px solid var(--border);}
+.chat-form{display:flex;gap:8px;}
+textarea{flex:1;padding:8px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);color:var(--text);font-family:'Outfit',sans-serif;font-size:0.82rem;resize:none;height:40px;}
+.btn-send{padding:8px 16px;background:linear-gradient(135deg,#FFD700 0%,#C8960C 100%);color:#080808;border:none;border-radius:var(--r);font-family:'DM Mono',monospace;font-size:0.65rem;font-weight:600;text-transform:uppercase;cursor:pointer;}
+.btn-send:hover{background:#b8963d;}
+
+.empty-state{display:flex;align-items:center;justify-content:center;height:100%;color:var(--muted);text-align:center;}
+</style>
+<script>if(localStorage.getItem('theme')==='light')document.documentElement.classList.add('light-mode');document.addEventListener('DOMContentLoaded',function(){var t=document.getElementById('themeToggle');if(t)t.textContent=document.documentElement.classList.contains('light-mode')?'Dark':'Light';});</script>
+</head>
+<body>
+
+{% set admin_active = 'messages' %}
+{% include 'admin/_sidebar.html' %}
+
+
+<main class="main">
+  <div class="page-header" style="grid-column:1/-1;">
+    <div class="page-title">Messages</div>
+    <div class="page-sub">Admin communications with users</div>
+  </div>
+
+  <!-- CONVERSATIONS LIST -->
+  <div class="conversations" id="conversations"></div>
+
+  <!-- CHAT WINDOW -->
+  <div class="chat-container" id="chat-container">
+    <div class="empty-state">
+      <p>Select a conversation to start messaging</p>
+    </div>
+  </div>
+</main>
+
+<script>
+function _getCsrf(){var m=document.querySelector('meta[name="csrf-token"]');return m?m.getAttribute('content'):'';}
+(function(){var o=window.fetch;window.fetch=function(url,opts){opts=opts||{};if(opts.method&&opts.method.toUpperCase()==='POST'){opts.headers=Object.assign({'X-CSRFToken':_getCsrf()},opts.headers||{});}return o.call(this,url,opts);};})();
+</script>
+
+<script>
+const messagesData = {{ messages | tojson }};
+const userConversations = {};
+
+// Group messages by user
+messagesData.forEach(msg => {
+  if (!userConversations[msg.user_id]) {
+    userConversations[msg.user_id] = {
+      name: msg.user.first_name + ' ' + msg.user.last_name,
+      messages: [],
+      unread: 0
+    };
+  }
+  userConversations[msg.user_id].messages.push(msg);
+  if (!msg.is_read) userConversations[msg.user_id].unread++;
+});
+
+// Render conversations list
+const convList = document.getElementById('conversations');
+Object.entries(userConversations)
+  .sort((a, b) => new Date(b[1].messages[b[1].messages.length - 1].created_at) - new Date(a[1].messages[a[1].messages.length - 1].created_at))
+  .forEach(([userId, conv]) => {
+    const lastMsg = conv.messages[conv.messages.length - 1];
+    const msgDate = new Date(lastMsg.created_at);
+    const timeStr = msgDate.toLocaleTimeString('en-US', {hour: '2-digit', minute: '2-digit', hour12: true});
+    
+    const convDiv = document.createElement('div');
+    convDiv.className = 'conversation-item';
+    convDiv.setAttribute('data-user-id', userId);
+    convDiv.onclick = () => loadConversation(userId);
+    convDiv.innerHTML = `
+      <div class="conv-name">${conv.name}${conv.unread > 0 ? ' <span style="color:var(--red)">●</span>' : ''}</div>
+      <div class="conv-preview">${lastMsg.content.substring(0, 40)}...</div>
+      <div class="conv-time">${timeStr}</div>
+    `;
+    convList.appendChild(convDiv);
+  });
+
+function loadConversation(userId) {
+  const conv = userConversations[userId];
+  if (!conv) return;
+  
+  // Mark as active
+  document.querySelectorAll('.conversation-item').forEach(c => c.classList.remove('active'));
+  document.querySelector(`[data-user-id="${userId}"]`).classList.add('active');
+  
+  // Build chat
+  let html = '<div class="chat-header">Conversation with ' + conv.name + '</div>';
+  html += '<div class="chat-messages">';
+  
+  conv.messages.forEach(m => {
+    const isSent = m.sender_id == {{ current_user.id }};
+    html += '<div class="message ' + (isSent ? 'sent' : 'received') + '">';
+    html += '<div class="msg-author">' + (isSent ? 'You' : m.user.first_name + ' ' + m.user.last_name) + '</div>';
+    html += '<div class="msg-bubble">' + m.content + '</div>';
+    html += '</div>';
+  });
+  
+  html += '</div>';
+  html += '<div class="chat-input"><form class="chat-form" onsubmit="sendReply(event, ' + userId + ')"><textarea placeholder="Type your reply..." required></textarea><button type="submit" class="btn-send">Send</button></form></div>';
+  
+  document.getElementById('chat-container').innerHTML = html;
+  const chatMessages = document.querySelector('.chat-messages');
+  if (chatMessages) chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+function sendReply(e, userId) {
+  e.preventDefault();
+  const textarea = e.target.querySelector('textarea');
+  const content = textarea.value;
+  
+  const formData = new FormData();
+  formData.append('content', content);
+  
+  fetch('/admin/message/' + userId + '/reply', {
+    method: 'POST',
+    body: formData
+  }).then(r => {
+    if (r.ok) {
+      textarea.value = '';
+      location.reload();
+    }
+  });
+}
+</script>
+
+</body>
+</html>

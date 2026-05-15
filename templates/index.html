@@ -1,0 +1,306 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="/static/images/logo.svg" type="image/svg+xml">
+<title>ProjectBuddy — Find Your Perfect Teammate</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+html{scrollbar-gutter:stable;overflow-y:scroll;}
+:root{
+  color-scheme:dark;--bg:#0d0c0b;--bg2:#141210;--bg3:#1c1915;--card:rgba(255,255,255,0.03);--card-h:rgba(255,255,255,0.055);--accent:#FFD700;--accent-dim:rgba(255,215,0,0.12);--red:#c0392b;--text:#ede8df;--muted:#9a9490;--soft:#d4cec8;--border:rgba(255,255,255,0.06);--r:8px;}
+html.light-mode{
+  color-scheme:light;--bg:#ffffff;--bg2:#f5f5f5;--bg3:#eeeeee;--card:rgba(0,0,0,0.03);--card-h:rgba(0,0,0,0.06);--accent:#d4a817;--accent-dim:rgba(212,168,23,0.12);--text:#1a1a1a;--muted:#6b6b6b;--soft:#505050;--border:rgba(0,0,0,0.1);}
+::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-thumb{background:rgba(255,215,0,0.2);border-radius:99px;}
+::selection{background:rgba(255,215,0,0.2);}
+html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;overflow-x:hidden;transition:background 0.3s,color 0.3s;}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:16px 48px;display:flex;align-items:center;justify-content:space-between;background:rgba(13,12,11,0.9);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);transition:background 0.3s,border-color 0.3s;}
+html.light-mode nav{background:rgba(255,255,255,0.9);}
+.nav-logo{display:flex;align-items:center;gap:8px;text-decoration:none;color:var(--text);font-family:'DM Serif Display',serif;font-size:1.2rem;}
+.nav-logo-icon{width:26px;height:26px;border-radius:4px;object-fit:contain;display:none;}
+.nav-logo em{font-style:italic;color:var(--accent);}
+.nav-links{display:flex;align-items:center;gap:28px;}
+.nav-links a{color:var(--soft);text-decoration:none;font-family:'DM Mono',monospace;font-size:0.72rem;letter-spacing:0.06em;text-transform:uppercase;transition:color 0.18s;}
+.nav-links a:hover{color:var(--text);}
+.nav-cta{display:flex;align-items:center;gap:8px;}
+.btn-12,.btn-12 *,.btn-12 :after,.btn-12 :before,.btn-12:after,.btn-12:before{border:0 solid;box-sizing:border-box;}
+.btn-12{-webkit-tap-highlight-color:transparent;-webkit-appearance:button;background-color:#0d0c0b;background-image:none;color:var(--text);cursor:pointer;font-family:'DM Mono',monospace;font-size:0.72rem;font-weight:700;line-height:1.5;margin:0;-webkit-mask-image:-webkit-radial-gradient(#000,#fff);padding:0;text-transform:uppercase;letter-spacing:0.08em;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;}
+.btn-12:disabled{cursor:default;}
+.btn-12 svg{display:block;vertical-align:middle;}
+.btn-12{border-radius:99rem;border:2px solid rgba(255,255,255,0.1);overflow:hidden;padding:0.65rem 1.8rem;position:relative;}
+.btn-12 span{mix-blend-mode:difference;}
+.btn-12:after,.btn-12:before{background:linear-gradient(90deg,#fff 25%,transparent 0,transparent 50%,#fff 0,#fff 75%,transparent 0);content:"";inset:0;position:absolute;transform:translateY(var(--progress,100%));transition:transform 0.2s ease;}
+.btn-12:after{--progress:-100%;background:linear-gradient(90deg,transparent 0,transparent 25%,#fff 0,#fff 50%,transparent 0,transparent 75%,#fff 0);z-index:-1;}
+.btn-12:hover:after,.btn-12:hover:before{--progress:0;}
+.btn-12-gold{background-color:var(--accent);color:#0d0c0b;border-color:#000000;}
+.btn-12-gold span{mix-blend-mode:normal;color:#0d0c0b;}
+.btn-12-gold:after,.btn-12-gold:before{background:linear-gradient(90deg,rgba(0,0,0,0.38) 25%,transparent 0,transparent 50%,rgba(0,0,0,0.38) 0,rgba(0,0,0,0.38) 75%,transparent 0);}
+.btn-12-gold:after{background:linear-gradient(90deg,transparent 0,transparent 25%,rgba(0,0,0,0.38) 0,rgba(0,0,0,0.38) 50%,transparent 0,transparent 75%,rgba(0,0,0,0.38) 0);}
+html.light-mode .btn-12:not(.btn-12-gold){color:#f0ece4;}
+.btn-12-sm{padding:0.48rem 1.1rem;font-size:0.65rem;}
+.btn-12-hero{padding:0.92rem 2.6rem;font-size:0.76rem;}
+.btn-12-full{width:100%;display:flex;}
+.btn-theme-toggle{padding:7px 14px;border-radius:var(--r);background:transparent;border:1px solid var(--border);color:var(--soft);cursor:pointer;transition:all 0.18s;font-family:'DM Mono',monospace;font-size:0.68rem;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;display:flex;align-items:center;justify-content:center;}
+.btn-theme-toggle:hover{border-color:rgba(255,255,255,0.15);color:var(--text);}
+
+/* HERO */
+.hero{min-height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;padding:120px 48px;position:relative;overflow:hidden;border-bottom:1px solid var(--border);}
+.hero-video{position:absolute;inset:0;width:100%;height:100%;mix-blend-mode:lighten;filter:saturate(1.2) brightness(0.95);opacity:0.8;pointer-events:none;z-index:2;transition:opacity 0.3s;}
+.hero-video-fallback{position:absolute;inset:0;background:#121212;pointer-events:none;z-index:0;transition:background 0.3s;}
+html.light-mode .hero-video-fallback{background:#ffffff;}
+html.light-mode .hero-video{opacity:0;}
+.hero-bg{position:absolute;inset:0;background:radial-gradient(ellipse 70% 60% at 10% 80%,rgba(255,215,0,0.06) 0%,transparent 60%),radial-gradient(ellipse 50% 50% at 90% 20%,rgba(192,57,43,0.04) 0%,transparent 60%);pointer-events:none;z-index:1;transition:all 0.3s;}
+html.light-mode .hero-bg{background:radial-gradient(ellipse 70% 60% at 10% 80%,rgba(212,168,23,0.15) 0%,transparent 60%),radial-gradient(ellipse 50% 50% at 90% 20%,rgba(192,57,43,0.08) 0%,transparent 60%);}
+.hero-grid{position:absolute;inset:0;background-image:repeating-linear-gradient(0deg,transparent,transparent 59px,rgba(255,255,255,0.02) 59px,rgba(255,255,255,0.02) 60px),repeating-linear-gradient(90deg,transparent,transparent 59px,rgba(255,255,255,0.02) 59px,rgba(255,255,255,0.02) 60px);pointer-events:none;z-index:1;}
+.hero-content{position:relative;z-index:10;max-width:800px;}
+.hero-label{font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--accent);margin-bottom:24px;}
+.hero h1{font-family:'DM Serif Display',serif;font-size:clamp(3rem,7vw,6.5rem);font-weight:400;line-height:0.95;letter-spacing:-0.03em;max-width:900px;}
+.hero h1 em{font-style:italic;color:var(--accent);}
+.hero-sub{margin-top:32px;font-size:1rem;color:var(--soft);line-height:1.7;max-width:600px;}
+.hero-actions{display:flex;gap:16px;margin-top:40px;flex-wrap:wrap;}
+.hero-stats{display:flex;gap:0;margin-top:80px;border-top:1px solid var(--border);}
+.hero-stat{padding:20px 32px 0 0;margin-right:32px;}
+.hero-stat-n{font-family:'DM Mono',monospace;font-size:2rem;font-weight:400;color:var(--accent);}
+.hero-stat-l{font-family:'DM Mono',monospace;font-size:0.64rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-top:4px;}
+
+/* MANIFESTO */
+.manifesto{padding:80px 48px;border-bottom:1px solid var(--border);display:grid;grid-template-columns:240px 1fr;gap:64px;align-items:start;}
+.manifesto-label{font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.16em;text-transform:uppercase;color:var(--muted);padding-top:6px;}
+.manifesto-text{font-family:'DM Serif Display',serif;font-size:clamp(1.4rem,3vw,2.2rem);font-weight:400;line-height:1.3;letter-spacing:-0.02em;color:var(--text);}
+.manifesto-text em{font-style:italic;color:var(--accent);}
+
+/* FEATURES */
+.features{border-bottom:1px solid var(--border);}
+.features-header{display:grid;grid-template-columns:1fr 1fr;gap:0;border-bottom:1px solid var(--border);}
+.features-header-left{padding:48px 48px;border-right:1px solid var(--border);}
+.features-header-right{padding:48px 48px;}
+.section-label{font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.16em;text-transform:uppercase;color:var(--muted);margin-bottom:16px;}
+.section-title{font-family:'DM Serif Display',serif;font-size:clamp(1.8rem,3vw,2.6rem);font-weight:400;line-height:1.1;letter-spacing:-0.02em;}
+.section-title em{font-style:italic;color:var(--accent);}
+.section-body{font-size:0.9rem;color:var(--soft);line-height:1.75;margin-top:16px;max-width:360px;}
+.features-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:0;}
+.feature-item{padding:36px 40px;border-right:1px solid var(--border);border-bottom:1px solid var(--border);transition:background 0.18s;}
+.feature-item:nth-child(3n){border-right:none;}
+.feature-item:nth-child(4),.feature-item:nth-child(5),.feature-item:nth-child(6){border-bottom:none;}
+.feature-item:hover{background:rgba(255,255,255,0.02);}
+.feature-number{font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.1em;color:var(--accent);margin-bottom:20px;opacity:0.7;}
+.feature-title{font-family:'DM Serif Display',serif;font-size:1.05rem;font-weight:400;margin-bottom:10px;letter-spacing:-0.01em;}
+.feature-desc{font-size:0.82rem;color:var(--soft);line-height:1.7;}
+
+/* ROLES */
+.roles{display:grid;grid-template-columns:repeat(3,1fr);gap:0;border-top:1px solid var(--border);border-bottom:1px solid var(--border);}
+.role-item{padding:48px 40px;border-right:1px solid var(--border);transition:background 0.18s;}
+.role-item:last-child{border-right:none;}
+.role-item:hover{background:rgba(255,255,255,0.02);}
+.role-kicker{font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);margin-bottom:16px;}
+.role-title{font-family:'DM Serif Display',serif;font-size:1.5rem;font-weight:400;margin-bottom:12px;letter-spacing:-0.01em;}
+.role-desc{font-size:0.84rem;color:var(--soft);line-height:1.7;}
+.role-tag{display:inline-block;margin-top:16px;padding:3px 9px;border-radius:3px;font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.06em;background:var(--accent-dim);color:var(--accent);}
+
+/* CTA */
+.cta-section{padding:80px 48px;display:flex;align-items:center;justify-content:space-between;gap:40px;flex-wrap:wrap;}
+.cta-title{font-family:'DM Serif Display',serif;font-size:clamp(2rem,4vw,3.5rem);font-weight:400;line-height:1.05;letter-spacing:-0.03em;max-width:600px;}
+.cta-title em{font-style:italic;color:var(--accent);}
+.cta-actions{display:flex;flex-direction:column;gap:10px;flex-shrink:0;}
+
+/* FOOTER */
+footer{border-top:1px solid var(--border);padding:32px 48px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;}
+.footer-logo{display:flex;align-items:center;gap:8px;text-decoration:none;color:var(--text);font-family:'DM Serif Display',serif;font-size:1.1rem;}
+.footer-logo-icon{width:24px;height:24px;border-radius:4px;object-fit:contain;display:none;}
+.footer-logo em{font-style:italic;color:var(--accent);}
+footer p{font-family:'DM Mono',monospace;font-size:0.64rem;letter-spacing:0.04em;color:var(--muted);}
+.footer-links{display:flex;gap:20px;}
+.footer-links a{font-family:'DM Mono',monospace;font-size:0.64rem;letter-spacing:0.04em;color:var(--muted);text-decoration:none;transition:color 0.18s;}
+.footer-links a:hover{color:var(--soft);}
+
+/* REVEAL */
+.reveal{opacity:0;transform:translateY(20px);transition:opacity 0.6s ease,transform 0.6s ease;}
+.reveal.visible{opacity:1;transform:translateY(0);}
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="/" class="nav-logo">
+    
+    Project<em>Buddy</em>
+  </a>
+  <div class="nav-links">
+    <a href="#features">Features</a>
+    <a href="#roles">Roles</a>
+  </div>
+  <div class="nav-cta">
+    <button id="themeToggle" class="btn-theme-toggle" title="Toggle dark/light mode" aria-label="Toggle theme">
+      <span class="theme-icon">Light</span>
+    </button>
+    <a href="/auth/login" class="btn-12 btn-12-sm"><span>Sign In</span></a>
+    <a href="/auth/register" class="btn-12 btn-12-sm btn-12-gold"><span>Get Started</span></a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <video class="hero-video" autoplay muted loop playsinline preload="auto">
+    <source src="/static/images/particles.mp4" type="video/mp4">
+  </video>
+  <div class="hero-video-fallback"></div>
+  <div class="hero-bg"></div>
+  <div class="hero-grid"></div>
+  
+  <div class="hero-content">
+    <div class="hero-label">International University of Sarajevo</div>
+    <h1>Stop settling for <em>random</em> teammates.</h1>
+    <p class="hero-sub">
+      ProjectBuddy connects IUS students and instructors through skills,
+      interests, and real collaboration history.
+    </p>
+    <div class="hero-actions">
+      <a href="/auth/register" class="btn-12 btn-12-hero btn-12-gold"><span>Start Matching</span></a>
+      <a href="/projects-page" class="btn-12 btn-12-hero"><span>Browse Projects</span></a>
+    </div>
+  </div>
+  
+  <div class="hero-stats">
+    <div class="hero-stat"><div class="hero-stat-n">500+</div><div class="hero-stat-l">Students</div></div>
+    <div class="hero-stat"><div class="hero-stat-n">120+</div><div class="hero-stat-l">Active Projects</div></div>
+    <div class="hero-stat"><div class="hero-stat-n">3</div><div class="hero-stat-l">User Roles</div></div>
+  </div>
+</section>
+
+<!-- MANIFESTO -->
+<section class="manifesto reveal">
+  <div class="manifesto-label"></div>
+  <div class="manifesto-text">
+    We've taken the best elements of team matching and
+    reprogrammed them for the <em>university project world.</em>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="features" id="features">
+  <div class="features-header reveal">
+    <div class="features-header-left">
+      <div class="section-label"></div>
+      <div class="section-title">Everything you need<br>to <em>collaborate</em> better.</div>
+    </div>
+    <div class="features-header-right">
+      <div class="section-body">
+        Built from the ground up for university project workflows.
+        Skill-based matching, reputation systems, and course integration
+        in one place.
+      </div>
+    </div>
+  </div>
+  <div class="features-grid">
+    <div class="feature-item reveal">
+      <div class="feature-number">01</div>
+      <div class="feature-title">Skill-Based Matching</div>
+      <div class="feature-desc">Personalized project recommendations powered by your 5 interest tags. No more scrolling through irrelevant listings.</div>
+    </div>
+    <div class="feature-item reveal">
+      <div class="feature-number">02</div>
+      <div class="feature-title">Reputation System</div>
+      <div class="feature-desc">Build a verifiable track record with peer ratings, skill endorsements, and achievement badges that mean something.</div>
+    </div>
+    <div class="feature-item reveal">
+      <div class="feature-number">03</div>
+      <div class="feature-title">Course Integration</div>
+      <div class="feature-desc">Instructors post course-specific projects. Only enrolled students can apply. Everything stays organized.</div>
+    </div>
+    <div class="feature-item reveal">
+      <div class="feature-number">04</div>
+      <div class="feature-title">Trust & Safety</div>
+      <div class="feature-desc">Built-in reporting system. Admins can warn, suspend, or ban users to keep the community clean.</div>
+    </div>
+    <div class="feature-item reveal">
+      <div class="feature-number">05</div>
+      <div class="feature-title">Application Flow</div>
+      <div class="feature-desc">Apply, accept, manage your team — all from a clean dashboard. No awkward cold messages.</div>
+    </div>
+    <div class="feature-item reveal">
+      <div class="feature-number">06</div>
+      <div class="feature-title">Achievement Badges</div>
+      <div class="feature-desc">First Step after 1 project. Veteran after 5. Expert after 10 endorsements. Progress that matters.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ROLES -->
+<section class="roles" id="roles">
+  <div class="role-item reveal">
+    <div class="role-kicker"></div>
+    <div class="role-title">Student</div>
+    <div class="role-desc">Post projects, browse listings, apply to teams, build your reputation, and earn badges. The core experience.</div>
+    <div class="role-tag">Most Users</div>
+  </div>
+  <div class="role-item reveal">
+    <div class="role-kicker"></div>
+    <div class="role-title">Instructor</div>
+    <div class="role-desc">Create course-tied projects, manage applications from enrolled students, set deadlines, and rate team members.</div>
+    <div class="role-tag" style="background:rgba(74,127,165,0.12);color:#7aaed0;">IUS Faculty</div>
+  </div>
+  <div class="role-item reveal">
+    <div class="role-kicker"></div>
+    <div class="role-title">Admin</div>
+    <div class="role-desc">Review reports, issue warnings, ban violators, and monitor platform activity to keep the community healthy.</div>
+    <div class="role-tag" style="background:rgba(192,57,43,0.12);color:#e07060;">Moderation</div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section reveal">
+  <div class="cta-title">
+    Ready to find your<br><em>dream team?</em>
+  </div>
+  <div class="cta-actions">
+    <a href="/auth/register" class="btn-12 btn-12-hero btn-12-gold"><span>Create Your Profile</span></a>
+    <a href="/projects-page" class="btn-12 btn-12-hero"><span>Explore Projects</span></a>
+  </div>
+</section>
+
+<footer>
+  <a href="/" class="footer-logo">
+    
+    Project<em>Buddy</em>
+  </a>
+  <p>© 2025 ProjectBuddy · International University of Sarajevo</p>
+  <div class="footer-links">
+    <a href="#">Privacy</a>
+    <a href="#">Terms</a>
+    <a href="#">Contact</a>
+  </div>
+</footer>
+
+<script>
+var obs=new IntersectionObserver(function(entries){
+  entries.forEach(function(e){if(e.isIntersecting)e.target.classList.add('visible');});
+},{threshold:0.1});
+document.querySelectorAll('.reveal').forEach(function(el){obs.observe(el);});
+
+const themeToggle = document.getElementById('themeToggle');
+const htmlElement = document.documentElement;
+const themeIcon = document.querySelector('.theme-icon');
+
+// Load saved theme preference
+const savedTheme = localStorage.getItem('theme') || 'dark';
+if (savedTheme === 'light') {
+  htmlElement.classList.add('light-mode');
+}
+themeIcon.textContent = savedTheme === 'light' ? 'Dark' : 'Light';
+
+// Toggle theme
+themeToggle.addEventListener('click', function() {
+  htmlElement.classList.toggle('light-mode');
+  const isLight = htmlElement.classList.contains('light-mode');
+  localStorage.setItem('theme', isLight ? 'light' : 'dark');
+  themeIcon.textContent = isLight ? 'Dark' : 'Light';
+});
+</script>
+</body>
+</html>

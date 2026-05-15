@@ -1,0 +1,28 @@
+/* ADMIN SIDEBAR (shared — include in each admin page <style>) */
+.sidebar{width:220px;flex-shrink:0;background:var(--bg2);border-right:1px solid var(--border);
+  display:flex;flex-direction:column;padding:24px 14px;position:fixed;top:0;left:0;bottom:0;z-index:50;
+  overflow:hidden;}
+.sidebar-inner{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;overflow-y:auto;overflow-x:hidden;
+  scrollbar-gutter:stable;padding-bottom:8px;}
+.sidebar-inner::-webkit-scrollbar{width:4px;}
+.sidebar-inner::-webkit-scrollbar-thumb{background:rgba(255,215,0,0.2);border-radius:99px;}
+.logo{display:flex;align-items:center;gap:8px;text-decoration:none;color:var(--text);
+  font-family:'DM Serif Display',serif;font-size:1.05rem;margin-bottom:24px;padding:0 8px;flex-shrink:0;}
+.logo em{font-style:italic;color:var(--accent);}
+.nav-section{font-family:'DM Mono',monospace;font-size:0.6rem;letter-spacing:0.18em;text-transform:uppercase;
+  color:var(--text);padding:0 10px;margin-bottom:6px;margin-top:16px;flex-shrink:0;}
+.nav-section:first-of-type{margin-top:0;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:var(--r);
+  text-decoration:none;color:var(--soft);font-size:0.84rem;font-weight:500;
+  transition:background-color 0.18s,color 0.18s,border-color 0.18s;margin-bottom:1px;border:1px solid transparent;flex-shrink:0;}
+.nav-item:hover{background:rgba(255,255,255,0.04);color:var(--text);}
+.nav-item.active{background:var(--accent-dim);color:var(--accent);border-color:rgba(255,215,0,0.2);}
+.nav-badge{background:var(--red);color:#fff;font-family:'DM Mono',monospace;font-size:0.58rem;
+  padding:1px 5px;border-radius:99px;margin-left:auto;flex-shrink:0;}
+.sidebar-footer{margin-top:0;padding:12px 6px 0;flex-shrink:0;border-top:1px solid var(--border);background:var(--bg2);}
+.user-card{display:flex;align-items:center;gap:10px;padding:11px;background:var(--card);border:1px solid var(--border);border-radius:var(--r);}
+.user-av{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#8a6530);
+  color:#0d0c0b;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:0.7rem;flex-shrink:0;overflow:hidden;}
+.user-name{font-size:0.82rem;font-weight:500;color:var(--text);}
+.user-role{font-size:0.7rem;color:var(--muted);}
+.admin-main-offset{margin-left:220px;}

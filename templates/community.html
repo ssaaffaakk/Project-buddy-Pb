@@ -1,0 +1,1011 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="csrf-token" content="{{ csrf_token() }}">
+<link rel="icon" href="/static/images/logo.svg" type="image/svg+xml">
+<title>ProjectBuddy — Community</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+html{scrollbar-gutter:stable;overflow-y:scroll;}
+:root{
+  color-scheme:dark;
+  --bg:#080808;--bg2:#0f0e0d;--bg3:#181614;
+  --card:rgba(255,255,255,0.025);--card-h:rgba(255,255,255,0.045);
+  --accent:#FFD700;--accent-dim:rgba(255,215,0,0.1);--accent-glow:rgba(255,215,0,0.18);
+  --admin:#e05252;--admin-dim:rgba(224,82,82,0.08);--admin-border:rgba(224,82,82,0.2);
+  --text:#ede8df;--muted:#6e6a64;--soft:#c8c2ba;
+  --border:rgba(255,255,255,0.055);--border-gold:rgba(255,215,0,0.12);--r:10px;
+}
+html.light-mode{color-scheme:light;--bg:#ffffff;--bg2:#f5f5f5;--bg3:#eeeeee;--card:rgba(0,0,0,0.03);--card-h:rgba(0,0,0,0.06);--accent:#d4a817;--accent-dim:rgba(212,168,23,0.12);--accent-glow:rgba(212,168,23,0.18);--red:#c0392b;--blue:#4a7fa5;--green:#5a8a6a;--text:#1a1a1a;--muted:#6b6b6b;--soft:#505050;--border:rgba(0,0,0,0.1);--border-gold:rgba(212,168,23,0.12);}
+html.light-mode input[type=text],html.light-mode input[type=email],html.light-mode input[type=password],html.light-mode input[type=date],html.light-mode input[type=number],html.light-mode input[type=search],html.light-mode input[type=url],html.light-mode textarea,html.light-mode select{background:rgba(0,0,0,0.04);}
+::-webkit-scrollbar{width:6px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:rgba(255,215,0,0.15);border-radius:99px;}
+::-webkit-scrollbar-thumb:hover{background:rgba(255,215,0,0.3);}
+::selection{background:rgba(255,215,0,0.18);}
+body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;display:flex;min-height:100vh;position:relative;}
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");pointer-events:none;z-index:0;opacity:0.6;}
+#cursor-glow{position:fixed;width:700px;height:700px;border-radius:50%;background:radial-gradient(circle,rgba(255,215,0,0.035) 0%,transparent 70%);pointer-events:none;transform:translate(-50%,-50%);z-index:1;}
+
+/* ── SIDEBAR ── */
+/* SIDEBAR */
+.sidebar{width:220px;flex-shrink:0;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:28px 14px;position:fixed;top:0;left:0;bottom:0;z-index:50;overflow:hidden;}
+.sidebar::before{content:'';position:absolute;top:0;left:0;right:0;height:200px;background:radial-gradient(ellipse at 50% 0%,rgba(255,215,0,0.06) 0%,transparent 70%);pointer-events:none;}
+.sidebar::after{content:'';position:absolute;bottom:0;left:0;right:0;height:120px;background:radial-gradient(ellipse at 30% 100%,rgba(255,215,0,0.04) 0%,transparent 70%);pointer-events:none;}
+.logo{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--text);font-family:'DM Serif Display',serif;font-size:1.08rem;font-weight:400;margin-bottom:36px;padding:0 8px;position:relative;z-index:1;}
+.logo-icon{width:28px;height:28px;border-radius:6px;object-fit:contain;flex-shrink:0;}
+.logo span{color:var(--accent);font-style:italic;}
+.nav-mark{display:none;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:var(--r);text-decoration:none;color:var(--muted);font-size:0.83rem;font-weight:500;transition:all 0.2s ease-out;margin-bottom:1px;border-left:2px solid transparent;position:relative;z-index:1;letter-spacing:0.01em;}
+.nav-item:hover{background:rgba(255,255,255,0.03);color:var(--soft);border-left-color:rgba(255,215,0,0.3);}
+.nav-item.active{background:rgba(255,215,0,0.06);color:var(--accent);border-left-color:var(--accent);}
+.sidebar-footer{margin-top:auto;padding:0 4px;position:relative;z-index:1;}
+.user-card{display:flex;align-items:center;gap:10px;padding:12px;background:rgba(255,255,255,0.025);border:1px solid var(--border);border-top-color:rgba(255,255,255,0.09);border-radius:var(--r);}
+.user-av{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#8a6530);color:var(--bg);display:flex;align-items:center;justify-content:center;font-size:0.72rem;font-weight:500;flex-shrink:0;}
+.user-name{font-size:0.83rem;font-weight:500;color:var(--text);}
+.user-role{font-size:0.68rem;color:var(--muted);font-family:'DM Mono',monospace;}
+
+/* ── TOAST ── */
+#toast-container{position:fixed;top:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none;}
+.toast{display:flex;align-items:flex-start;gap:12px;padding:13px 16px;border-radius:var(--r);min-width:300px;
+  max-width:400px;pointer-events:all;backdrop-filter:blur(20px);border:1px solid transparent;
+  box-shadow:0 8px 32px rgba(0,0,0,0.5);animation:toastIn 0.35s cubic-bezier(0.34,1.56,0.64,1) both;
+  position:relative;overflow:hidden;}
+.toast.success{background:rgba(15,12,8,0.95);border-color:rgba(255,215,0,0.3);}
+.toast.error{background:rgba(20,5,5,0.95);border-color:rgba(224,82,82,0.35);}
+.toast-icon{font-family:'DM Serif Display',serif;font-style:italic;font-size:1rem;flex-shrink:0;margin-top:1px;}
+.toast.success .toast-icon{color:var(--accent);}.toast.error .toast-icon{color:#e07060;}
+.toast-body{flex:1;}
+.toast-title{font-family:'DM Serif Display',serif;font-size:0.85rem;margin-bottom:2px;color:var(--text);}
+.toast-msg{font-size:0.78rem;color:var(--soft);line-height:1.5;}
+.toast-close{background:none;border:none;color:var(--muted);cursor:pointer;font-size:0.9rem;padding:0;flex-shrink:0;}
+.toast-progress{position:absolute;bottom:0;left:0;height:2px;width:100%;transform-origin:left;animation:toastProgress 4s linear forwards;}
+.toast.success .toast-progress{background:var(--accent);}
+.toast.error .toast-progress{background:#e07060;}
+@keyframes toastIn{from{opacity:0;transform:translateX(30px);}to{opacity:1;transform:translateX(0);}}
+@keyframes toastOut{from{opacity:1;max-height:120px;}to{opacity:0;max-height:0;padding:0;margin:0;}}
+@keyframes toastProgress{from{transform:scaleX(1);}to{transform:scaleX(0);}}
+
+/* ── MAIN ── */
+.main{margin-left:220px;flex:1;padding:40px 48px;max-width:calc(220px + 760px + 96px);}
+
+/* ── PAGE HEADER ── */
+.page-header{display:flex;align-items:flex-end;justify-content:space-between;
+  margin-bottom:36px;padding-bottom:22px;border-bottom:1px solid var(--border);}
+.page-title-wrap .breadcrumb{font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.1em;
+  text-transform:uppercase;color:var(--muted);margin-bottom:8px;}
+.page-title{font-family:'DM Serif Display',serif;font-size:2rem;font-weight:400;letter-spacing:-0.02em;line-height:1;}
+.page-sub{font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--soft);letter-spacing:0.04em;margin-top:6px;}
+
+/* ── COMPOSER ── */
+.composer-wrap{margin-bottom:32px;}
+.composer-trigger{display:flex;align-items:center;gap:12px;padding:16px 20px;background:var(--card);
+  border:1px solid var(--border);border-radius:var(--r);cursor:pointer;transition:border-color 0.18s,background 0.18s;}
+.composer-trigger:hover{border-color:rgba(255,215,0,0.2);background:var(--card-h);}
+.composer-av{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#8a6530);
+  color:var(--bg);display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;
+  font-size:0.72rem;flex-shrink:0;overflow:hidden;}
+.composer-av img{width:100%;height:100%;object-fit:cover;}
+.composer-placeholder{flex:1;font-size:0.9rem;color:var(--muted);}
+.btn-share{padding:8px 18px;background:linear-gradient(135deg,#FFD700 0%,#C8960C 100%);border:none;border-radius:var(--r);
+  color:var(--bg);font-family:'DM Mono',monospace;font-size:0.7rem;font-weight:500;letter-spacing:0.08em;
+  text-transform:uppercase;cursor:pointer;transition:background 0.18s,box-shadow 0.18s;}
+.btn-share:hover{background:#daa520;box-shadow:0 0 0 3px rgba(255,215,0,0.15);}
+
+.composer-panel{display:none;margin-top:8px;background:var(--bg2);border:1px solid var(--border);
+  border-radius:var(--r);overflow:hidden;}
+.composer-panel.open{display:block;animation:fadeDown 0.22s ease both;}
+@keyframes fadeDown{from{opacity:0;transform:translateY(-8px);}to{opacity:1;transform:translateY(0);}}
+.composer-body{padding:22px 24px;}
+.composer-title-input{width:100%;padding:10px 14px;background:rgba(255,255,255,0.04);
+  border:1px solid var(--border);border-radius:var(--r);color:var(--text);font-family:'DM Serif Display',serif;
+  font-size:1rem;outline:none;transition:border-color 0.18s,box-shadow 0.18s;margin-bottom:10px;}
+.composer-title-input::placeholder{color:var(--muted);}
+.composer-title-input:focus{border-color:rgba(255,215,0,0.35);box-shadow:0 0 0 3px rgba(255,215,0,0.07);}
+.composer-textarea{width:100%;padding:12px 14px;background:rgba(255,255,255,0.04);
+  border:1px solid var(--border);border-radius:var(--r);color:var(--text);font-family:'Outfit',sans-serif;
+  font-size:0.9rem;line-height:1.7;outline:none;resize:vertical;min-height:110px;
+  transition:border-color 0.18s,box-shadow 0.18s;}
+.composer-textarea::placeholder{color:var(--muted);}
+.composer-textarea:focus{border-color:rgba(255,215,0,0.35);box-shadow:0 0 0 3px rgba(255,215,0,0.07);}
+.composer-footer{display:flex;align-items:center;gap:10px;padding:14px 24px;
+  border-top:1px solid var(--border);background:rgba(255,255,255,0.015);}
+.upload-label{display:flex;align-items:center;gap:7px;padding:8px 14px;
+  background:transparent;border:1px solid var(--border);border-radius:var(--r);
+  color:var(--soft);font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.05em;
+  text-transform:uppercase;cursor:pointer;transition:all 0.18s;}
+.upload-label:hover{border-color:rgba(255,215,0,0.3);color:var(--text);}
+.upload-label svg{opacity:0.7;}
+#composer-file{display:none;}
+.upload-preview{display:none;align-items:center;gap:8px;font-family:'DM Mono',monospace;
+  font-size:0.7rem;color:var(--soft);letter-spacing:0.03em;}
+.upload-preview.visible{display:flex;}
+.upload-preview-thumb{width:32px;height:32px;border-radius:4px;object-fit:cover;border:1px solid var(--border);}
+.btn-remove-file{background:none;border:none;color:var(--muted);cursor:pointer;font-size:0.9rem;padding:0;
+  transition:color 0.18s;}
+.btn-remove-file:hover{color:#e07060;}
+.composer-footer .spacer{flex:1;}
+.btn-post{padding:9px 22px;background:linear-gradient(135deg,#FFD700 0%,#C8960C 100%);border:none;border-radius:var(--r);
+  color:var(--bg);font-family:'DM Mono',monospace;font-size:0.7rem;font-weight:500;letter-spacing:0.08em;
+  text-transform:uppercase;cursor:pointer;transition:background 0.18s;}
+.btn-post:hover{background:#daa520;}
+.btn-cancel-compose{padding:9px 14px;background:transparent;border:1px solid var(--border);border-radius:var(--r);
+  color:var(--soft);font-family:'DM Mono',monospace;font-size:0.7rem;letter-spacing:0.06em;
+  text-transform:uppercase;cursor:pointer;transition:all 0.18s;}
+.btn-cancel-compose:hover{border-color:rgba(255,255,255,0.15);color:var(--text);}
+
+/* ── FEED ── */
+.feed{display:flex;flex-direction:column;gap:16px;}
+.empty-feed{text-align:center;padding:80px 20px;}
+.empty-feed .ef-icon{font-family:'DM Serif Display',serif;font-style:italic;font-size:3rem;
+  color:var(--muted);display:block;margin-bottom:16px;}
+.empty-feed h3{font-family:'DM Serif Display',serif;font-size:1.3rem;font-weight:400;margin-bottom:8px;}
+.empty-feed p{font-size:0.84rem;color:var(--soft);line-height:1.7;}
+
+/* ── POST CARD ── */
+.post-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);
+  overflow:hidden;transition:border-color 0.2s;}
+.post-card:hover{border-color:rgba(255,255,255,0.10);}
+
+.post-header{display:flex;align-items:flex-start;gap:12px;padding:18px 20px 0;}
+.post-av{width:40px;height:40px;border-radius:50%;flex-shrink:0;overflow:hidden;
+  background:linear-gradient(135deg,var(--accent),#8a6530);display:flex;align-items:center;
+  justify-content:center;font-family:'DM Mono',monospace;font-size:0.78rem;color:var(--bg);}
+.post-av img{width:100%;height:100%;object-fit:cover;}
+.post-meta{flex:1;min-width:0;}
+.post-author-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.post-author-name{font-family:'Outfit',sans-serif;font-size:0.9rem;font-weight:600;color:var(--text);}
+.post-author-name.is-admin{color:var(--admin);}
+.admin-badge{display:inline-flex;align-items:center;padding:1px 6px;border-radius:3px;
+  font-family:'DM Mono',monospace;font-size:0.58rem;letter-spacing:0.08em;text-transform:uppercase;
+  background:var(--admin-dim);color:var(--admin);border:1px solid var(--admin-border);font-weight:500;}
+.post-time{font-family:'DM Mono',monospace;font-size:0.65rem;color:var(--muted);letter-spacing:0.03em;margin-top:2px;}
+.post-header-actions{display:flex;align-items:center;gap:6px;margin-left:auto;flex-shrink:0;}
+.btn-del-post{background:none;border:none;color:var(--muted);cursor:pointer;padding:4px 6px;
+  border-radius:4px;font-size:0.72rem;font-family:'DM Mono',monospace;letter-spacing:0.04em;
+  text-transform:uppercase;transition:all 0.18s;}
+.btn-del-post:hover{color:#e07060;background:rgba(224,82,82,0.08);}
+
+.post-content{padding:14px 20px 0;}
+.post-title{font-family:'DM Serif Display',serif;font-size:1.2rem;font-weight:400;
+  letter-spacing:-0.01em;margin-bottom:10px;line-height:1.35;color:var(--text);}
+.post-body{font-size:0.9rem;line-height:1.75;color:var(--soft);word-break:break-word;white-space:pre-wrap;}
+.post-body .mention{color:var(--accent);font-weight:500;cursor:default;}
+
+.post-media{margin:16px 20px 0;border-radius:var(--r);overflow:hidden;border:1px solid var(--border);}
+.post-media img{width:100%;max-height:480px;object-fit:cover;display:block;transition:transform 0.3s;}
+.post-media img:hover{transform:scale(1.01);}
+.post-media video{width:100%;max-height:480px;display:block;background:#000;}
+
+/* ── POST ACTIONS ── */
+.post-actions{display:flex;align-items:center;gap:4px;padding:14px 20px 16px;}
+.btn-like{display:flex;align-items:center;gap:7px;padding:7px 14px;background:transparent;
+  border:1px solid var(--border);border-radius:20px;color:var(--soft);font-family:'DM Mono',monospace;
+  font-size:0.72rem;letter-spacing:0.04em;cursor:pointer;transition:all 0.18s;user-select:none;}
+.btn-like:hover{border-color:rgba(224,82,82,0.35);color:#e07060;}
+.btn-like.liked{background:rgba(224,82,82,0.1);border-color:rgba(224,82,82,0.35);color:#e07060;}
+.btn-like .heart{font-size:0.9rem;transition:transform 0.25s cubic-bezier(0.34,1.56,0.64,1);}
+.btn-like.liked .heart,.btn-like:hover .heart{transform:scale(1.25);}
+.btn-like .like-count{font-weight:500;}
+.btn-comments-toggle{display:flex;align-items:center;gap:7px;padding:7px 14px;background:transparent;
+  border:1px solid var(--border);border-radius:20px;color:var(--soft);font-family:'DM Mono',monospace;
+  font-size:0.72rem;letter-spacing:0.04em;cursor:pointer;transition:all 0.18s;user-select:none;}
+.btn-comments-toggle:hover{border-color:rgba(255,255,255,0.15);color:var(--text);}
+.btn-comments-toggle.open{background:rgba(255,255,255,0.04);border-color:rgba(255,255,255,0.12);color:var(--text);}
+
+/* ── COMMENTS SECTION ── */
+.comments-section{display:none;border-top:1px solid var(--border);}
+.comments-section.open{display:block;animation:fadeDown 0.2s ease both;}
+.comments-list{padding:0;}
+
+.comment-item{display:flex;gap:12px;padding:16px 20px;border-bottom:1px solid rgba(255,255,255,0.03);
+  transition:background 0.15s;}
+.comment-item:hover{background:rgba(255,255,255,0.012);}
+.comment-item:last-child{border-bottom:none;}
+.comment-av{width:30px;height:30px;border-radius:50%;flex-shrink:0;overflow:hidden;
+  background:linear-gradient(135deg,var(--accent),#8a6530);display:flex;align-items:center;
+  justify-content:center;font-family:'DM Mono',monospace;font-size:0.62rem;color:var(--bg);margin-top:1px;}
+.comment-av img{width:100%;height:100%;object-fit:cover;}
+.comment-right{flex:1;min-width:0;}
+.comment-header{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:5px;}
+.comment-author{font-family:'Outfit',sans-serif;font-size:0.82rem;font-weight:600;color:var(--text);}
+.comment-author.is-admin{color:var(--admin);}
+.comment-time{font-family:'DM Mono',monospace;font-size:0.62rem;color:var(--muted);letter-spacing:0.02em;}
+.comment-actions{display:flex;align-items:center;gap:6px;margin-left:auto;}
+.btn-reply,.btn-del-comment{background:none;border:none;cursor:pointer;padding:2px 6px;border-radius:4px;
+  font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.04em;text-transform:uppercase;
+  transition:all 0.18s;color:var(--muted);}
+.btn-reply:hover{color:var(--accent);background:var(--accent-dim);}
+.btn-del-comment:hover{color:#e07060;background:rgba(224,82,82,0.08);}
+.comment-body{font-size:0.87rem;line-height:1.65;color:var(--soft);word-break:break-word;white-space:pre-wrap;}
+.comment-body .mention{color:var(--accent);font-weight:500;}
+
+/* ── NEW COMMENT BOX ── */
+.new-comment-wrap{display:flex;gap:10px;padding:14px 20px 16px;border-top:1px solid var(--border);
+  background:rgba(255,255,255,0.01);}
+.new-comment-av{width:30px;height:30px;border-radius:50%;flex-shrink:0;overflow:hidden;
+  background:linear-gradient(135deg,var(--accent),#8a6530);display:flex;align-items:center;
+  justify-content:center;font-family:'DM Mono',monospace;font-size:0.62rem;color:var(--bg);margin-top:2px;}
+.new-comment-av img{width:100%;height:100%;object-fit:cover;}
+.new-comment-right{flex:1;display:flex;flex-direction:column;gap:8px;position:relative;}
+.new-comment-textarea{width:100%;padding:10px 14px;background:rgba(255,255,255,0.04);
+  border:1px solid var(--border);border-radius:var(--r);color:var(--text);font-family:'Outfit',sans-serif;
+  font-size:0.86rem;line-height:1.6;outline:none;resize:none;min-height:40px;max-height:160px;
+  transition:border-color 0.18s,box-shadow 0.18s,min-height 0.2s;}
+.new-comment-textarea::placeholder{color:var(--muted);}
+.new-comment-textarea:focus{border-color:rgba(255,215,0,0.35);box-shadow:0 0 0 3px rgba(255,215,0,0.06);min-height:72px;}
+.new-comment-footer{display:flex;align-items:center;justify-content:flex-end;gap:8px;}
+.btn-post-comment{padding:7px 16px;background:linear-gradient(135deg,#FFD700 0%,#C8960C 100%);border:none;border-radius:var(--r);
+  color:var(--bg);font-family:'DM Mono',monospace;font-size:0.68rem;font-weight:500;letter-spacing:0.07em;
+  text-transform:uppercase;cursor:pointer;transition:background 0.18s;}
+.btn-post-comment:hover{background:#daa520;}
+.btn-post-comment:disabled{opacity:0.45;cursor:not-allowed;}
+
+/* ── MENTION DROPDOWN ── */
+.mention-dropdown{position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--bg2);
+  border:1px solid rgba(255,215,0,0.2);border-radius:var(--r);z-index:200;overflow:hidden;
+  box-shadow:0 8px 32px rgba(0,0,0,0.6);display:none;max-height:180px;overflow-y:auto;}
+.mention-dropdown.open{display:block;animation:fadeDown 0.15s ease both;}
+.mention-item{display:flex;align-items:center;gap:10px;padding:9px 14px;cursor:pointer;
+  transition:background 0.13s;}
+.mention-item:hover,.mention-item.focused{background:var(--accent-dim);}
+.mention-item-av{width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#8a6530);
+  color:var(--bg);display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;
+  font-size:0.55rem;flex-shrink:0;}
+.mention-item-name{font-size:0.82rem;color:var(--text);}
+.mention-item-role{font-family:'DM Mono',monospace;font-size:0.6rem;color:var(--muted);letter-spacing:0.04em;margin-left:auto;}
+.mention-item-role.admin-role{color:var(--admin);}
+
+/* ── UTIL ── */
+.divider{height:1px;background:var(--border);margin:4px 0;}
+/* FORM ELEMENTS */
+input[type=text],input[type=email],input[type=password],input[type=date],
+input[type=number],input[type=search],input[type=url],textarea,select{
+  width:100%;padding:11px 14px;background:rgba(255,255,255,0.04);
+  border:1px solid var(--border);border-radius:var(--r);
+  color:var(--text);font-family:'Outfit',sans-serif;font-size:0.88rem;
+  outline:none;transition:border-color 0.18s,box-shadow 0.18s;
+  appearance:none;-webkit-appearance:none;}
+input[type=text]:focus,input[type=email]:focus,input[type=password]:focus,
+input[type=date]:focus,input[type=number]:focus,input[type=search]:focus,
+input[type=url]:focus,textarea:focus,select:focus{
+  border-color:rgba(255,215,0,0.4);box-shadow:0 0 0 3px rgba(255,215,0,0.07);}
+::placeholder{color:var(--muted);opacity:1;}
+textarea{resize:vertical;min-height:100px;line-height:1.6;}
+select{
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236e6a64' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 12px center;padding-right:36px;}
+</style>
+<script>if(localStorage.getItem('theme')==='light')document.documentElement.classList.add('light-mode');document.addEventListener('DOMContentLoaded',function(){var t=document.getElementById('themeToggle');if(t)t.textContent=document.documentElement.classList.contains('light-mode')?'Dark':'Light';});</script>
+</head>
+<body>
+<div id="toast-container"></div>
+{% set _msgs = get_flashed_messages(with_categories=true) %}
+{% if _msgs %}<div id="flask-messages" data-messages="{{ _msgs | tojson }}"></div>{% endif %}
+
+<!-- ── SIDEBAR ─────────────────────────────────────────────────────────────── -->
+<aside class="sidebar">
+  <a href="/" class="logo">
+    
+    Project<span>Buddy</span>
+  </a>
+  <a href="/dashboard" class="nav-item"><span class="nav-mark">&#8212;</span> Dashboard</a>
+  <a href="/projects-page" class="nav-item"><span class="nav-mark">&#8212;</span> Browse Projects</a>
+  <a href="/community" class="nav-item active"><span class="nav-mark">&#8212;</span> Community</a>
+  <a href="/study-groups" class="nav-item"><span class="nav-mark">&#8212;</span> Study Groups</a>
+  <a href="/chatbot" class="nav-item"><span class="nav-mark">&#8212;</span> AI Assistant</a>
+  <a href="/post-project-page" class="nav-item"><span class="nav-mark">&#8212;</span> Post a Project</a>
+  <a href="/my-projects" class="nav-item"><span class="nav-mark">&#8212;</span> My Projects</a>
+  <a href="/profile" class="nav-item"><span class="nav-mark">&#8212;</span> My Profile</a>
+  <a href="/report-issue" class="nav-item"><span class="nav-mark">&#8212;</span> Report Issue</a>
+  <a href="#" id="themeToggle" class="nav-item" onclick="var h=document.documentElement;h.classList.toggle('light-mode');var l=h.classList.contains('light-mode');localStorage.setItem('theme',l?'light':'dark');this.textContent=l?'Dark':'Light';return false;"><span class="nav-mark">&#8212;</span> Light</a>
+  <a href="/auth/logout" class="nav-item"><span class="nav-mark">&#8212;</span> Log Out</a>
+  <div style="padding:0 6px;margin-bottom:6px;">
+    <button onclick="toggleNotifs()" id="notif-btn" style="width:100%;display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:var(--r);background:none;border:1px solid transparent;cursor:pointer;color:var(--soft);font-family:'Outfit',sans-serif;font-size:0.84rem;font-weight:500;transition:all 0.18s;">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      Notifications
+      <span id="notif-badge" style="display:none;background:#c0392b;color:#fff;border-radius:99px;font-size:0.65rem;font-family:'DM Mono',monospace;padding:1px 6px;margin-left:auto;">0</span>
+    </button>
+  </div>
+  <div class="sidebar-footer">
+    <div class="user-card">
+      <div class="user-av" style="overflow:hidden;">
+        {% if current_user.avatar_url %}
+          <img src="{{ current_user.avatar_url }}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;">
+        {% else %}{{ current_user.first_name[0] }}{{ current_user.last_name[0] }}{% endif %}
+      </div>
+      <div>
+        <div class="user-name">{{ current_user.first_name }} {{ current_user.last_name }}</div>
+        <div class="user-role">{{ current_user.department or 'IUS' }} &middot; {{ current_user.role.title() }}</div>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<!-- ── MAIN ──────────────────────────────────────────────────────────────── -->
+<main class="main">
+
+  <!-- PAGE HEADER -->
+  <div class="page-header">
+    <div class="page-title-wrap">
+      <div class="breadcrumb">ProjectBuddy / Community</div>
+      <div class="page-title">Community</div>
+      <div class="page-sub">Share what you learn — screenshots, videos, tips, breakthroughs.</div>
+    </div>
+  </div>
+
+  <!-- ── COMPOSER ── -->
+  <div class="composer-wrap">
+    <div class="composer-trigger" id="composerTrigger">
+      <div class="composer-av">
+        {% if user.avatar_url %}<img src="{{ user.avatar_url }}" alt="">
+        {% else %}{{ user.first_name[0] }}{{ user.last_name[0] }}{% endif %}
+      </div>
+      <span class="composer-placeholder">Share something with the community…</span>
+      <button class="btn-share" type="button" onclick="openComposer(event)">+ Share</button>
+    </div>
+
+    <div class="composer-panel" id="composerPanel">
+      <form method="POST" action="/community/new" enctype="multipart/form-data">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="composer-body">
+          <input class="composer-title-input" type="text" name="title"
+                 placeholder="Title (optional) — e.g. Finally understood recursion ✦">
+          <textarea class="composer-textarea" name="body" id="composerBody"
+                    placeholder="What did you learn? Share a tip, a screenshot moment, a video walkthrough… Use @Name to tag someone."
+                    required></textarea>
+        </div>
+        <div class="composer-footer">
+          <label class="upload-label" for="composer-file">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/>
+              <polyline points="21 15 16 10 5 21"/>
+            </svg>
+            Attach photo / video
+          </label>
+          <input type="file" id="composer-file" name="media" accept="image/*,video/*"
+                 onchange="previewComposerFile(this)">
+          <div class="upload-preview" id="uploadPreview">
+            <img id="uploadThumb" class="upload-preview-thumb" src="" alt="">
+            <span id="uploadName"></span>
+            <button type="button" class="btn-remove-file" onclick="removeComposerFile()" title="Remove">×</button>
+          </div>
+          <div class="spacer"></div>
+          <button type="button" class="btn-cancel-compose" onclick="closeComposer()">Cancel</button>
+          <button type="submit" class="btn-post">Post</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ── FEED ── -->
+  <div class="feed" id="feed">
+    {% if not posts %}
+    <div class="empty-feed">
+      <span class="ef-icon">✦</span>
+      <h3>Nothing here yet.</h3>
+      <p>Be the first to share something with the community.<br>
+         A screenshot of a bug fix, a video walkthrough, a tip — anything goes.</p>
+    </div>
+    {% endif %}
+
+    {% for post in posts %}
+    {% set handle = post.author.first_name + post.author.last_name %}
+    {% set is_admin_post = post.author.role == 'admin' %}
+    {% set can_del = (post.author_id == user.id or user.role == 'admin') %}
+
+    <article class="post-card" id="post-{{ post.id }}">
+
+      <!-- POST HEADER -->
+      <div class="post-header">
+        <div class="post-av">
+          {% if post.author.avatar_url %}
+            <img src="{{ post.author.avatar_url }}" alt="">
+          {% else %}
+            {{ post.author.first_name[0] }}{{ post.author.last_name[0] }}
+          {% endif %}
+        </div>
+        <div class="post-meta">
+          <div class="post-author-row">
+            <a href="/user/{{ post.author.id }}" style="text-decoration:none;">
+              <span class="post-author-name {% if is_admin_post %}is-admin{% endif %}">
+                {{ post.author.first_name }} {{ post.author.last_name }}
+              </span>
+            </a>
+            {% if is_admin_post %}<span class="admin-badge">Admin</span>{% endif %}
+          </div>
+          <div class="post-time" data-ts="{{ post.created_at.isoformat() }}">
+            {{ post.created_at.strftime('%b %d, %Y') }}
+          </div>
+        </div>
+        <div class="post-header-actions">
+          {% if can_del %}
+          <button class="btn-del-post" onclick="deletePost({{ post.id }})">Delete</button>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- POST CONTENT -->
+      <div class="post-content">
+        {% if post.title %}
+          <div class="post-title">{{ post.title }}</div>
+        {% endif %}
+        <div class="post-body" data-raw="{{ post.body | e }}"></div>
+      </div>
+
+      <!-- MEDIA -->
+      {% if post.media_url %}
+      <div class="post-media">
+        {% if post.media_type == 'image' %}
+          <img src="{{ post.media_url }}" alt="Post image" loading="lazy">
+        {% elif post.media_type == 'video' %}
+          <video controls preload="metadata">
+            <source src="{{ post.media_url }}">
+            Your browser does not support video.
+          </video>
+        {% endif %}
+      </div>
+      {% endif %}
+
+      <!-- ACTIONS -->
+      <div class="post-actions">
+        <button class="btn-like {% if post.id in liked_ids %}liked{% endif %}"
+                id="like-btn-{{ post.id }}"
+                onclick="toggleLike({{ post.id }})">
+          <span class="heart">♥</span>
+          <span class="like-count" id="like-count-{{ post.id }}">{{ post.likes | length }}</span>
+        </button>
+        <button class="btn-comments-toggle" id="ctoggle-{{ post.id }}"
+                onclick="toggleComments({{ post.id }})">
+          <span>💬</span>
+          <span id="comment-count-{{ post.id }}">{{ post.comments | length }}</span>
+          <span>{{ 'comment' if post.comments | length == 1 else 'comments' }}</span>
+        </button>
+      </div>
+
+      <!-- COMMENTS -->
+      <div class="comments-section" id="comments-{{ post.id }}">
+        <div class="comments-list" id="clist-{{ post.id }}">
+          {% for c in post.comments %}
+          {% set is_admin_c = c.author.role == 'admin' %}
+          {% set can_del_c = (c.author_id == user.id or user.role == 'admin') %}
+          <div class="comment-item" id="comment-{{ c.id }}">
+            <div class="comment-av">
+              {% if c.author.avatar_url %}<img src="{{ c.author.avatar_url }}" alt="">
+              {% else %}{{ c.author.first_name[0] }}{{ c.author.last_name[0] }}{% endif %}
+            </div>
+            <div class="comment-right">
+              <div class="comment-header">
+                <a href="/user/{{ c.author.id }}" style="text-decoration:none;">
+                  <span class="comment-author {% if is_admin_c %}is-admin{% endif %}">
+                    {{ c.author.first_name }} {{ c.author.last_name }}
+                  </span>
+                </a>
+                {% if is_admin_c %}<span class="admin-badge">Admin</span>{% endif %}
+                <span class="comment-time" data-ts="{{ c.created_at.isoformat() }}">
+                  {{ c.created_at.strftime('%b %d') }}
+                </span>
+                <div class="comment-actions">
+                  <button class="btn-reply"
+                    onclick="replyTo({{ post.id }},'{{ c.author.first_name }}{{ c.author.last_name }}')">
+                    Reply
+                  </button>
+                  {% if can_del_c %}
+                  <button class="btn-del-comment" onclick="deleteComment({{ c.id }}, {{ post.id }})">Del</button>
+                  {% endif %}
+                </div>
+              </div>
+              <div class="comment-body" data-raw="{{ c.body | e }}"></div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+
+        <!-- NEW COMMENT -->
+        <div class="new-comment-wrap">
+          <div class="new-comment-av">
+            {% if user.avatar_url %}<img src="{{ user.avatar_url }}" alt="">
+            {% else %}{{ user.first_name[0] }}{{ user.last_name[0] }}{% endif %}
+          </div>
+          <div class="new-comment-right">
+            <textarea class="new-comment-textarea" id="ctextarea-{{ post.id }}"
+                      placeholder="Write a comment… use @Name to mention someone"
+                      oninput="autoResize(this); handleMention(this, {{ post.id }})"
+                      onkeydown="handleCommentKey(event, {{ post.id }})"
+                      rows="1"></textarea>
+            <div class="mention-dropdown" id="mention-drop-{{ post.id }}"></div>
+            <div class="new-comment-footer" id="comment-footer-{{ post.id }}" style="display:none;">
+              <button class="btn-post-comment" onclick="postComment({{ post.id }})">
+                Post Comment
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </article>
+    {% endfor %}
+  </div>
+</main>
+
+<script>
+/* ── CSRF helper — reads Flask-WTF token from meta tag ──────────────────── */
+function _getCsrf(){
+  var m=document.querySelector('meta[name="csrf-token"]');
+  return m?m.getAttribute('content'):'';
+}
+/* Patch all fetch() POST calls to include the CSRF token header automatically */
+(function(){
+  var _origFetch=window.fetch;
+  window.fetch=function(url,opts){
+    opts=opts||{};
+    if(opts.method&&opts.method.toUpperCase()==='POST'){
+      opts.headers=Object.assign({'X-CSRFToken':_getCsrf()},opts.headers||{});
+    }
+    return _origFetch.call(this,url,opts);
+  };
+})();
+</script><script>
+// ── DATA FROM SERVER ─────────────────────────────────────────────────────────
+var CURRENT_USER = {
+  id:       {{ user.id }},
+  name:     "{{ user.first_name }} {{ user.last_name }}",
+  handle:   "{{ user.first_name }}{{ user.last_name }}",
+  initials: "{{ user.first_name[0] }}{{ user.last_name[0] }}",
+  role:     "{{ user.role }}",
+  avatar:   "{{ user.avatar_url or '' }}"
+};
+
+// ── RELATIVE TIMES ───────────────────────────────────────────────────────────
+function relTime(iso) {
+  var d    = new Date(iso);
+  var now  = new Date();
+  var diff = Math.floor((now - d) / 1000);
+  if (diff < 60)     return 'just now';
+  if (diff < 3600)   return Math.floor(diff / 60) + 'm ago';
+  if (diff < 86400)  return Math.floor(diff / 3600) + 'h ago';
+  if (diff < 604800) return Math.floor(diff / 86400) + 'd ago';
+  return d.toLocaleDateString('en-US', {month:'short', day:'numeric'});
+}
+document.querySelectorAll('[data-ts]').forEach(function(el) {
+  el.textContent = relTime(el.getAttribute('data-ts'));
+});
+
+// ── RENDER MENTIONS ──────────────────────────────────────────────────────────
+function parseMentions(text) {
+  var escaped = text
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  return escaped.replace(/@([\w]+)/g,
+    '<span class="mention">@$1</span>');
+}
+document.querySelectorAll('.post-body[data-raw], .comment-body[data-raw]').forEach(function(el) {
+  el.innerHTML = parseMentions(el.getAttribute('data-raw'));
+});
+
+// ── COMPOSER ─────────────────────────────────────────────────────────────────
+function openComposer(e) {
+  e.stopPropagation();
+  document.getElementById('composerPanel').classList.add('open');
+  document.getElementById('composerTrigger').style.display = 'none';
+  setTimeout(function(){ document.getElementById('composerBody').focus(); }, 100);
+}
+function closeComposer() {
+  document.getElementById('composerPanel').classList.remove('open');
+  document.getElementById('composerTrigger').style.display = 'flex';
+}
+document.getElementById('composerTrigger').addEventListener('click', function(e) {
+  if (e.target.classList.contains('btn-share')) return;
+  openComposer(e);
+});
+
+// ── COMPOSER FILE PREVIEW ────────────────────────────────────────────────────
+function previewComposerFile(input) {
+  var file    = input.files[0];
+  var preview = document.getElementById('uploadPreview');
+  var thumb   = document.getElementById('uploadThumb');
+  var nameEl  = document.getElementById('uploadName');
+  if (!file) { preview.classList.remove('visible'); return; }
+  nameEl.textContent = file.name.length > 28 ? file.name.slice(0,26)+'…' : file.name;
+  if (file.type.startsWith('image/')) {
+    var r = new FileReader();
+    r.onload = function(e) { thumb.src = e.target.result; thumb.style.display = 'block'; };
+    r.readAsDataURL(file);
+  } else {
+    thumb.style.display = 'none';
+  }
+  preview.classList.add('visible');
+}
+function removeComposerFile() {
+  document.getElementById('composer-file').value = '';
+  document.getElementById('uploadPreview').classList.remove('visible');
+}
+
+// ── AUTO-RESIZE TEXTAREA ─────────────────────────────────────────────────────
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 160) + 'px';
+}
+
+// ── TOGGLE COMMENTS ──────────────────────────────────────────────────────────
+function toggleComments(postId) {
+  var section = document.getElementById('comments-' + postId);
+  var btn     = document.getElementById('ctoggle-'  + postId);
+  if (section.classList.contains('open')) {
+    section.classList.remove('open');
+    section.style.display = 'none';
+    btn.classList.remove('open');
+  } else {
+    section.classList.add('open');
+    section.style.display = 'block';
+    btn.classList.add('open');
+    // show footer when section opens
+    var ta = document.getElementById('ctextarea-' + postId);
+    if (ta) ta.focus();
+  }
+}
+
+// ── SHOW COMMENT FOOTER ON FOCUS ─────────────────────────────────────────────
+document.querySelectorAll('.new-comment-textarea').forEach(function(ta) {
+  ta.addEventListener('focus', function() {
+    var postId = ta.id.replace('ctextarea-', '');
+    document.getElementById('comment-footer-' + postId).style.display = 'flex';
+  });
+});
+
+function handleCommentKey(e, postId) {
+  // Submit on Ctrl+Enter / Cmd+Enter
+  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+    e.preventDefault();
+    postComment(postId);
+  }
+  // Close mention dropdown on Escape
+  if (e.key === 'Escape') {
+    closeMentionDrop(postId);
+  }
+}
+
+// ── POST COMMENT ─────────────────────────────────────────────────────────────
+function postComment(postId) {
+  var ta   = document.getElementById('ctextarea-' + postId);
+  var body = ta.value.trim();
+  if (!body) return;
+
+  var btn = document.querySelector('#comments-' + postId + ' .btn-post-comment');
+  if (btn) btn.disabled = true;
+
+  fetch('/community/' + postId + '/comment', {
+    method:  'POST',
+    headers: {'Content-Type': 'application/json'},
+    body:    JSON.stringify({body: body})
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (data.error) { showToast(data.error, 'error'); return; }
+    ta.value = '';
+    ta.style.height = 'auto';
+    // Update count
+    var countEl = document.getElementById('comment-count-' + postId);
+    var n = parseInt(countEl.textContent || '0') + 1;
+    countEl.textContent = n;
+    // Update toggle label
+    var toggleBtn = document.getElementById('ctoggle-' + postId);
+    var spans = toggleBtn.querySelectorAll('span');
+    if (spans.length >= 3) spans[2].textContent = n === 1 ? 'comment' : 'comments';
+    // Render new comment
+    appendComment(postId, data);
+  })
+  .catch(function() { showToast('Something went wrong.', 'error'); })
+  .finally(function() { if (btn) btn.disabled = false; });
+}
+
+function appendComment(postId, d) {
+  var list = document.getElementById('clist-' + postId);
+  var div  = document.createElement('div');
+  div.className = 'comment-item';
+  div.id = 'comment-' + d.id;
+
+  var isAdmin  = d.author_role === 'admin';
+  var avHtml   = d.author_avatar
+    ? '<img src="' + d.author_avatar + '" alt="">'
+    : d.author_initials;
+  var nameClass = 'comment-author' + (isAdmin ? ' is-admin' : '');
+  var badge     = isAdmin ? '<span class="admin-badge">Admin</span>' : '';
+  var canDel    = d.can_delete ?
+    '<button class="btn-del-comment" onclick="deleteComment('+d.id+','+postId+')">Del</button>' : '';
+
+  div.innerHTML =
+    '<div class="comment-av">' + avHtml + '</div>' +
+    '<div class="comment-right">' +
+      '<div class="comment-header">' +
+        '<a href="/user/'+d.author_id+'" style="text-decoration:none;">' +
+          '<span class="' + nameClass + '">' + esc(d.author_name) + '</span>' +
+        '</a>' +
+        badge +
+        '<span class="comment-time">just now</span>' +
+        '<div class="comment-actions">' +
+          '<button class="btn-reply" onclick="replyTo('+postId+',\''+esc(d.author_handle)+'\')">Reply</button>' +
+          canDel +
+        '</div>' +
+      '</div>' +
+      '<div class="comment-body">' + parseMentions(d.body) + '</div>' +
+    '</div>';
+
+  list.appendChild(div);
+  div.scrollIntoView({behavior:'smooth', block:'nearest'});
+}
+
+// ── REPLY ─────────────────────────────────────────────────────────────────────
+function replyTo(postId, handle) {
+  var section = document.getElementById('comments-' + postId);
+  if (!section.classList.contains('open')) toggleComments(postId);
+  var ta = document.getElementById('ctextarea-' + postId);
+  var prefix = '@' + handle + ' ';
+  if (!ta.value.includes(prefix)) {
+    ta.value = prefix + ta.value;
+  }
+  ta.focus();
+  ta.selectionStart = ta.selectionEnd = ta.value.length;
+  autoResize(ta);
+  document.getElementById('comment-footer-' + postId).style.display = 'flex';
+}
+
+// ── @MENTION AUTOCOMPLETE ─────────────────────────────────────────────────────
+var _mentionTimer = null;
+var _mentionFocusIdx = -1;
+
+function handleMention(ta, postId) {
+  clearTimeout(_mentionTimer);
+  var drop = document.getElementById('mention-drop-' + postId);
+  var val  = ta.value;
+  var cur  = ta.selectionStart;
+  // Find @word under cursor
+  var before  = val.slice(0, cur);
+  var match   = before.match(/@([\w]*)$/);
+  if (!match) { closeMentionDrop(postId); return; }
+  var partial = match[1];
+  if (partial.length < 1) { closeMentionDrop(postId); return; }
+
+  _mentionTimer = setTimeout(function() {
+    fetch('/users/search?type=user&q=' + encodeURIComponent(partial))
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      var results = (data.results || []).slice(0, 6);
+      if (!results.length) { closeMentionDrop(postId); return; }
+      drop.innerHTML = '';
+      _mentionFocusIdx = -1;
+      results.forEach(function(u, i) {
+        var handle  = u.name.replace(/\s+/g,'');
+        var initial = u.name.slice(0,1);
+        var isAdm   = u.display && u.display.indexOf('admin') !== -1;
+        var item    = document.createElement('div');
+        item.className = 'mention-item';
+        item.dataset.handle = handle;
+        item.innerHTML =
+          '<div class="mention-item-av">' + initial + '</div>' +
+          '<span class="mention-item-name">' + esc(u.name) + '</span>' +
+          '<span class="mention-item-role' + (isAdm?' admin-role':'') + '">' +
+            esc(u.display.split('(')[1]||'').replace(')','') +
+          '</span>';
+        item.addEventListener('mousedown', function(e) {
+          e.preventDefault();
+          insertMention(ta, postId, handle);
+        });
+        drop.appendChild(item);
+      });
+      drop.classList.add('open');
+      drop.style.display = 'block';
+    })
+    .catch(function() { closeMentionDrop(postId); });
+  }, 200);
+}
+
+function closeMentionDrop(postId) {
+  var drop = document.getElementById('mention-drop-' + postId);
+  if (drop) { drop.classList.remove('open'); drop.style.display = 'none'; drop.innerHTML = ''; }
+  _mentionFocusIdx = -1;
+}
+
+function insertMention(ta, postId, handle) {
+  var val   = ta.value;
+  var cur   = ta.selectionStart;
+  var before = val.slice(0, cur);
+  var replaced = before.replace(/@([\w]*)$/, '@' + handle + ' ');
+  ta.value = replaced + val.slice(cur);
+  ta.focus();
+  ta.selectionStart = ta.selectionEnd = replaced.length;
+  closeMentionDrop(postId);
+  autoResize(ta);
+}
+
+// Arrow-key navigation in mention dropdown
+document.addEventListener('keydown', function(e) {
+  var openDrop = document.querySelector('.mention-dropdown.open');
+  if (!openDrop) return;
+  var items = openDrop.querySelectorAll('.mention-item');
+  if (!items.length) return;
+
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    _mentionFocusIdx = (_mentionFocusIdx + 1) % items.length;
+    items.forEach(function(it,i){ it.classList.toggle('focused', i === _mentionFocusIdx); });
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    _mentionFocusIdx = (_mentionFocusIdx - 1 + items.length) % items.length;
+    items.forEach(function(it,i){ it.classList.toggle('focused', i === _mentionFocusIdx); });
+  } else if (e.key === 'Enter' && _mentionFocusIdx >= 0) {
+    e.preventDefault();
+    var focused = items[_mentionFocusIdx];
+    if (!focused) return;
+    // find which textarea is active
+    var activeTA = document.activeElement;
+    if (!activeTA || !activeTA.classList.contains('new-comment-textarea')) return;
+    var postId = activeTA.id.replace('ctextarea-','');
+    insertMention(activeTA, postId, focused.dataset.handle);
+  }
+});
+
+// ── LIKE ─────────────────────────────────────────────────────────────────────
+function toggleLike(postId) {
+  var btn  = document.getElementById('like-btn-' + postId);
+  var cntEl = document.getElementById('like-count-' + postId);
+  btn.style.pointerEvents = 'none';
+  fetch('/community/' + postId + '/like', {method:'POST'})
+  .then(function(r) { return r.json(); })
+  .then(function(d) {
+    cntEl.textContent = d.count;
+    btn.classList.toggle('liked', d.liked);
+  })
+  .catch(function() { showToast('Could not update like.', 'error'); })
+  .finally(function() { btn.style.pointerEvents = ''; });
+}
+
+// ── DELETE POST ───────────────────────────────────────────────────────────────
+function deletePost(postId) {
+  if (!confirm('Delete this post? This cannot be undone.')) return;
+  fetch('/community/post/' + postId + '/delete', {method:'POST'})
+  .then(function(r) { return r.json(); })
+  .then(function(d) {
+    if (d.error) { showToast(d.error, 'error'); return; }
+    var card = document.getElementById('post-' + postId);
+    if (card) {
+      card.style.transition = 'opacity 0.3s, max-height 0.4s';
+      card.style.opacity = '0';
+      card.style.maxHeight = card.offsetHeight + 'px';
+      setTimeout(function() {
+        card.style.maxHeight = '0';
+        card.style.overflow  = 'hidden';
+        card.style.marginBottom = '0';
+        setTimeout(function() { card.remove(); }, 350);
+      }, 200);
+    }
+    showToast('Post deleted.', 'success');
+  })
+  .catch(function() { showToast('Could not delete post.', 'error'); });
+}
+
+// ── DELETE COMMENT ────────────────────────────────────────────────────────────
+function deleteComment(commentId, postId) {
+  if (!confirm('Delete this comment?')) return;
+  fetch('/community/comment/' + commentId + '/delete', {method:'POST'})
+  .then(function(r) { return r.json(); })
+  .then(function(d) {
+    if (d.error) { showToast(d.error, 'error'); return; }
+    var el = document.getElementById('comment-' + commentId);
+    if (el) { el.style.opacity = '0'; setTimeout(function(){ el.remove(); }, 200); }
+    var countEl = document.getElementById('comment-count-' + postId);
+    var n = Math.max(0, parseInt(countEl.textContent || '0') - 1);
+    countEl.textContent = n;
+    var toggleBtn = document.getElementById('ctoggle-' + postId);
+    var spans = toggleBtn.querySelectorAll('span');
+    if (spans.length >= 3) spans[2].textContent = n === 1 ? 'comment' : 'comments';
+    showToast('Comment removed.', 'success');
+  })
+  .catch(function() { showToast('Could not delete comment.', 'error'); });
+}
+
+// ── UTILS ─────────────────────────────────────────────────────────────────────
+function esc(str) {
+  return String(str)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── TOAST ─────────────────────────────────────────────────────────────────────
+(function(){
+  var ICONS  = {success:'✦', error:'!'};
+  var TITLES = {success:'Done', error:'Error'};
+  window.showToast = function(msg, type, dur) {
+    type = type || 'success'; dur = dur || 4000;
+    var c = document.getElementById('toast-container');
+    if (!c) return;
+    var t = document.createElement('div');
+    t.className = 'toast ' + type;
+    t.innerHTML =
+      '<div class="toast-icon">' + ICONS[type] + '</div>' +
+      '<div class="toast-body">' +
+        '<div class="toast-title">' + TITLES[type] + '</div>' +
+        '<div class="toast-msg">' + esc(msg) + '</div>' +
+      '</div>' +
+      '<button class="toast-close" onclick="dismissToast(this.parentElement)">×</button>' +
+      '<div class="toast-progress"></div>';
+    c.appendChild(t);
+    setTimeout(function(){ dismissToast(t); }, dur);
+  };
+  window.dismissToast = function(t) {
+    if (!t || t._d) return; t._d = true;
+    t.style.animation = 'toastOut 0.28s ease forwards';
+    setTimeout(function(){ if (t.parentElement) t.parentElement.removeChild(t); }, 280);
+  };
+  // Flask flash messages
+  document.addEventListener('DOMContentLoaded', function() {
+    var el = document.getElementById('flask-messages');
+    if (!el) return;
+    try {
+      JSON.parse(el.getAttribute('data-messages')).forEach(function(m) {
+        showToast(m[1], m[0] === 'error' ? 'error' : 'success');
+      });
+    } catch(e) {}
+  });
+})();
+</script>
+<div id="notif-panel" style="display:none;position:fixed;left:228px;bottom:80px;width:320px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);box-shadow:0 8px 32px rgba(0,0,0,0.6);z-index:200;overflow:hidden;">
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:1px solid var(--border);">
+    <span style="font-family:'DM Serif Display',serif;font-size:0.9rem;">Notifications</span>
+    <button onclick="markAllRead()" style="background:none;border:none;color:var(--muted);font-size:0.72rem;cursor:pointer;font-family:'DM Mono',monospace;">mark all read</button>
+  </div>
+  <div id="notif-list" style="max-height:320px;overflow-y:auto;"></div>
+</div>
+<script>
+function _esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#x27;');}
+function toggleNotifs(){
+  var p=document.getElementById('notif-panel');
+  p.style.display=p.style.display==='none'?'block':'none';
+  if(p.style.display==='block') fetchNotifs();
+}
+async function fetchNotifs(){
+  try{
+    var r=await fetch('/notifications/unread');
+    var d=await r.json();
+    var badge=document.getElementById('notif-badge');
+    var list=document.getElementById('notif-list');
+    if(d.count>0){badge.textContent=d.count;badge.style.display='inline';}
+    else{badge.style.display='none';}
+    if(!list)return;
+    if(d.notifications.length===0){
+      list.innerHTML='<div style="padding:20px;text-align:center;color:var(--muted);font-size:0.8rem;">No new notifications</div>';
+      return;
+    }
+    list.innerHTML=d.notifications.map(function(n){return(
+      '<a href="'+(n.link||'#')+'" onclick="readNotif('+n.id+')" style="display:block;padding:12px 14px;border-bottom:1px solid var(--border);text-decoration:none;color:var(--text);transition:background 0.15s;" onmouseover="this.style.background=\'rgba(255,255,255,0.04)\'" onmouseout="this.style.background=\'none\'">'+
+      '<div style="font-size:0.82rem;line-height:1.4;">'+n.message+'</div>'+
+      '<div style="font-size:0.7rem;color:var(--muted);margin-top:4px;font-family:\'DM Mono\',monospace;">'+n.time_ago+'</div>'+
+      '</a>'
+    );}).join('');
+  }catch(e){}
+}
+async function readNotif(id){
+  await fetch('/notifications/'+id+'/read',{method:'POST'});
+  fetchNotifs();
+}
+async function markAllRead(){
+  await fetch('/notifications/read-all',{method:'POST'});
+  fetchNotifs();
+}
+document.addEventListener('click',function(e){
+  var panel=document.getElementById('notif-panel');
+  var btn=document.getElementById('notif-btn');
+  if(panel&&btn&&!panel.contains(e.target)&&!btn.contains(e.target)){
+    panel.style.display='none';
+  }
+});
+setInterval(fetchNotifs,30000);
+fetchNotifs();
+</script>
+<div id="cursor-glow"></div>
+<script>var cg=document.getElementById('cursor-glow');document.addEventListener('mousemove',function(e){cg.style.left=e.clientX+'px';cg.style.top=e.clientY+'px';});</script>
+</body>
+</html>

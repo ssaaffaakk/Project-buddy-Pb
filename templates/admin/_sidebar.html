@@ -1,0 +1,34 @@
+{# admin_active: dashboard | analytics | support_chats | ai_chats | messages #}
+<aside class="sidebar">
+  <a href="{{ url_for('main.admin_dashboard') }}" class="logo">Project<em>Buddy</em></a>
+  <div class="sidebar-inner">
+    <nav class="sidebar-nav" aria-label="Admin navigation">
+      <div class="nav-section">Admin</div>
+      <a href="{{ url_for('main.admin_dashboard') }}" class="nav-item{% if admin_active == 'dashboard' %} active{% endif %}">Dashboard</a>
+      <a href="{{ url_for('main.admin_analytics') }}" class="nav-item{% if admin_active == 'analytics' %} active{% endif %}">Analytics
+        {% if admin_pending_reports|default(0) > 0 %}<span class="nav-badge">{{ admin_pending_reports }}</span>{% endif %}
+      </a>
+      <a href="{{ url_for('chat.admin_view_all') }}" class="nav-item{% if admin_active == 'support_chats' %} active{% endif %}">Support Chats
+        {% if admin_open_chat_count|default(0) > 0 %}<span class="nav-badge">{{ admin_open_chat_count }}</span>{% endif %}
+      </a>
+      <a href="{{ url_for('admin.ai_chat_logs') }}" class="nav-item{% if admin_active == 'ai_chats' %} active{% endif %}">AI Chat Logs</a>
+      <a href="{{ url_for('admin.admin_messages') }}" class="nav-item{% if admin_active == 'messages' %} active{% endif %}">Messages</a>
+      <div class="nav-section">Account</div>
+      <a href="#" id="themeToggle" class="nav-item" onclick="var h=document.documentElement;h.classList.toggle('light-mode');var l=h.classList.contains('light-mode');localStorage.setItem('theme',l?'light':'dark');this.textContent=l?'Dark':'Light';return false;">Light</a>
+      <a href="{{ url_for('auth.logout') }}" class="nav-item">Log Out</a>
+    </nav>
+  </div>
+  <div class="sidebar-footer">
+    <div class="user-card">
+      <div class="user-av">
+        {% if current_user.avatar_url %}
+          <img src="{{ current_user.avatar_url }}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;">
+        {% else %}{{ current_user.first_name[0] }}{{ current_user.last_name[0] }}{% endif %}
+      </div>
+      <div>
+        <div class="user-name">{{ current_user.first_name }} {{ current_user.last_name }}</div>
+        <div class="user-role">Administrator</div>
+      </div>
+    </div>
+  </div>
+</aside>

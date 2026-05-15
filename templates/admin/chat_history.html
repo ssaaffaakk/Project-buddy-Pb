@@ -1,0 +1,95 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="/static/images/logo.svg" type="image/svg+xml">
+<title>Admin - Support Chats</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+html{scrollbar-gutter:stable;overflow-y:scroll;}
+:root{
+  color-scheme:dark;--bg:#0d0c0b;--bg2:#141210;--bg3:#1c1915;--card:rgba(255,255,255,0.03);--card-h:rgba(255,255,255,0.055);--accent:#FFD700;--accent-dim:rgba(255,215,0,0.12);--red:#c0392b;--green:#5a8a6a;--text:#ede8df;--muted:#9a9490;--soft:#d4cec8;--border:rgba(255,255,255,0.06);--r:8px;}
+html.light-mode{color-scheme:light;--bg:#ffffff;--bg2:#f5f5f5;--bg3:#eeeeee;--card:rgba(0,0,0,0.03);--card-h:rgba(0,0,0,0.06);--accent:#d4a817;--accent-dim:rgba(212,168,23,0.12);--red:#c0392b;--green:#5a8a6a;--text:#1a1a1a;--muted:#6b6b6b;--soft:#505050;--border:rgba(0,0,0,0.1);}
+html.light-mode .nav-item:hover{background:rgba(0,0,0,0.04);}
+body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;display:flex;min-height:100vh;margin:0;}
+
+{% include 'admin/_sidebar_styles.html' %}
+
+.main{margin-left:220px;flex:1;padding:40px 48px;}
+
+.page-header{margin-bottom:32px;padding-bottom:24px;border-bottom:1px solid var(--border);}
+.page-title{font-family:'DM Serif Display',serif;font-size:1.5rem;margin-bottom:6px;}
+.page-sub{font-family:'DM Mono',monospace;font-size:0.7rem;letter-spacing:0.06em;color:var(--muted);text-transform:uppercase;}
+
+.chats-list{display:grid;gap:12px;}
+.chat-item{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:20px;cursor:pointer;transition:all 0.2s;text-decoration:none;display:block;}
+.chat-item:hover{background:var(--bg3);border-color:var(--accent);}
+
+.chat-item-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+.chat-subject{font-family:'DM Serif Display',serif;font-size:1rem;color:var(--accent);}
+.chat-status{font-family:'DM Mono',monospace;font-size:0.65rem;padding:4px 8px;border-radius:3px;text-transform:uppercase;}
+.chat-status.open{background:rgba(90,138,106,0.2);color:#5a8a6a;}
+.chat-status.closed{background:rgba(192,57,43,0.2);color:#e07060;}
+
+.chat-item-details{display:flex;justify-content:space-between;font-size:0.8rem;color:var(--muted);gap:16px;flex-wrap:wrap;}
+.chat-user{display:flex;align-items:center;gap:8px;}
+.chat-meta{display:flex;gap:16px;flex-wrap:wrap;}
+.chat-preview{margin-top:10px;font-size:0.82rem;color:var(--soft);line-height:1.55;}
+
+.empty-message{text-align:center;color:var(--muted);padding:60px 20px;}
+</style>
+<script>if(localStorage.getItem('theme')==='light')document.documentElement.classList.add('light-mode');document.addEventListener('DOMContentLoaded',function(){var t=document.getElementById('themeToggle');if(t)t.textContent=document.documentElement.classList.contains('light-mode')?'Dark':'Light';});</script>
+</head>
+<body>
+{% set admin_active = 'support_chats' %}
+{% include 'admin/_sidebar.html' %}
+
+
+<main class="main">
+  <div class="page-header">
+    <h1 class="page-title">Support Chats</h1>
+    <p class="page-sub">{{ open_chats }} open chats · {{ unassigned_chats }} unassigned</p>
+  </div>
+  
+  {% if chat_items %}
+  <div class="chats-list">
+    {% for item in chat_items %}
+    {% set chat = item.chat %}
+    <a href="{{ url_for('chat.admin_view_chat', chat_id=chat.id) }}" class="chat-item">
+      <div class="chat-item-header">
+        <div class="chat-subject">{{ chat.subject }}</div>
+        <span class="chat-status {% if chat.status == 'open' %}open{% else %}closed{% endif %}">{{ chat.status }}</span>
+      </div>
+      
+      <div class="chat-item-details">
+        <div class="chat-user">
+          <span>{{ chat.user.first_name }} {{ chat.user.last_name }}</span>
+        </div>
+        <div class="chat-meta">
+          <span>{{ item.message_count }} messages</span>
+          <span>{{ item.last_activity.strftime('%Y-%m-%d %H:%M') }}</span>
+          {% if chat.admin_id %}
+            <span style="color:var(--accent);">Assigned</span>
+          {% else %}
+            <span style="color:var(--muted);">Unassigned</span>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="chat-preview">
+        {{ item.last_message.message if item.last_message else 'No messages yet.' }}
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty-message">
+    <p>No chats yet</p>
+  </div>
+  {% endif %}
+</main>
+</body>
+</html>

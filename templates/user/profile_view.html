@@ -1,0 +1,518 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="csrf-token" content="{{ csrf_token() }}">
+<link rel="icon" href="/static/images/logo.svg" type="image/svg+xml">
+<title>{{ profile_user.first_name }} {{ profile_user.last_name }} — ProjectBuddy</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+html{scrollbar-gutter:stable;overflow-y:scroll;}
+:root{
+  color-scheme:dark;
+  --bg:#080808;--bg2:#0f0e0d;--bg3:#181614;
+  --card:rgba(255,255,255,0.025);--card-h:rgba(255,255,255,0.045);
+  --accent:#FFD700;--accent-dim:rgba(255,215,0,0.1);--accent-glow:rgba(255,215,0,0.18);
+  --red:#c0392b;--text:#ede8df;--muted:#6e6a64;--soft:#c8c2ba;
+  --border:rgba(255,255,255,0.055);--border-gold:rgba(255,215,0,0.12);--r:10px;
+}
+html.light-mode{color-scheme:light;--bg:#ffffff;--bg2:#f5f5f5;--bg3:#eeeeee;--card:rgba(0,0,0,0.03);--card-h:rgba(0,0,0,0.06);--accent:#d4a817;--accent-dim:rgba(212,168,23,0.12);--accent-glow:rgba(212,168,23,0.18);--red:#c0392b;--blue:#4a7fa5;--green:#5a8a6a;--text:#1a1a1a;--muted:#6b6b6b;--soft:#505050;--border:rgba(0,0,0,0.1);--border-gold:rgba(212,168,23,0.12);}
+html.light-mode input[type=text],html.light-mode input[type=email],html.light-mode input[type=password],html.light-mode input[type=date],html.light-mode input[type=number],html.light-mode input[type=search],html.light-mode input[type=url],html.light-mode textarea,html.light-mode select{background:rgba(0,0,0,0.04);}
+body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;display:flex;min-height:100vh;margin:0;position:relative;}
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");pointer-events:none;z-index:0;opacity:0.6;}
+#cursor-glow{position:fixed;width:700px;height:700px;border-radius:50%;background:radial-gradient(circle,rgba(255,215,0,0.035) 0%,transparent 70%);pointer-events:none;transform:translate(-50%,-50%);z-index:1;}
+
+/* SIDEBAR */
+.sidebar{width:220px;flex-shrink:0;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:28px 14px;position:fixed;top:0;left:0;bottom:0;z-index:50;overflow:hidden;}
+.sidebar::before{content:'';position:absolute;top:0;left:0;right:0;height:200px;background:radial-gradient(ellipse at 50% 0%,rgba(255,215,0,0.06) 0%,transparent 70%);pointer-events:none;}
+.sidebar::after{content:'';position:absolute;bottom:0;left:0;right:0;height:120px;background:radial-gradient(ellipse at 30% 100%,rgba(255,215,0,0.04) 0%,transparent 70%);pointer-events:none;}
+.logo{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--text);font-family:'DM Serif Display',serif;font-size:1.08rem;font-weight:400;margin-bottom:36px;padding:0 8px;position:relative;z-index:1;}
+.logo-icon{width:28px;height:28px;border-radius:6px;object-fit:contain;flex-shrink:0;}
+.logo span{color:var(--accent);font-style:italic;}
+.nav-mark{display:none;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:var(--r);text-decoration:none;color:var(--muted);font-size:0.83rem;font-weight:500;transition:all 0.2s ease-out;margin-bottom:1px;border-left:2px solid transparent;position:relative;z-index:1;letter-spacing:0.01em;}
+.nav-item:hover{background:rgba(255,255,255,0.03);color:var(--soft);border-left-color:rgba(255,215,0,0.3);}
+.nav-item.active{background:rgba(255,215,0,0.06);color:var(--accent);border-left-color:var(--accent);}
+.sidebar-footer{margin-top:auto;padding:0 4px;position:relative;z-index:1;}
+.user-card{display:flex;align-items:center;gap:10px;padding:12px;background:rgba(255,255,255,0.025);border:1px solid var(--border);border-top-color:rgba(255,255,255,0.09);border-radius:var(--r);}
+.user-av{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#8a6530);color:var(--bg);display:flex;align-items:center;justify-content:center;font-size:0.72rem;font-weight:500;flex-shrink:0;}
+.user-name{font-size:0.83rem;font-weight:500;color:var(--text);}
+.user-role{font-size:0.68rem;color:var(--muted);font-family:'DM Mono',monospace;}
+
+/* FORM ELEMENTS */
+input[type=text],input[type=email],input[type=password],input[type=date],
+input[type=number],input[type=search],input[type=url],textarea,select{
+  width:100%;padding:11px 14px;background:rgba(255,255,255,0.04);
+  border:1px solid var(--border);border-radius:var(--r);
+  color:var(--text);font-family:'Outfit',sans-serif;font-size:0.88rem;
+  outline:none;transition:border-color 0.18s,box-shadow 0.18s;
+  appearance:none;-webkit-appearance:none;}
+input[type=text]:focus,input[type=email]:focus,input[type=password]:focus,
+input[type=date]:focus,input[type=number]:focus,input[type=search]:focus,
+input[type=url]:focus,textarea:focus,select:focus{
+  border-color:rgba(255,215,0,0.4);box-shadow:0 0 0 3px rgba(255,215,0,0.07);}
+::placeholder{color:var(--muted);opacity:1;}
+textarea{resize:vertical;min-height:100px;line-height:1.6;}
+select{
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236e6a64' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 12px center;padding-right:36px;}
+/* MAIN */
+.main{margin-left:220px;flex:1;padding:40px;position:relative;z-index:2;}
+
+.back-link{display:inline-flex;align-items:center;gap:6px;color:var(--accent);text-decoration:none;
+  font-size:0.85rem;font-weight:500;margin-bottom:24px;transition:all 0.2s;}
+.back-link:hover{gap:10px;}
+
+/* PROFILE HEADER */
+.profile-header{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:24px;margin-bottom:32px;display:flex;gap:24px;align-items:start;}
+
+.profile-avatar{width:80px;height:80px;border-radius:8px;background:linear-gradient(135deg,var(--accent),#8a6530);
+  display:flex;align-items:center;justify-content:center;font-size:2rem;font-weight:600;color:var(--bg);flex-shrink:0;}
+
+.profile-info{flex:1;}
+.profile-name{font-family:'DM Serif Display',serif;font-size:1.4rem;font-weight:400;margin-bottom:4px;}
+.profile-role{font-family:'DM Mono',monospace;font-size:0.7rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);margin-bottom:12px;}
+.profile-bio{font-size:0.85rem;color:var(--soft);line-height:1.6;margin-bottom:16px;}
+
+.profile-stats{display:flex;gap:24px;margin:16px 0;}
+.stat-item{display:flex;flex-direction:column;gap:4px;}
+.stat-label{font-family:'DM Mono',monospace;font-size:0.65rem;letter-spacing:0.06em;color:var(--muted);text-transform:uppercase;}
+.stat-value{font-family:'DM Serif Display',serif;font-size:1.1rem;font-weight:600;color:var(--accent);}
+
+.profile-actions{display:flex;gap:8px;}
+.btn-primary{padding:10px 16px;background:linear-gradient(135deg,#FFD700 0%,#C8960C 100%);color:#080808;border:none;border-radius:var(--r);
+  font-family:'DM Mono',monospace;font-size:0.7rem;font-weight:600;text-transform:uppercase;cursor:pointer;transition:all 0.2s;}
+.btn-primary:hover{box-shadow:0 0 0 1px rgba(255,215,0,0.5),0 4px 24px rgba(255,215,0,0.2);transform:translateY(-1px);}
+.btn-secondary{padding:10px 16px;background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:var(--r);
+  font-family:'DM Mono',monospace;font-size:0.7rem;font-weight:600;text-transform:uppercase;cursor:pointer;transition:all 0.2s;}
+.btn-secondary:hover{background:var(--card-h);}
+
+/* TABS */
+.tabs{display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:24px;}
+.tab-btn{padding:12px 16px;background:none;border:none;font-family:'DM Mono',monospace;font-size:0.75rem;
+  font-weight:600;text-transform:uppercase;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;
+  transition:all 0.2s;letter-spacing:0.05em;}
+.tab-btn:hover{color:var(--text);}
+.tab-btn.active{color:var(--accent);border-bottom-color:var(--accent);}
+
+.tab-content{display:none;}
+.tab-content.active{display:block;}
+
+/* REVIEWS */
+.reviews-grid{display:flex;flex-direction:column;gap:12px;}
+.review-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:16px;}
+
+.review-header{display:flex;justify-content:space-between;align-items:start;margin-bottom:12px;}
+.review-author{font-size:0.85rem;font-weight:600;color:var(--text);}
+.review-date{font-family:'DM Mono',monospace;font-size:0.65rem;color:var(--muted);}
+.review-rating{display:flex;gap:3px;}
+.star{font-size:0.8rem;color:var(--accent);}
+
+.review-comment{font-size:0.85rem;color:var(--soft);line-height:1.6;}
+
+.empty-state{text-align:center;padding:40px;color:var(--muted);}
+
+/* ENDORSEMENT STICKERS */
+.sticker-wall{display:flex;flex-wrap:wrap;gap:14px;margin-top:8px;}
+.endorsement-sticker{
+  position:relative;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  width:110px;min-height:90px;
+  background:var(--bg);
+  border:2.5px solid var(--sc);
+  border-radius:14px;
+  padding:18px 10px 10px;
+  text-align:center;
+  box-shadow:0 0 0 4px color-mix(in srgb,var(--sc) 15%,transparent),
+             0 6px 20px rgba(0,0,0,0.5);
+  transition:transform 0.2s,box-shadow 0.2s;
+  cursor:default;
+}
+.endorsement-sticker:hover{
+  transform:translateY(-4px) rotate(-1deg);
+  box-shadow:0 0 0 4px color-mix(in srgb,var(--sc) 25%,transparent),
+             0 12px 28px rgba(0,0,0,0.6);
+}
+.sticker-ribbon{
+  position:absolute;top:-12px;left:50%;transform:translateX(-50%);
+  background:var(--sc);color:#111;
+  font-family:'DM Mono',monospace;font-size:0.65rem;font-weight:700;
+  padding:2px 8px;border-radius:99px;
+  white-space:nowrap;letter-spacing:0.05em;
+}
+.sticker-skill{
+  font-family:'DM Serif Display',serif;font-size:0.82rem;
+  color:var(--sc);font-weight:600;line-height:1.3;word-break:break-word;
+  margin-bottom:4px;
+}
+.sticker-label{
+  font-family:'DM Mono',monospace;font-size:0.58rem;letter-spacing:0.1em;
+  text-transform:uppercase;color:var(--muted);
+}
+
+/* REVIEW FORM */
+.review-form{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:20px;margin-bottom:24px;}
+.form-group{margin-bottom:16px;}
+.form-label{display:block;font-family:'DM Mono',monospace;font-size:0.7rem;letter-spacing:0.08em;
+  text-transform:uppercase;color:var(--muted);margin-bottom:8px;}
+
+.rating-selector{display:flex;gap:8px;}
+.rating-btn{width:32px;height:32px;border:1px solid var(--border);background:var(--bg3);color:var(--soft);
+  border-radius:4px;cursor:pointer;transition:all 0.2s;font-weight:600;font-size:0.85rem;}
+.rating-btn:hover{background:var(--accent-dim);color:var(--accent);border-color:var(--accent);}
+.rating-btn.selected{background:var(--accent);color:var(--bg);border-color:var(--accent);}
+
+textarea{width:100%;padding:10px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);
+  color:var(--text);font-family:'Outfit',sans-serif;font-size:0.82rem;resize:vertical;min-height:80px;font-size:0.85rem;}
+
+.form-actions{display:flex;gap:8px;}
+.btn-submit{padding:10px 16px;background:linear-gradient(135deg,#FFD700 0%,#C8960C 100%);color:#080808;border:none;border-radius:var(--r);
+  font-family:'DM Mono',monospace;font-size:0.7rem;font-weight:600;text-transform:uppercase;cursor:pointer;transition:all 0.2s;}
+.btn-submit:hover{box-shadow:0 0 0 1px rgba(255,215,0,0.5),0 4px 20px rgba(255,215,0,0.2);transform:translateY(-1px);}
+</style>
+<script>if(localStorage.getItem('theme')==='light')document.documentElement.classList.add('light-mode');document.addEventListener('DOMContentLoaded',function(){var t=document.getElementById('themeToggle');if(t)t.textContent=document.documentElement.classList.contains('light-mode')?'Dark':'Light';});</script>
+</head>
+<body>
+
+<aside class="sidebar">
+  <a href="/" class="logo">
+    
+    Project<span>Buddy</span>
+  </a>
+  <a href="/dashboard" class="nav-item"><span class="nav-mark">&#8212;</span> Dashboard</a>
+  <a href="/projects-page" class="nav-item active"><span class="nav-mark">&#8212;</span> Browse Projects</a>
+  <a href="/community" class="nav-item"><span class="nav-mark">&#8212;</span> Community</a>
+  <a href="/study-groups" class="nav-item"><span class="nav-mark">&#8212;</span> Study Groups</a>
+  <a href="/chatbot" class="nav-item"><span class="nav-mark">&#8212;</span> AI Assistant</a>
+  <a href="/post-project-page" class="nav-item"><span class="nav-mark">&#8212;</span> Post a Project</a>
+  <a href="/my-projects" class="nav-item"><span class="nav-mark">&#8212;</span> My Projects</a>
+  <a href="/profile" class="nav-item"><span class="nav-mark">&#8212;</span> My Profile</a>
+  <a href="/report-issue" class="nav-item"><span class="nav-mark">&#8212;</span> Report Issue</a>
+  <a href="#" id="themeToggle" class="nav-item" onclick="var h=document.documentElement;h.classList.toggle('light-mode');var l=h.classList.contains('light-mode');localStorage.setItem('theme',l?'light':'dark');this.textContent=l?'Dark':'Light';return false;"><span class="nav-mark">&#8212;</span> Light</a>
+  <a href="/auth/logout" class="nav-item"><span class="nav-mark">&#8212;</span> Log Out</a>
+  <div style="padding:0 6px;margin-bottom:6px;">
+    <button onclick="toggleNotifs()" id="notif-btn" style="width:100%;display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:var(--r);background:none;border:1px solid transparent;cursor:pointer;color:var(--soft);font-family:'Outfit',sans-serif;font-size:0.84rem;font-weight:500;transition:all 0.18s;">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      Notifications
+      <span id="notif-badge" style="display:none;background:#c0392b;color:#fff;border-radius:99px;font-size:0.65rem;font-family:'DM Mono',monospace;padding:1px 6px;margin-left:auto;">0</span>
+    </button>
+  </div>
+  <div class="sidebar-footer">
+    <div class="user-card">
+      <div class="user-av" style="overflow:hidden;">
+        {% if current_user.avatar_url %}
+          <img src="{{ current_user.avatar_url }}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;">
+        {% else %}{{ current_user.first_name[0] }}{{ current_user.last_name[0] }}{% endif %}
+      </div>
+      <div>
+        <div class="user-name">{{ current_user.first_name }} {{ current_user.last_name }}</div>
+        <div class="user-role">{{ current_user.department or 'IUS' }} &middot; {{ current_user.role.title() }}</div>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<main class="main">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for category, message in messages %}
+      <div style="padding:12px 16px;border-radius:8px;margin-bottom:16px;font-size:0.85rem;font-family:'DM Mono',monospace;
+        {% if category=='error' %}background:rgba(192,57,43,0.15);border:1px solid rgba(192,57,43,0.3);color:#e07060;
+        {% else %}background:rgba(90,138,106,0.15);border:1px solid rgba(90,138,106,0.3);color:#7ab890;{% endif %}">
+        {{ message }}
+      </div>
+    {% endfor %}
+  {% endwith %}
+  <a href="/profile" class="back-link">← Back to My Profile</a>
+
+  <!-- PROFILE HEADER -->
+  <div class="profile-header">
+    <div class="profile-avatar" style="overflow:hidden;">
+      {% if profile_user.avatar_url %}
+        <img src="{{ profile_user.avatar_url }}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;">
+      {% else %}{{ profile_user.first_name[0] }}{{ profile_user.last_name[0] }}{% endif %}
+    </div>
+    <div class="profile-info">
+      <div class="profile-name">{{ profile_user.first_name }} {{ profile_user.last_name }}</div>
+      <div class="profile-role">{{ profile_user.role }} • {{ profile_user.department or 'IUS' }}</div>
+      {% if profile_user.bio %}
+        <div class="profile-bio">{{ profile_user.bio }}</div>
+      {% endif %}
+      {% if profile_user.role != 'admin' %}
+      <div class="profile-stats">
+        <div class="stat-item">
+          <div class="stat-label">Projects</div>
+          <div class="stat-value">{{ user_stats.projects_count }}</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">Rating</div>
+          <div class="stat-value">{{ user_stats.avg_rating or '—' }}</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">Reviews</div>
+          <div class="stat-value">{{ user_stats.reviews_count }}</div>
+        </div>
+      </div>
+      {% else %}
+      <div class="profile-stats">
+        <div class="stat-item" style="color:var(--muted);">
+          <p style="font-size:0.85rem;margin-top:12px;">Administrator account. Limited profile information available.</p>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- TABS - Only show for non-admin users -->
+  {% if profile_user.role != 'admin' %}
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab(event, 'reviews-tab')">Reviews</button>
+    <button class="tab-btn" onclick="switchTab(event, 'skills-tab')">Skills & Endorsements</button>
+  </div>
+  {% endif %}
+
+  <!-- REVIEWS TAB -->
+  {% if profile_user.role != 'admin' %}
+  <div id="reviews-tab" class="tab-content active">
+    {% if can_leave_review %}
+      <div class="review-form">
+        <h3 style="font-family:'DM Serif Display',serif;font-size:1.1rem;margin-bottom:16px;">Leave a Review</h3>
+        <form method="POST" action="/user/{{ profile_user.id }}/review">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <div class="form-group">
+            <label class="form-label">Rating</label>
+            <div class="rating-selector" id="rating-selector">
+              <button type="button" class="rating-btn" data-rating="1">1</button>
+              <button type="button" class="rating-btn" data-rating="2">2</button>
+              <button type="button" class="rating-btn" data-rating="3">3</button>
+              <button type="button" class="rating-btn" data-rating="4">4</button>
+              <button type="button" class="rating-btn" data-rating="5">5</button>
+            </div>
+            <input type="hidden" id="rating-input" name="rating" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Comment</label>
+            <textarea name="comment" placeholder="Share your experience working with this person..." minlength="10" required></textarea>
+            <div style="font-size:0.7rem;color:var(--muted);margin-top:4px;">Minimum 10 characters</div>
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="btn-submit">Submit Review</button>
+          </div>
+        </form>
+      </div>
+    {% endif %}
+
+    <h3 style="font-family:'DM Serif Display',serif;font-size:1.1rem;margin-bottom:16px;">{{ user_stats.reviews_count }} Review{% if user_stats.reviews_count != 1 %}s{% endif %}</h3>
+    {% if reviews %}
+      <div class="reviews-grid">
+        {% for review in reviews %}
+          <div class="review-card">
+            <div class="review-header">
+              <div>
+                <div class="review-author">{{ review.giver.first_name }} {{ review.giver.last_name }}</div>
+                <div class="review-rating">
+                  {% for i in range(1, review.rating + 1) %}
+                    <span class="star">&#9733;</span>
+                  {% endfor %}
+                  {% for i in range(review.rating + 1, 6) %}
+                    <span class="star" style="opacity:0.3;">&#9733;</span>
+                  {% endfor %}
+                </div>
+              </div>
+              <div class="review-date">{{ review.created_at.strftime('%b %d, %Y') }}</div>
+            </div>
+            <div class="review-comment">{{ review.comment }}</div>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="empty-state">
+        <p>No reviews yet</p>
+      </div>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  <!-- SKILLS & ENDORSEMENTS TAB -->
+  {% if profile_user.role != 'admin' %}
+  <div id="skills-tab" class="tab-content">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;">
+      <!-- SKILLS LIST -->
+      <div>
+        <h3 style="font-family:'DM Serif Display',serif;font-size:1.1rem;margin-bottom:16px;">Skills</h3>
+        {% if profile_user.skills %}
+          <div style="display:flex;flex-wrap:wrap;gap:8px;">
+            {% for skill in profile_user.skills %}
+              <div style="display:inline-flex;align-items:center;gap:6px;padding:8px 12px;background:var(--accent-dim);border-radius:var(--r);font-size:0.8rem;color:var(--accent);">
+                {{ skill.skill }}
+                <span style="opacity:0.6;font-size:0.7rem;">{{ skill.level }}</span>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <div class="empty-state">
+            <p>No skills listed</p>
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- ENDORSE FORM -->
+      <div>
+        {% if can_endorse %}
+          <h3 style="font-family:'DM Serif Display',serif;font-size:1.1rem;margin-bottom:16px;">Endorse a Skill</h3>
+          <form method="POST" action="/user/{{ profile_user.id }}/endorse">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="form-group">
+              <label class="form-label">Skill</label>
+              <input type="text" name="skill" placeholder="e.g. Python, React, Project Management" required>
+            </div>
+            <button type="submit" class="btn-submit">Endorse Skill</button>
+          </form>
+          {% if already_endorsed_skills %}
+            <div style="margin-top:12px;font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--muted);">
+              Already endorsed: {{ already_endorsed_skills | join(', ') }}
+            </div>
+          {% endif %}
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- ENDORSEMENTS RECEIVED -->
+    <div style="margin-top:32px;">
+      <h3 style="font-family:'DM Serif Display',serif;font-size:1.1rem;margin-bottom:16px;">Endorsements Received</h3>
+      {% if profile_user.endorsements_received %}
+        {% set skill_endorsements = {} %}
+        {% for endorsement in profile_user.endorsements_received %}
+          {% if endorsement.skill in skill_endorsements %}
+            {% set _ = skill_endorsements.update({endorsement.skill: skill_endorsements[endorsement.skill] + 1}) %}
+          {% else %}
+            {% set _ = skill_endorsements.update({endorsement.skill: 1}) %}
+          {% endif %}
+        {% endfor %}
+        <div class="sticker-wall">
+          {% set colors = ['#FFD700','#FF6B6B','#4ECDC4','#A78BFA','#34D399','#FB923C','#60A5FA','#F472B6','#FACC15','#2DD4BF'] %}
+          {% for skill, count in skill_endorsements.items() %}
+            {% set ci = loop.index0 % colors|length %}
+            <div class="endorsement-sticker" style="--sc:{{ colors[ci] }};">
+              <div class="sticker-ribbon">{{ count }}×</div>
+              <div class="sticker-skill">{{ skill }}</div>
+              <div class="sticker-label">endorsed</div>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="empty-state">
+          <p>No endorsements yet</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+</main>
+
+<script>
+/* ── CSRF helper — reads Flask-WTF token from meta tag ──────────────────── */
+function _getCsrf(){
+  var m=document.querySelector('meta[name="csrf-token"]');
+  return m?m.getAttribute('content'):'';
+}
+/* Patch all fetch() POST calls to include the CSRF token header automatically */
+(function(){
+  var _origFetch=window.fetch;
+  window.fetch=function(url,opts){
+    opts=opts||{};
+    if(opts.method&&opts.method.toUpperCase()==='POST'){
+      opts.headers=Object.assign({'X-CSRFToken':_getCsrf()},opts.headers||{});
+    }
+    return _origFetch.call(this,url,opts);
+  };
+})();
+</script><script>
+function switchTab(e, tabName) {
+  e.preventDefault();
+  
+  // Hide all tabs
+  const tabs = document.querySelectorAll('.tab-content');
+  tabs.forEach(tab => tab.classList.remove('active'));
+  
+  // Remove active from all buttons
+  const buttons = document.querySelectorAll('.tab-btn');
+  buttons.forEach(btn => btn.classList.remove('active'));
+  
+  // Show selected tab
+  document.getElementById(tabName).classList.add('active');
+  e.target.classList.add('active');
+}
+
+// Rating selector
+document.querySelectorAll('.rating-btn').forEach(btn => {
+  btn.addEventListener('click', (e) => {
+    e.preventDefault();
+    const rating = btn.dataset.rating;
+    document.getElementById('rating-input').value = rating;
+    
+    document.querySelectorAll('.rating-btn').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+  });
+});
+</script>
+
+<div id="notif-panel" style="display:none;position:fixed;left:228px;bottom:80px;width:320px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);box-shadow:0 8px 32px rgba(0,0,0,0.6);z-index:200;overflow:hidden;">
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:1px solid var(--border);">
+    <span style="font-family:'DM Serif Display',serif;font-size:0.9rem;">Notifications</span>
+    <button onclick="markAllRead()" style="background:none;border:none;color:var(--muted);font-size:0.72rem;cursor:pointer;font-family:'DM Mono',monospace;">mark all read</button>
+  </div>
+  <div id="notif-list" style="max-height:320px;overflow-y:auto;"></div>
+</div>
+<script>
+function _esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#x27;');}
+function toggleNotifs(){
+  var p=document.getElementById('notif-panel');
+  p.style.display=p.style.display==='none'?'block':'none';
+  if(p.style.display==='block') fetchNotifs();
+}
+async function fetchNotifs(){
+  try{
+    var r=await fetch('/notifications/unread');
+    var d=await r.json();
+    var badge=document.getElementById('notif-badge');
+    var list=document.getElementById('notif-list');
+    if(d.count>0){badge.textContent=d.count;badge.style.display='inline';}
+    else{badge.style.display='none';}
+    if(!list)return;
+    if(d.notifications.length===0){
+      list.innerHTML='<div style="padding:20px;text-align:center;color:var(--muted);font-size:0.8rem;">No new notifications</div>';
+      return;
+    }
+    list.innerHTML=d.notifications.map(function(n){return(
+      '<a href="'+(n.link||'#')+'" onclick="readNotif('+n.id+')" style="display:block;padding:12px 14px;border-bottom:1px solid var(--border);text-decoration:none;color:var(--text);transition:background 0.15s;" onmouseover="this.style.background=\'rgba(255,255,255,0.04)\'" onmouseout="this.style.background=\'none\'">'+
+      '<div style="font-size:0.82rem;line-height:1.4;">'+n.message+'</div>'+
+      '<div style="font-size:0.7rem;color:var(--muted);margin-top:4px;font-family:\'DM Mono\',monospace;">'+n.time_ago+'</div>'+
+      '</a>'
+    );}).join('');
+  }catch(e){}
+}
+async function readNotif(id){
+  await fetch('/notifications/'+id+'/read',{method:'POST'});
+  fetchNotifs();
+}
+async function markAllRead(){
+  await fetch('/notifications/read-all',{method:'POST'});
+  fetchNotifs();
+}
+document.addEventListener('click',function(e){
+  var panel=document.getElementById('notif-panel');
+  var btn=document.getElementById('notif-btn');
+  if(panel&&btn&&!panel.contains(e.target)&&!btn.contains(e.target)){
+    panel.style.display='none';
+  }
+});
+setInterval(fetchNotifs,30000);
+fetchNotifs();
+</script>
+<div id="cursor-glow"></div>
+<script>var cg=document.getElementById('cursor-glow');document.addEventListener('mousemove',function(e){cg.style.left=e.clientX+'px';cg.style.top=e.clientY+'px';});</script>
+</body>
+</html>

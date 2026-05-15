@@ -1,0 +1,332 @@
+"""
+Flask Application Factory
+
+This module creates and configures the Flask application instance
+using the application factory pattern.
+"""
+
+import os
+import logging
+from logging.handlers import RotatingFileHandler
+from flask import Flask
+from config import Config
+from extensions import db, login_manager, socketio, migrate
+
+
+def create_app(config_class=None):
+    """
+    Create and configure the Flask application.
+
+    Args:
+        config_class: Configuration class to use. Defaults to DevelopmentConfig.
+
+    Returns:
+        Flask: Configured Flask application instance.
+    """
+    if config_class is None:
+        from config import DevelopmentConfig
+        config_class = DevelopmentConfig
+    
+    app = Flask(__name__)
+    app.config.from_object(config_class)
+    
+    # Initialize extensions
+    _initialize_extensions(app)
+    
+    # Create instance folder
+    try:
+        os.makedirs(app.instance_path)
+    except OSError:
+        pass
+    
+    # Register blueprints
+    _register_blueprints(app)
+
+    _register_context_processors(app)
+    
+    # Set up shell context
+    _setup_shell_context(app)
+    
+    # Configure logging
+    _configure_logging(app)
+    
+    return app
+
+
+def _initialize_extensions(app: Flask) -> None:
+    """Initialize Flask extensions with the app."""
+    from extensions import limiter, csrf
+    import models  # ensure all models are registered before migrate sees them
+
+    db.init_app(app)
+    migrate.init_app(app, db)
+    login_manager.init_app(app)
+    login_manager.login_view = "auth.login"
+    login_manager.login_message = "Please log in to access this page."
+    limiter.init_app(app)
+    csrf.init_app(app)
+
+    # Restrict SocketIO CORS: allow only our own origin in production,
+    # all origins in development (needed for hot-reload / test clients).
+    is_prod = os.environ.get("FLASK_ENV") == "production"
+    cors_origins = (
+        os.environ.get("CORS_ORIGINS", "").split(",") if is_prod else "*"
+    )
+    socketio.init_app(app, cors_allowed_origins=cors_origins)
+
+    # Disable Secure cookie flag outside of production
+    # (allows login over plain http://localhost in dev)
+    if not app.config.get("TESTING") and os.environ.get("FLASK_ENV") != "production":
+        app.config["SESSION_COOKIE_SECURE"] = False
+
+    # ── Security headers on every response ────────────────────────────────────
+    @app.after_request
+    def set_security_headers(response):
+        # Prevent MIME-type sniffing
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        # Disallow embedding in iframes (clickjacking)
+        response.headers["X-Frame-Options"] = "SAMEORIGIN"
+        # Legacy XSS filter (modern browsers ignore this, kept for old IE/Edge)
+        response.headers["X-XSS-Protection"] = "1; mode=block"
+        # Don't send full URL in Referer header to third parties
+        response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+        # Remove server fingerprint
+        response.headers.pop("Server", None)
+        # Content Security Policy:
+        #   - default: only our own origin
+        #   - scripts: self + CDN (Chart.js), unsafe-inline needed for our inline <script> blocks
+        #   - styles:  self + Google Fonts + inline (we use <style> tags throughout)
+        #   - fonts:   Google Fonts CDN
+        #   - images:  self, data URIs, and any https (GitHub/IUS avatars)
+        #   - connect: self + WebSocket (SocketIO voice chat)
+        #   - media: self (microphone audio streams)
+        #   - frame-ancestors: none (double-blocks clickjacking beyond X-Frame-Options)
+        response.headers["Content-Security-Policy"] = (
+            "default-src 'self'; "
+            "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
+            "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
+            "font-src 'self' https://fonts.gstatic.com; "
+            "img-src 'self' data: https:; "
+            "connect-src 'self' ws: wss:; "
+            "media-src 'self' blob:; "
+            "frame-ancestors 'none';"
+        )
+        # HSTS — only sent in production (where HTTPS is enforced)
+        if os.environ.get("FLASK_ENV") == "production":
+            response.headers["Strict-Transport-Security"] = (
+                "max-age=63072000; includeSubDomains; preload"
+            )
+        return response
+
+    # ── Rate-limit exceeded: return flash+redirect instead of raw JSON ─────────
+    from flask import request as _req, redirect as _redir, flash as _flash, url_for as _url_for
+    from flask_limiter.errors import RateLimitExceeded
+
+    @app.errorhandler(RateLimitExceeded)
+    def ratelimit_handler(e):
+        _flash('Too many attempts. Please wait a moment and try again.', 'error')
+        return _redir(_req.referrer or _url_for('auth.login'))
+
+    # ── CSRF failure: redirect with flash instead of raw 400 JSON ─────────────
+    from flask_wtf.csrf import CSRFError
+
+    @app.errorhandler(CSRFError)
+    def csrf_error(e):
+        _flash('Session expired. Please try again.', 'error')
+        return _redir(_req.referrer or _url_for('auth.login'))
+
+    # ── Generic HTTP error pages ───────────────────────────────────────────────
+    from flask import render_template_string
+
+    _404_PAGE = """<!doctype html><html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>404 — Page Not Found</title>
+<style>*{margin:0;padding:0;box-sizing:border-box;}
+body{background:#0d0c0b;color:#ede8df;font-family:'Outfit',sans-serif;
+  display:flex;align-items:center;justify-content:center;min-height:100vh;text-align:center;padding:20px;}
+.code{font-size:5rem;font-weight:700;color:#FFD700;letter-spacing:-0.04em;line-height:1;}
+.msg{font-size:1.1rem;color:#9a9490;margin:12px 0 28px;}
+a{color:#FFD700;text-decoration:none;border-bottom:1px solid rgba(255,215,0,0.3);padding-bottom:2px;}
+</style></head><body>
+<div><div class="code">404</div>
+<div class="msg">This page doesn't exist.</div>
+<a href="/">← Back to ProjectBuddy</a></div></body></html>"""
+
+    _500_PAGE = """<!doctype html><html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>500 — Server Error</title>
+<style>*{margin:0;padding:0;box-sizing:border-box;}
+body{background:#0d0c0b;color:#ede8df;font-family:'Outfit',sans-serif;
+  display:flex;align-items:center;justify-content:center;min-height:100vh;text-align:center;padding:20px;}
+.code{font-size:5rem;font-weight:700;color:#c0392b;letter-spacing:-0.04em;line-height:1;}
+.msg{font-size:1.1rem;color:#9a9490;margin:12px 0 28px;}
+a{color:#FFD700;text-decoration:none;border-bottom:1px solid rgba(255,215,0,0.3);padding-bottom:2px;}
+</style></head><body>
+<div><div class="code">500</div>
+<div class="msg">Something went wrong on our end. Please try again.</div>
+<a href="/">← Back to ProjectBuddy</a></div></body></html>"""
+
+    @app.errorhandler(404)
+    def not_found(e):
+        return render_template_string(_404_PAGE), 404
+
+    @app.errorhandler(500)
+    def server_error(e):
+        app.logger.error("500 error: %s", e)
+        return render_template_string(_500_PAGE), 500
+
+
+def _register_blueprints(app: Flask) -> None:
+    """Register Flask blueprints."""
+    from routes.main import main_bp
+    from routes.auth import auth_bp
+    from routes.projects import projects_bp
+    from routes.users import users_bp
+    from routes.admin import admin_bp
+    from routes.chat import chat_bp
+    from routes.community import community_bp
+    from routes.study_groups import study_groups_bp
+    from routes.chatbot import chatbot_bp
+
+    app.register_blueprint(main_bp)
+    app.register_blueprint(auth_bp)
+    app.register_blueprint(projects_bp)
+    app.register_blueprint(users_bp)
+    app.register_blueprint(admin_bp)
+    app.register_blueprint(chat_bp)
+    app.register_blueprint(community_bp)
+    app.register_blueprint(study_groups_bp)
+    app.register_blueprint(chatbot_bp)
+
+    # Register SocketIO voice-chat event handlers
+    import routes.voice  # noqa: F401  — side-effect: registers @socketio.on handlers
+
+    # Create tables, seed badges, sync admin, and seed mock data on first run
+    with app.app_context():
+        db.create_all()
+        _seed_badges()
+        _sync_admin()
+        _seed_mock_if_empty()
+        _fix_broken_passwords()
+
+
+def _seed_badges() -> None:
+    """Create default badges if they don't exist."""
+    from models import Badge
+    defaults = [
+        ("first step", "Complete your first project", "[1]"),
+        ("veteran", "Complete 5 projects", "[5]"),
+        ("expert", "Receive 10 skill endorsements", "[E]"),
+    ]
+    for name, desc, icon in defaults:
+        if not Badge.query.filter_by(name=name).first():
+            db.session.add(Badge(name=name, description=desc, icon=icon))
+    db.session.commit()
+
+
+def _sync_admin() -> None:
+    """Create or update the admin account from .env credentials."""
+    from flask import current_app
+    from models import User
+    email = current_app.config.get('ADMIN_EMAIL')
+    password = current_app.config.get('ADMIN_PASSWORD')
+    if not email or not password:
+        return
+    admin = User.query.filter_by(email=email).first()
+    if admin:
+        admin.set_password(password)
+        admin.role = 'admin'
+    else:
+        admin = User(
+            first_name='Admin',
+            last_name='IUS',
+            email=email,
+            role='admin',
+        )
+        admin.set_password(password)
+        db.session.add(admin)
+    db.session.commit()
+
+
+def _seed_mock_if_empty() -> None:
+    """Seed realistic mock data the first time the app starts (or if DB is empty)."""
+    from flask import current_app
+    if not current_app.config.get('SEED_MOCK_DATA', True):
+        return
+    try:
+        from services.mock_data import seed_mock_data
+        seed_mock_data()
+    except Exception as e:
+        import logging
+        logging.getLogger(__name__).warning("Mock data seeding skipped: %s", e)
+
+
+def _fix_broken_passwords() -> None:
+    """Auto-fix mock accounts whose passwords got corrupted or use an
+    unsupported hash algorithm (e.g. scrypt on Python 3.9 / LibreSSL).
+    Safe to run every startup — only re-hashes when the password doesn't verify."""
+    from flask import current_app
+    from models import User
+    mock_password = current_app.config.get('MOCK_PASSWORD', 'Mock@123')
+    mock_suffix = current_app.config.get('MOCK_EMAIL_SUFFIX', '@mock.projectbuddy.local')
+    fixed = 0
+    for user in User.query.filter(User.email.like(f'%{mock_suffix}')).all():
+        try:
+            needs_fix = not user.check_password(mock_password)
+        except (AttributeError, ValueError):
+            # hash algorithm not supported on this platform (e.g. scrypt + LibreSSL)
+            needs_fix = True
+        if needs_fix:
+            user.set_password(mock_password)
+            fixed += 1
+    if fixed:
+        db.session.commit()
+
+
+def _register_context_processors(app: Flask) -> None:
+    """Inject admin sidebar badge counts on all admin templates."""
+    @app.context_processor
+    def inject_admin_sidebar():
+        from flask_login import current_user
+        if not current_user.is_authenticated or not current_user.is_admin():
+            return {}
+        from models import Report, Chat
+        return {
+            "admin_pending_reports": Report.query.filter_by(status="pending").count(),
+            "admin_open_chat_count": Chat.query.filter_by(status="open").count(),
+        }
+
+
+def _setup_shell_context(app: Flask) -> None:
+    """Set up Flask shell context."""
+    @app.shell_context_processor
+    def make_shell_context():
+        """Add common objects to shell context."""
+        return {"db": db}
+
+
+def _configure_logging(app: Flask) -> None:
+    """Configure application logging."""
+    if not app.debug and not app.testing:
+        if not os.path.exists("logs"):
+            os.mkdir("logs")
+        
+        file_handler = RotatingFileHandler(
+            "logs/app.log", maxBytes=10240000, backupCount=10
+        )
+        file_handler.setFormatter(
+            logging.Formatter(
+                "%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]"
+            )
+        )
+        file_handler.setLevel(logging.INFO)
+        app.logger.addHandler(file_handler)
+        
+        app.logger.setLevel(logging.INFO)
+        app.logger.info("Application startup")
+
+
+if __name__ == "__main__":
+    app = create_app()
+    port = int(os.environ.get("PORT", 5001))
+    socketio.run(app, debug=app.debug, host="0.0.0.0", port=port, allow_unsafe_werkzeug=True)

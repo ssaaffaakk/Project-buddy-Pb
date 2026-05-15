@@ -1,0 +1,497 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="csrf-token" content="{{ csrf_token() }}">
+<title>Admin Dashboard — ProjectBuddy</title>
+<link rel="icon" href="/static/images/logo.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+html{scrollbar-gutter:stable;overflow-y:scroll;}
+:root{
+  color-scheme:dark;
+  --bg:#0d0c0b;--bg2:#141210;--bg3:#1c1915;
+  --card:rgba(255,255,255,0.03);--card-h:rgba(255,255,255,0.055);
+  --accent:#FFD700;--accent-dim:rgba(255,215,0,0.12);
+  --red:#c0392b;--red-dim:rgba(192,57,43,0.15);
+  --green:#5a8a6a;--green-dim:rgba(90,138,106,0.15);
+  --blue:#4a7fa5;--blue-dim:rgba(74,127,165,0.15);
+  --text:#ede8df;--muted:#9a9490;--soft:#d4cec8;
+  --border:rgba(255,255,255,0.06);--r:8px;
+}
+html.light-mode{color-scheme:light;--bg:#ffffff;--bg2:#f5f5f5;--bg3:#eeeeee;--card:rgba(0,0,0,0.03);--card-h:rgba(0,0,0,0.06);--accent:#d4a817;--accent-dim:rgba(212,168,23,0.12);--red:#c0392b;--red-dim:rgba(192,57,43,0.1);--green:#5a8a6a;--green-dim:rgba(90,138,106,0.1);--blue:#4a7fa5;--blue-dim:rgba(74,127,165,0.1);--text:#1a1a1a;--muted:#6b6b6b;--soft:#505050;--border:rgba(0,0,0,0.1);}
+html.light-mode .nav-item:hover{background:rgba(0,0,0,0.04);}
+::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar-thumb{background:rgba(255,215,0,0.2);border-radius:99px;}
+body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;display:flex;min-height:100vh;margin:0;}
+
+{% include 'admin/_sidebar_styles.html' %}
+
+/* MAIN */
+.main{margin-left:220px;flex:1;padding:32px 36px;min-height:100vh;}
+
+/* TOAST */
+#toast-container{position:fixed;top:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none;}
+.toast{display:flex;align-items:flex-start;gap:12px;padding:13px 16px;border-radius:var(--r);min-width:300px;max-width:400px;
+  pointer-events:all;backdrop-filter:blur(20px);border:1px solid transparent;box-shadow:0 8px 32px rgba(0,0,0,0.5);
+  animation:toastIn 0.35s cubic-bezier(0.34,1.56,0.64,1) both;position:relative;overflow:hidden;}
+.toast.success{background:rgba(15,12,8,0.95);border-color:rgba(255,215,0,0.3);}
+.toast.error{background:rgba(20,5,5,0.95);border-color:rgba(192,57,43,0.3);}
+.toast-icon{font-size:1rem;flex-shrink:0;margin-top:1px;}
+.toast.success .toast-icon{color:var(--accent);}.toast.error .toast-icon{color:#e07060;}
+.toast-body{flex:1;font-size:0.82rem;color:var(--text);}
+.toast-progress{position:absolute;bottom:0;left:0;height:2px;width:100%;transform-origin:left;animation:toastProgress 4.2s linear forwards;}
+.toast.success .toast-progress{background:var(--accent);}.toast.error .toast-progress{background:#e07060;}
+@keyframes toastIn{from{opacity:0;transform:translateX(30px);}to{opacity:1;transform:translateX(0);}}
+@keyframes toastProgress{from{transform:scaleX(1);}to{transform:scaleX(0);}}
+
+/* PAGE HEADER */
+.page-header{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:32px;padding-bottom:24px;border-bottom:1px solid var(--border);}
+.page-title{font-family:'DM Serif Display',serif;font-size:1.8rem;font-weight:400;letter-spacing:-0.02em;}
+.page-sub{font-family:'DM Mono',monospace;font-size:0.7rem;letter-spacing:0.04em;color:var(--text);margin-top:4px;}
+
+/* STATS GRID */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:32px;}
+.stat-card{background:var(--bg2);padding:20px 22px;transition:background 0.18s;cursor:default;}
+.stat-card:hover{background:var(--bg3);}
+.stat-label{font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--text);margin-bottom:10px;}
+.stat-value{font-family:'DM Mono',monospace;font-size:2rem;font-weight:400;line-height:1;}
+.stat-value.gold{color:var(--accent);}
+.stat-value.red{color:#e07060;}
+.stat-value.blue{color:#7aaed0;}
+.stat-value.green{color:#7ab890;}
+.stat-sub{font-size:0.7rem;color:var(--muted);margin-top:4px;font-family:'DM Mono',monospace;}
+
+/* TABS */
+.tabs{display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:24px;}
+.tab-btn{padding:11px 18px;background:none;border:none;font-family:'DM Mono',monospace;font-size:0.72rem;
+  font-weight:500;text-transform:uppercase;letter-spacing:0.08em;color:var(--text);cursor:pointer;
+  border-bottom:2px solid transparent;transition:all 0.18s;display:flex;align-items:center;gap:8px;}
+.tab-btn:hover{color:var(--text);}
+.tab-btn.active{color:var(--accent);border-bottom-color:var(--accent);}
+.tab-count{background:var(--accent-dim);color:var(--accent);font-size:0.6rem;padding:1px 6px;border-radius:99px;font-family:'DM Mono',monospace;}
+.tab-count.red{background:var(--red-dim);color:#e07060;}
+
+.tab-content{display:none;}
+.tab-content.active{display:block;}
+
+/* REPORT CARDS */
+.report-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:20px;margin-bottom:12px;display:grid;grid-template-columns:1fr auto;gap:20px;align-items:start;}
+.report-card:hover{border-color:rgba(255,215,0,0.1);}
+
+.report-type{display:inline-flex;align-items:center;gap:6px;font-family:'DM Mono',monospace;font-size:0.62rem;
+  letter-spacing:0.08em;text-transform:uppercase;padding:3px 8px;border-radius:3px;margin-bottom:10px;}
+.report-type.user-report{background:var(--red-dim);color:#e07060;}
+.report-type.project-report{background:var(--blue-dim);color:#7aaed0;}
+
+.report-target{font-family:'DM Serif Display',serif;font-size:1.05rem;font-weight:400;margin-bottom:6px;}
+.report-reason{display:inline-block;font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.06em;
+  text-transform:uppercase;padding:2px 8px;border-radius:3px;background:var(--accent-dim);color:var(--accent);margin-bottom:8px;}
+.report-desc{font-size:0.82rem;color:var(--soft);line-height:1.65;margin-bottom:10px;}
+.report-meta{font-family:'DM Mono',monospace;font-size:0.66rem;color:var(--muted);display:flex;align-items:center;gap:12px;}
+.report-meta a{color:var(--soft);text-decoration:none;}
+.report-meta a:hover{color:var(--accent);}
+
+.report-actions{display:flex;flex-direction:column;gap:6px;min-width:130px;}
+.btn-warn{padding:8px 14px;border:none;border-radius:var(--r);font-family:'DM Mono',monospace;font-size:0.66rem;
+  font-weight:500;text-transform:uppercase;cursor:pointer;transition:all 0.2s;
+  background:var(--accent-dim);color:var(--accent);}
+.btn-warn:hover{background:rgba(255,215,0,0.2);}
+.btn-ban{padding:8px 14px;border:none;border-radius:var(--r);font-family:'DM Mono',monospace;font-size:0.66rem;
+  font-weight:500;text-transform:uppercase;cursor:pointer;transition:all 0.2s;
+  background:var(--red-dim);color:#e07060;}
+.btn-ban:hover{background:rgba(192,57,43,0.3);}
+.btn-dismiss{padding:8px 14px;border:none;border-radius:var(--r);font-family:'DM Mono',monospace;font-size:0.66rem;
+  font-weight:500;text-transform:uppercase;cursor:pointer;transition:all 0.2s;
+  background:var(--card);color:var(--soft);border:1px solid var(--border);}
+.btn-dismiss:hover{background:var(--card-h);color:var(--text);}
+
+/* USERS TABLE */
+.users-table{width:100%;border-collapse:separate;border-spacing:0;}
+.users-table th{font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.1em;text-transform:uppercase;
+  color:var(--muted);padding:10px 14px;border-bottom:1px solid var(--border);text-align:left;font-weight:400;}
+.users-table td{padding:12px 14px;border-bottom:1px solid rgba(255,255,255,0.03);font-size:0.84rem;vertical-align:middle;}
+.users-table tr:hover td{background:rgba(255,255,255,0.02);}
+.users-table tr:last-child td{border-bottom:none;}
+
+.user-inline{display:flex;align-items:center;gap:10px;}
+.mini-av{width:28px;height:28px;border-radius:50%;background:var(--accent-dim);display:flex;align-items:center;
+  justify-content:center;font-family:'DM Mono',monospace;font-size:0.62rem;color:var(--accent);flex-shrink:0;}
+.user-inline-name{font-weight:500;color:var(--text);}
+.user-inline-email{font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--muted);}
+
+.role-badge{display:inline-block;font-family:'DM Mono',monospace;font-size:0.6rem;letter-spacing:0.06em;
+  text-transform:uppercase;padding:2px 7px;border-radius:3px;}
+.role-student{background:var(--blue-dim);color:#7aaed0;}
+.role-instructor{background:var(--accent-dim);color:var(--accent);}
+
+.status-active{background:var(--green-dim);color:#7ab890;display:inline-block;font-family:'DM Mono',monospace;
+  font-size:0.6rem;letter-spacing:0.06em;text-transform:uppercase;padding:2px 7px;border-radius:3px;}
+.status-banned{background:var(--red-dim);color:#e07060;display:inline-block;font-family:'DM Mono',monospace;
+  font-size:0.6rem;letter-spacing:0.06em;text-transform:uppercase;padding:2px 7px;border-radius:3px;}
+
+.btn-sm-ban{padding:5px 10px;border:none;border-radius:4px;font-family:'DM Mono',monospace;font-size:0.62rem;
+  font-weight:500;text-transform:uppercase;cursor:pointer;transition:all 0.2s;
+  background:var(--red-dim);color:#e07060;}
+.btn-sm-ban:hover{background:rgba(192,57,43,0.3);}
+.btn-sm-unban{padding:5px 10px;border:none;border-radius:4px;font-family:'DM Mono',monospace;font-size:0.62rem;
+  font-weight:500;text-transform:uppercase;cursor:pointer;transition:all 0.2s;
+  background:var(--green-dim);color:#7ab890;}
+.btn-sm-unban:hover{background:rgba(90,138,106,0.3);}
+
+/* PROJECTS TABLE */
+.projects-table{width:100%;border-collapse:separate;border-spacing:0;}
+.projects-table th{font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.1em;text-transform:uppercase;
+  color:var(--muted);padding:10px 14px;border-bottom:1px solid var(--border);text-align:left;font-weight:400;}
+.projects-table td{padding:12px 14px;border-bottom:1px solid rgba(255,255,255,0.03);font-size:0.84rem;vertical-align:middle;}
+.projects-table tr:hover td{background:rgba(255,255,255,0.02);}
+.projects-table tr:last-child td{border-bottom:none;}
+
+.proj-status-open{background:var(--green-dim);color:#7ab890;display:inline-block;font-family:'DM Mono',monospace;font-size:0.6rem;letter-spacing:0.06em;text-transform:uppercase;padding:2px 7px;border-radius:3px;}
+.proj-status-closed{background:var(--blue-dim);color:#7aaed0;display:inline-block;font-family:'DM Mono',monospace;font-size:0.6rem;letter-spacing:0.06em;text-transform:uppercase;padding:2px 7px;border-radius:3px;}
+.proj-status-completed{background:var(--accent-dim);color:var(--accent);display:inline-block;font-family:'DM Mono',monospace;font-size:0.6rem;letter-spacing:0.06em;text-transform:uppercase;padding:2px 7px;border-radius:3px;}
+
+.btn-sm-remove{padding:5px 10px;border:none;border-radius:4px;font-family:'DM Mono',monospace;font-size:0.62rem;
+  font-weight:500;text-transform:uppercase;cursor:pointer;transition:all 0.2s;
+  background:var(--red-dim);color:#e07060;}
+.btn-sm-remove:hover{background:rgba(192,57,43,0.3);}
+
+/* SEARCH */
+.search-bar{display:flex;gap:10px;margin-bottom:16px;}
+.search-input{flex:1;padding:9px 14px;background:var(--card);border:1px solid var(--border);border-radius:var(--r);
+  color:var(--text);font-family:'Outfit',sans-serif;font-size:0.84rem;outline:none;transition:border-color 0.18s;}
+.search-input:focus{border-color:rgba(255,215,0,0.3);}
+.search-input::placeholder{color:var(--muted);}
+
+.empty{text-align:center;padding:40px;color:var(--muted);font-family:'DM Serif Display',serif;font-size:1rem;}
+
+/* SECTION CARD */
+.section-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;}
+.section-card-inner{padding:0 4px;}
+</style>
+<script>if(localStorage.getItem('theme')==='light')document.documentElement.classList.add('light-mode');document.addEventListener('DOMContentLoaded',function(){var t=document.getElementById('themeToggle');if(t)t.textContent=document.documentElement.classList.contains('light-mode')?'Dark':'Light';});</script>
+</head>
+<body>
+
+<div id="toast-container"></div>
+{% set _msgs = get_flashed_messages(with_categories=true) %}
+{% if _msgs %}<div id="flask-messages" data-messages="{{ _msgs | tojson }}"></div>{% endif %}
+
+{% set admin_active = 'dashboard' %}
+{% include 'admin/_sidebar.html' %}
+
+
+<!-- MAIN -->
+<main class="main">
+  <div class="page-header">
+    <div>
+      <div class="page-title">Admin Dashboard</div>
+      <div class="page-sub">Platform management &amp; moderation</div>
+    </div>
+  </div>
+
+  <!-- STATS -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-label">Total Users</div>
+      <div class="stat-value gold">{{ total_users }}</div>
+      <div class="stat-sub">Students &amp; instructors</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Projects</div>
+      <div class="stat-value blue">{{ total_projects }}</div>
+      <div class="stat-sub">{{ open_projects }} open · {{ completed_projects }} done</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Pending Reports</div>
+      <div class="stat-value {{ 'red' if pending_reports > 0 else 'gold' }}">{{ pending_reports }}</div>
+      <div class="stat-sub">Awaiting review</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Banned Users</div>
+      <div class="stat-value {{ 'red' if banned_users > 0 else 'gold' }}">{{ banned_users }}</div>
+      <div class="stat-sub">{{ open_chat_count }} open chats · {{ unassigned_chat_count }} unassigned</div>
+    </div>
+  </div>
+
+  <!-- TABS -->
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab(event,'tab-reports')">
+      Reports
+      {% if pending_reports > 0 %}<span class="tab-count red">{{ pending_reports }}</span>{% endif %}
+    </button>
+    <button class="tab-btn" onclick="switchTab(event,'tab-users')">
+      Users
+      <span class="tab-count">{{ total_users }}</span>
+    </button>
+    <button class="tab-btn" onclick="switchTab(event,'tab-projects')">
+      Projects
+      <span class="tab-count">{{ total_projects }}</span>
+    </button>
+  </div>
+
+  <!-- TAB: REPORTS -->
+  <div id="tab-reports" class="tab-content active">
+    {% if reports_data %}
+      {% for item in reports_data %}
+      <div class="report-card">
+        <div>
+          {% if item.target_user %}
+            <div class="report-type user-report">User Report</div>
+          {% else %}
+            <div class="report-type project-report">Project Report</div>
+          {% endif %}
+
+          <div class="report-target">
+            {% if item.target_user %}
+              {{ item.target_user.first_name }} {{ item.target_user.last_name }}
+              <span style="font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--muted);font-style:normal;">({{ item.target_user.email }})</span>
+            {% elif item.target_project %}
+              "{{ item.target_project.title }}"
+              <span style="font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--muted);font-style:normal;">by {{ item.target_project.owner.first_name if item.target_project.owner else 'Unknown' }}</span>
+            {% else %}
+              Unknown target
+            {% endif %}
+          </div>
+
+          <span class="report-reason">{{ item.report.reason | replace('_', ' ') }}</span>
+
+          {% if item.report.description %}
+            <div class="report-desc">{{ item.report.description }}</div>
+          {% endif %}
+
+          <div class="report-meta">
+            <span>Reported by:
+              {% if item.reporter %}
+                <a href="/user/{{ item.reporter.id }}">{{ item.reporter.first_name }} {{ item.reporter.last_name }}</a>
+              {% else %}
+                Unknown
+              {% endif %}
+            </span>
+            <span>{{ item.report.created_at.strftime('%b %d, %Y') if item.report.created_at else '' }}</span>
+          </div>
+        </div>
+
+        <div class="report-actions">
+          <form method="POST" action="/admin/report/{{ item.report.id }}/process" style="margin:0;">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="action" value="warn">
+            <button type="submit" class="btn-warn" style="width:100%;">Warn</button>
+          </form>
+          {% if item.target_user %}
+          <form method="POST" action="/admin/report/{{ item.report.id }}/process" style="margin:0;">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="action" value="ban">
+            <button type="submit" class="btn-ban" style="width:100%;">Ban User</button>
+          </form>
+          {% endif %}
+          {% if item.target_project %}
+          <form method="POST" action="/admin/project/{{ item.target_project.id }}/remove" style="margin:0;"
+                onsubmit="return confirm('Remove this project? This cannot be undone.');">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="btn-ban" style="width:100%;">Remove Project</button>
+          </form>
+          {% endif %}
+          <form method="POST" action="/admin/report/{{ item.report.id }}/process" style="margin:0;">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="action" value="dismiss">
+            <button type="submit" class="btn-dismiss" style="width:100%;">Dismiss</button>
+          </form>
+        </div>
+      </div>
+      {% endfor %}
+    {% else %}
+      <div class="empty">No pending reports</div>
+    {% endif %}
+  </div>
+
+  <!-- TAB: USERS -->
+  <div id="tab-users" class="tab-content">
+    <div class="search-bar">
+      <input type="text" class="search-input" id="user-search" placeholder="Search users by name or email..." oninput="filterUsers()">
+    </div>
+    <div class="section-card">
+      <div class="section-card-inner">
+        <table class="users-table" id="users-table">
+          <thead>
+            <tr>
+              <th>User</th>
+              <th>Role</th>
+              <th>Department</th>
+              <th>Joined</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for user in all_users %}
+            <tr data-name="{{ user.first_name ~ ' ' ~ user.last_name | lower }}" data-email="{{ user.email | lower }}">
+              <td>
+                <div class="user-inline">
+                  <div class="mini-av">{{ user.first_name[0] }}{{ user.last_name[0] }}</div>
+                  <div>
+                    <div class="user-inline-name">{{ user.first_name }} {{ user.last_name }}</div>
+                    <div class="user-inline-email">{{ user.email }}</div>
+                  </div>
+                </div>
+              </td>
+              <td>
+                {% if user.role == 'instructor' %}
+                  <span class="role-badge role-instructor">Instructor</span>
+                {% else %}
+                  <span class="role-badge role-student">Student</span>
+                {% endif %}
+              </td>
+              <td style="color:var(--soft);font-size:0.8rem;">{{ user.department or '—' }}</td>
+              <td style="font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--muted);">
+                {{ user.created_at.strftime('%b %d, %Y') if user.created_at else '—' }}
+              </td>
+              <td>
+                {% if user.is_banned %}
+                  <span class="status-banned">Banned</span>
+                {% else %}
+                  <span class="status-active">Active</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if user.is_banned %}
+                  <form method="POST" action="/admin/user/{{ user.id }}/unban" style="margin:0;display:inline;">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn-sm-unban">Unban</button>
+                  </form>
+                {% else %}
+                  <form method="POST" action="/admin/user/{{ user.id }}/ban" style="margin:0;display:inline;">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn-sm-ban">Ban</button>
+                  </form>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% if not all_users %}
+          <div class="empty">No users found</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: PROJECTS -->
+  <div id="tab-projects" class="tab-content">
+    <div class="search-bar">
+      <input type="text" class="search-input" id="proj-search" placeholder="Search projects by title..." oninput="filterProjects()">
+    </div>
+    <div class="section-card">
+      <div class="section-card-inner">
+        <table class="projects-table" id="projects-table">
+          <thead>
+            <tr>
+              <th>Title</th>
+              <th>Owner</th>
+              <th>Course</th>
+              <th>Team</th>
+              <th>Status</th>
+              <th>Created</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for project in recent_projects %}
+            <tr data-title="{{ project.title | lower }}">
+              <td>
+                <a href="/project/{{ project.id }}" style="color:var(--text);text-decoration:none;font-weight:500;">
+                  {{ project.title }}
+                </a>
+              </td>
+              <td style="font-size:0.82rem;color:var(--soft);">
+                {% if project.owner %}
+                  <a href="/user/{{ project.owner.id }}" style="color:var(--soft);text-decoration:none;">
+                    {{ project.owner.first_name }} {{ project.owner.last_name }}
+                  </a>
+                {% else %}—{% endif %}
+              </td>
+              <td style="font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--muted);">{{ project.course or '—' }}</td>
+              <td style="font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--muted);">
+                {{ project.current_member_count() }} / {{ project.team_size }}
+              </td>
+              <td>
+                {% if project.status == 'open' %}
+                  <span class="proj-status-open">Open</span>
+                {% elif project.status == 'closed' %}
+                  <span class="proj-status-closed">Closed</span>
+                {% elif project.status == 'completed' %}
+                  <span class="proj-status-completed">Completed</span>
+                {% else %}
+                  <span style="color:var(--muted);font-size:0.78rem;">{{ project.status }}</span>
+                {% endif %}
+              </td>
+              <td style="font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--muted);">
+                {{ project.created_at.strftime('%b %d, %Y') if project.created_at else '—' }}
+              </td>
+              <td>
+                <form method="POST" action="/admin/project/{{ project.id }}/remove" style="margin:0;display:inline;"
+                      onsubmit="return confirm('Remove this project? This cannot be undone.')">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button type="submit" class="btn-sm-remove">Remove</button>
+                </form>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% if not recent_projects %}
+          <div class="empty">No projects found</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+function switchTab(e, tabId) {
+  document.querySelectorAll('.tab-content').forEach(function(t){t.classList.remove('active');});
+  document.querySelectorAll('.tab-btn').forEach(function(b){b.classList.remove('active');});
+  document.getElementById(tabId).classList.add('active');
+  e.currentTarget.classList.add('active');
+}
+
+function filterUsers() {
+  var q = document.getElementById('user-search').value.toLowerCase();
+  document.querySelectorAll('#users-table tbody tr').forEach(function(row) {
+    var name = row.dataset.name || '';
+    var email = row.dataset.email || '';
+    row.style.display = (name.includes(q) || email.includes(q)) ? '' : 'none';
+  });
+}
+
+function filterProjects() {
+  var q = document.getElementById('proj-search').value.toLowerCase();
+  document.querySelectorAll('#projects-table tbody tr').forEach(function(row) {
+    var title = row.dataset.title || '';
+    row.style.display = title.includes(q) ? '' : 'none';
+  });
+}
+
+(function(){
+  var ICONS={success:'',error:''};
+  var TITLES={success:'Done',error:'Error'};
+  window.showToast=function(msg,type,dur){
+    type=type||'info';dur=dur||4200;
+    var c=document.getElementById('toast-container');if(!c)return;
+    var t=document.createElement('div');
+    t.className='toast '+type;
+    t.innerHTML='<div class="toast-icon">'+ICONS[type]+'</div><div class="toast-body">'+msg+'</div><div class="toast-progress"></div>';
+    c.appendChild(t);setTimeout(function(){if(t.parentElement)t.parentElement.removeChild(t);},dur);
+  };
+  document.addEventListener('DOMContentLoaded',function(){
+    var el=document.getElementById('flask-messages');if(!el)return;
+    try{JSON.parse(el.getAttribute('data-messages')).forEach(function(m){window.showToast(m[1],m[0]==='error'?'error':'success');});}catch(e){}
+  });
+})();
+</script>
+</body>
+</html>

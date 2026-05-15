@@ -1,0 +1,613 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="csrf-token" content="{{ csrf_token() }}">
+<link rel="icon" href="/static/images/logo.svg" type="image/svg+xml">
+<title>ProjectBuddy — Edit Profile</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+html{scrollbar-gutter:stable;overflow-y:scroll;}
+:root{
+  color-scheme:dark;
+  --bg:#080808;--bg2:#0f0e0d;--bg3:#181614;
+  --card:rgba(255,255,255,0.025);--card-h:rgba(255,255,255,0.045);
+  --accent:#FFD700;--accent-dim:rgba(255,215,0,0.1);--accent-glow:rgba(255,215,0,0.18);
+  --red:#c0392b;--text:#ede8df;--muted:#6e6a64;--soft:#c8c2ba;
+  --border:rgba(255,255,255,0.055);--border-gold:rgba(255,215,0,0.12);--r:10px;
+}
+html.light-mode{color-scheme:light;--bg:#ffffff;--bg2:#f5f5f5;--bg3:#eeeeee;--card:rgba(0,0,0,0.03);--card-h:rgba(0,0,0,0.06);--accent:#d4a817;--accent-dim:rgba(212,168,23,0.12);--accent-glow:rgba(212,168,23,0.18);--red:#c0392b;--blue:#4a7fa5;--green:#5a8a6a;--text:#1a1a1a;--muted:#6b6b6b;--soft:#505050;--border:rgba(0,0,0,0.1);--border-gold:rgba(212,168,23,0.12);}
+html.light-mode input[type=text],html.light-mode input[type=email],html.light-mode input[type=password],html.light-mode input[type=date],html.light-mode input[type=number],html.light-mode input[type=search],html.light-mode input[type=url],html.light-mode textarea,html.light-mode select{background:rgba(0,0,0,0.04);}
+::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-thumb{background:rgba(255,215,0,0.2);border-radius:99px;}
+body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;display:flex;min-height:100vh;position:relative;}
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");pointer-events:none;z-index:0;opacity:0.6;}
+#cursor-glow{position:fixed;width:700px;height:700px;border-radius:50%;background:radial-gradient(circle,rgba(255,215,0,0.035) 0%,transparent 70%);pointer-events:none;transform:translate(-50%,-50%);z-index:1;}
+/* SIDEBAR */
+.sidebar{width:220px;flex-shrink:0;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:28px 14px;position:fixed;top:0;left:0;bottom:0;z-index:50;overflow:hidden;}
+.sidebar::before{content:'';position:absolute;top:0;left:0;right:0;height:200px;background:radial-gradient(ellipse at 50% 0%,rgba(255,215,0,0.06) 0%,transparent 70%);pointer-events:none;}
+.sidebar::after{content:'';position:absolute;bottom:0;left:0;right:0;height:120px;background:radial-gradient(ellipse at 30% 100%,rgba(255,215,0,0.04) 0%,transparent 70%);pointer-events:none;}
+.logo{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--text);font-family:'DM Serif Display',serif;font-size:1.08rem;font-weight:400;margin-bottom:36px;padding:0 8px;position:relative;z-index:1;}
+.logo-icon{width:28px;height:28px;border-radius:6px;object-fit:contain;flex-shrink:0;}
+.logo span{color:var(--accent);font-style:italic;}
+.nav-mark{display:none;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:var(--r);text-decoration:none;color:var(--muted);font-size:0.83rem;font-weight:500;transition:all 0.2s ease-out;margin-bottom:1px;border-left:2px solid transparent;position:relative;z-index:1;letter-spacing:0.01em;}
+.nav-item:hover{background:rgba(255,255,255,0.03);color:var(--soft);border-left-color:rgba(255,215,0,0.3);}
+.nav-item.active{background:rgba(255,215,0,0.06);color:var(--accent);border-left-color:var(--accent);}
+.sidebar-footer{margin-top:auto;padding:0 4px;position:relative;z-index:1;}
+.user-card{display:flex;align-items:center;gap:10px;padding:12px;background:rgba(255,255,255,0.025);border:1px solid var(--border);border-top-color:rgba(255,255,255,0.09);border-radius:var(--r);}
+.user-av{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#8a6530);color:var(--bg);display:flex;align-items:center;justify-content:center;font-size:0.72rem;font-weight:500;flex-shrink:0;}
+.user-name{font-size:0.83rem;font-weight:500;color:var(--text);}
+.user-role{font-size:0.68rem;color:var(--muted);font-family:'DM Mono',monospace;}
+#toast-container{position:fixed;top:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none;}
+.toast{display:flex;align-items:flex-start;gap:12px;padding:13px 16px;border-radius:var(--r);min-width:300px;max-width:400px;pointer-events:all;backdrop-filter:blur(20px);border:1px solid transparent;box-shadow:0 8px 32px rgba(0,0,0,0.5);animation:toastIn 0.35s cubic-bezier(0.34,1.56,0.64,1) both;position:relative;overflow:hidden;}
+.toast.success{background:rgba(15,12,8,0.95);border-color:rgba(255,215,0,0.3);}.toast.error{background:rgba(20,5,5,0.95);border-color:rgba(192,57,43,0.3);}
+.toast-icon{font-family:'DM Serif Display',serif;font-style:italic;font-size:1rem;flex-shrink:0;margin-top:1px;}
+.toast.success .toast-icon{color:var(--accent);}.toast.error .toast-icon{color:#e07060;}
+.toast-body{flex:1;}.toast-title{font-family:'DM Serif Display',serif;font-size:0.85rem;margin-bottom:2px;color:var(--text);}
+.toast-msg{font-size:0.78rem;color:var(--soft);line-height:1.5;}
+.toast-close{background:none;border:none;color:var(--muted);cursor:pointer;font-size:0.8rem;padding:0;flex-shrink:0;}
+.toast-progress{position:absolute;bottom:0;left:0;height:2px;width:100%;transform-origin:left;animation:toastProgress 4.2s linear forwards;}
+.toast.success .toast-progress{background:var(--accent);}.toast.error .toast-progress{background:#e07060;}
+@keyframes toastIn{from{opacity:0;transform:translateX(30px);}to{opacity:1;transform:translateX(0);}}
+@keyframes toastOut{from{opacity:1;max-height:100px;}to{opacity:0;max-height:0;padding:0;margin:0;}}
+@keyframes toastProgress{from{transform:scaleX(1);}to{transform:scaleX(0);}}
+
+/* MAIN */
+.main{margin-left:220px;flex:1;padding:40px 48px;max-width:calc(100vw - 220px);position:relative;z-index:2;}
+.page-header{margin-bottom:36px;padding-bottom:24px;border-bottom:1px solid var(--border);}
+.breadcrumb{display:flex;align-items:center;gap:8px;font-family:'DM Mono',monospace;font-size:0.64rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);margin-bottom:12px;}
+.breadcrumb a{color:var(--soft);text-decoration:none;transition:color 0.18s;}
+.breadcrumb a:hover{color:var(--accent);}
+.breadcrumb-sep{color:var(--muted);}
+.page-title{font-family:'DM Serif Display',serif;font-size:1.8rem;font-weight:400;letter-spacing:-0.02em;}
+
+.form-grid{display:grid;grid-template-columns:1fr 320px;gap:40px;align-items:start;}
+
+/* AVATAR SECTION */
+.avatar-section{margin-bottom:32px;padding:28px;background:var(--card);border:1px solid var(--border);border-radius:var(--r);}
+.avatar-section-title{font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);margin-bottom:20px;}
+.avatar-upload-area{display:flex;align-items:center;gap:20px;}
+.avatar-preview{width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#8a6530);display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:1.4rem;color:var(--bg);flex-shrink:0;position:relative;overflow:hidden;cursor:pointer;border:2px solid rgba(255,215,0,0.3);}
+.avatar-preview:hover::after{content:'Change';position:absolute;inset:0;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:0.6rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--accent);}
+.avatar-preview img{width:100%;height:100%;object-fit:cover;}
+.avatar-info{flex:1;}
+.avatar-info p{font-size:0.84rem;color:var(--soft);line-height:1.6;margin-bottom:10px;}
+.avatar-info small{font-family:'DM Mono',monospace;font-size:0.64rem;color:var(--muted);letter-spacing:0.03em;}
+#avatar-file{display:none;}
+.btn-upload{display:inline-block;padding:8px 16px;border-radius:var(--r);font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.06em;text-transform:uppercase;cursor:pointer;background:transparent;border:1px solid rgba(255,215,0,0.25);color:var(--soft);transition:all 0.18s;}
+.btn-upload:hover{border-color:rgba(255,215,0,0.5);color:var(--gold);}
+
+/* FORM */
+.form-section{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:28px;margin-bottom:20px;}
+.form-section-title{font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);margin-bottom:20px;padding-bottom:12px;border-bottom:1px solid var(--border);}
+.form-group{margin-bottom:18px;}
+.form-group label{display:block;font-family:'DM Mono',monospace;font-size:0.66rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--soft);margin-bottom:8px;}
+.form-group label .req{color:var(--red);}
+/* FORM ELEMENTS */
+input[type=text],input[type=email],input[type=password],input[type=date],
+input[type=number],input[type=search],input[type=url],textarea,select{
+  width:100%;padding:11px 14px;background:rgba(255,255,255,0.04);
+  border:1px solid var(--border);border-radius:var(--r);
+  color:var(--text);font-family:'Outfit',sans-serif;font-size:0.88rem;
+  outline:none;transition:border-color 0.18s,box-shadow 0.18s;
+  appearance:none;-webkit-appearance:none;}
+input[type=text]:focus,input[type=email]:focus,input[type=password]:focus,
+input[type=date]:focus,input[type=number]:focus,input[type=search]:focus,
+input[type=url]:focus,textarea:focus,select:focus{
+  border-color:rgba(255,215,0,0.4);box-shadow:0 0 0 3px rgba(255,215,0,0.07);}
+::placeholder{color:var(--muted);opacity:1;}
+textarea{resize:vertical;min-height:100px;line-height:1.6;}
+select{
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236e6a64' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 12px center;padding-right:36px;}
+textarea{resize:vertical;min-height:100px;line-height:1.6;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.hint{font-family:'DM Mono',monospace;font-size:0.64rem;color:var(--muted);margin-top:5px;line-height:1.5;letter-spacing:0.02em;}
+
+/* SKILLS TAG SELECTOR */
+.tags-wrap{display:flex;flex-wrap:wrap;gap:6px;}
+.sel-tag{padding:5px 12px;border-radius:3px;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.03em;cursor:pointer;border:1px solid var(--border);background:var(--card);color:var(--soft);user-select:none;transition:all 0.18s;}
+.sel-tag:hover{border-color:rgba(255,215,0,0.3);color:var(--text);}
+.sel-tag.selected{background:var(--accent-dim);border-color:rgba(255,215,0,0.4);color:var(--accent);}
+.tag-count-lbl{font-family:'DM Mono',monospace;font-size:0.64rem;color:var(--muted);margin-top:8px;letter-spacing:0.04em;}
+.tag-count-lbl span{color:var(--accent);font-weight:500;}
+
+/* SKILLS INPUT */
+.skill-input-row{display:flex;gap:8px;margin-bottom:10px;}
+.skill-input-row input{flex:1;}
+.btn-add{padding:11px 16px;background:var(--accent-dim);border:1px solid rgba(255,215,0,0.25);border-radius:var(--r);color:var(--accent);font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.04em;cursor:pointer;white-space:nowrap;transition:all 0.18s;}
+.btn-add:hover{background:rgba(255,215,0,0.2);}
+.skills-list{display:flex;flex-wrap:wrap;gap:6px;}
+.skill-chip{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;background:var(--card);border:1px solid var(--border);border-radius:3px;font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--soft);letter-spacing:0.02em;}
+.skill-chip-remove{cursor:pointer;color:var(--muted);font-size:0.75rem;transition:color 0.18s;}
+.skill-chip-remove:hover{color:var(--red);}
+
+/* ACTIONS */
+.form-actions{display:flex;align-items:center;gap:10px;margin-top:24px;}
+.btn-save{padding:11px 24px;background:linear-gradient(135deg,#FFD700 0%,#C8960C 100%);border:none;border-radius:var(--r);color:#080808;font-family:'DM Mono',monospace;font-size:0.72rem;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;transition:all 0.18s;}
+.btn-save:hover{box-shadow:0 0 0 1px rgba(255,215,0,0.5),0 4px 24px rgba(255,215,0,0.2);transform:translateY(-1px);}
+.btn-cancel{padding:11px 20px;background:transparent;border:1px solid var(--border);border-radius:var(--r);color:var(--soft);font-family:'DM Mono',monospace;font-size:0.72rem;letter-spacing:0.06em;text-transform:uppercase;cursor:pointer;text-decoration:none;transition:all 0.18s;display:inline-block;}
+.btn-cancel:hover{border-color:rgba(255,255,255,0.15);color:var(--text);}
+
+/* SIDEBAR PREVIEW */
+.preview-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:24px;position:sticky;top:24px;}
+.preview-title{font-family:'DM Serif Display',serif;font-size:0.9rem;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--border);}
+.preview-av{width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#8a6530);display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:1.1rem;color:var(--bg);margin:0 auto 16px;overflow:hidden;}
+.preview-av img{width:100%;height:100%;object-fit:cover;}
+.preview-name{font-family:'DM Serif Display',serif;font-size:1rem;text-align:center;margin-bottom:4px;}
+.preview-sub{font-family:'DM Mono',monospace;font-size:0.64rem;letter-spacing:0.06em;text-transform:uppercase;color:var(--muted);text-align:center;margin-bottom:16px;}
+.preview-interests{display:flex;flex-wrap:wrap;gap:4px;justify-content:center;}
+.preview-tag{padding:2px 7px;border-radius:2px;font-family:'DM Mono',monospace;font-size:0.58rem;letter-spacing:0.04em;background:var(--accent-dim);color:var(--accent);}
+.preview-bio{font-size:0.78rem;color:var(--soft);line-height:1.65;margin-top:14px;font-style:italic;}
+</style>
+<script>if(localStorage.getItem('theme')==='light')document.documentElement.classList.add('light-mode');document.addEventListener('DOMContentLoaded',function(){var t=document.getElementById('themeToggle');if(t)t.textContent=document.documentElement.classList.contains('light-mode')?'Dark':'Light';});</script>
+</head>
+<body>
+<div id="toast-container"></div>
+{% set _msgs = get_flashed_messages(with_categories=true) %}
+{% if _msgs %}<div id="flask-messages" data-messages="{{ _msgs | tojson }}"></div>{% endif %}
+
+<aside class="sidebar">
+  <a href="/" class="logo">
+    
+    Project<span>Buddy</span>
+  </a>
+  <a href="/dashboard" class="nav-item"><span class="nav-mark">&#8212;</span> Dashboard</a>
+  <a href="/projects-page" class="nav-item"><span class="nav-mark">&#8212;</span> Browse Projects</a>
+  <a href="/community" class="nav-item"><span class="nav-mark">&#8212;</span> Community</a>
+  <a href="/study-groups" class="nav-item"><span class="nav-mark">&#8212;</span> Study Groups</a>
+  <a href="/chatbot" class="nav-item"><span class="nav-mark">&#8212;</span> AI Assistant</a>
+  <a href="/post-project-page" class="nav-item"><span class="nav-mark">&#8212;</span> Post a Project</a>
+  <a href="/my-projects" class="nav-item"><span class="nav-mark">&#8212;</span> My Projects</a>
+  <a href="/profile" class="nav-item active"><span class="nav-mark">&#8212;</span> My Profile</a>
+  <a href="/report-issue" class="nav-item"><span class="nav-mark">&#8212;</span> Report Issue</a>
+  <a href="#" id="themeToggle" class="nav-item" onclick="var h=document.documentElement;h.classList.toggle('light-mode');var l=h.classList.contains('light-mode');localStorage.setItem('theme',l?'light':'dark');this.textContent=l?'Dark':'Light';return false;"><span class="nav-mark">&#8212;</span> Light</a>
+  <a href="/auth/logout" class="nav-item"><span class="nav-mark">&#8212;</span> Log Out</a>
+  <div style="padding:0 6px;margin-bottom:6px;">
+    <button onclick="toggleNotifs()" id="notif-btn" style="width:100%;display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:var(--r);background:none;border:1px solid transparent;cursor:pointer;color:var(--soft);font-family:'Outfit',sans-serif;font-size:0.84rem;font-weight:500;transition:all 0.18s;">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      Notifications
+      <span id="notif-badge" style="display:none;background:#c0392b;color:#fff;border-radius:99px;font-size:0.65rem;font-family:'DM Mono',monospace;padding:1px 6px;margin-left:auto;">0</span>
+    </button>
+  </div>
+  <div class="sidebar-footer">
+    <div class="user-card">
+      <div class="user-av" style="overflow:hidden;">
+        {% if current_user.avatar_url %}
+          <img src="{{ current_user.avatar_url }}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;">
+        {% else %}{{ current_user.first_name[0] }}{{ current_user.last_name[0] }}{% endif %}
+      </div>
+      <div>
+        <div class="user-name">{{ current_user.first_name }} {{ current_user.last_name }}</div>
+        <div class="user-role">{{ current_user.department or 'IUS' }} &middot; {{ current_user.role.title() }}</div>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<main class="main">
+  <div class="page-header">
+    <div class="breadcrumb">
+      <a href="/profile">Profile</a>
+      <span class="breadcrumb-sep">/</span>
+      <span>Edit</span>
+    </div>
+    <div class="page-title">Edit Profile</div>
+  </div>
+
+  <form method="POST" action="/edit-profile">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+    <div class="form-grid">
+      <div>
+        <!-- AVATAR — separate form so it never gets blocked by main form validation -->
+        <form method="POST" action="/profile/avatar" enctype="multipart/form-data" id="avatar-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="avatar-section">
+          <div class="avatar-section-title">Profile Photo</div>
+          <div class="avatar-upload-area">
+            <div class="avatar-preview" onclick="document.getElementById('avatar-file').click()" id="avatar-preview-el">
+              {% if user.avatar_url %}
+                <img src="{{ user.avatar_url }}" alt="Avatar" id="avatar-img">
+              {% else %}
+                <span id="avatar-initials">{{ user.first_name[0] }}{{ user.last_name[0] }}</span>
+                <img src="" alt="" id="avatar-img" style="display:none;">
+              {% endif %}
+            </div>
+            <div class="avatar-info">
+              <p>Upload a profile photo. Shown on your public profile and project listings.</p>
+              <small>JPG, PNG or WebP · Max 2MB · Recommended 400×400px</small>
+              <br><br>
+              <button type="button" class="btn-upload" onclick="document.getElementById('avatar-file').click()">Choose Photo</button>
+              <button type="submit" class="btn-upload" id="avatar-upload-btn" style="display:none;margin-left:8px;border-color:rgba(255,215,0,0.5);color:var(--accent);">↑ Upload</button>
+            </div>
+          </div>
+          <input type="file" id="avatar-file" name="avatar" accept="image/*" onchange="previewAvatar(this)">
+        </div>
+        </form>
+
+        <!-- BASIC INFO -->
+        <div class="form-section">
+          <div class="form-section-title">Basic Information</div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>First Name <span class="req">*</span></label>
+              <input type="text" name="first_name" value="{{ user.first_name }}" required>
+            </div>
+            <div class="form-group">
+              <label>Last Name <span class="req">*</span></label>
+              <input type="text" name="last_name" value="{{ user.last_name }}" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Email</label>
+            <input type="email" value="{{ user.email }}" disabled style="opacity:0.5;cursor:not-allowed;">
+            <div class="hint">Email cannot be changed.</div>
+          </div>
+          <div class="form-group">
+            <label>Department</label>
+            <select name="department">
+              <option value="">Select department</option>
+              <optgroup label="Engineering &amp; Natural Sciences">
+                <option value="Computer Science" {% if user.department == 'Computer Science' %}selected{% endif %}>Computer Science</option>
+                <option value="Software Engineering" {% if user.department == 'Software Engineering' %}selected{% endif %}>Software Engineering</option>
+                <option value="Electrical &amp; Electronics Engineering" {% if user.department == 'Electrical & Electronics Engineering' %}selected{% endif %}>Electrical &amp; Electronics Engineering</option>
+                <option value="Industrial Engineering" {% if user.department == 'Industrial Engineering' %}selected{% endif %}>Industrial Engineering</option>
+                <option value="Architecture" {% if user.department == 'Architecture' %}selected{% endif %}>Architecture</option>
+                <option value="Biomedical Engineering" {% if user.department == 'Biomedical Engineering' %}selected{% endif %}>Biomedical Engineering</option>
+                <option value="Genetics &amp; Bioengineering" {% if user.department == 'Genetics & Bioengineering' %}selected{% endif %}>Genetics &amp; Bioengineering</option>
+              </optgroup>
+              <optgroup label="Economics &amp; Administrative Sciences">
+                <option value="Business Administration" {% if user.department == 'Business Administration' %}selected{% endif %}>Business Administration</option>
+                <option value="International Relations" {% if user.department == 'International Relations' %}selected{% endif %}>International Relations &amp; European Studies</option>
+                <option value="Economics" {% if user.department == 'Economics' %}selected{% endif %}>Economics</option>
+                <option value="Tourism &amp; Hotel Management" {% if user.department == 'Tourism & Hotel Management' %}selected{% endif %}>Tourism &amp; Hotel Management</option>
+              </optgroup>
+              <optgroup label="Arts &amp; Social Sciences">
+                <option value="Psychology" {% if user.department == 'Psychology' %}selected{% endif %}>Psychology</option>
+                <option value="Communication &amp; Design" {% if user.department == 'Communication & Design' %}selected{% endif %}>Communication &amp; Design</option>
+                <option value="Translation &amp; Interpreting" {% if user.department == 'Translation & Interpreting' %}selected{% endif %}>Translation &amp; Interpreting</option>
+              </optgroup>
+              <optgroup label="Law">
+                <option value="Law" {% if user.department == 'Law' %}selected{% endif %}>Law</option>
+              </optgroup>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Bio</label>
+            <textarea name="bio" placeholder="Tell others about yourself, your projects, and what you're looking for in a teammate...">{{ user.bio or '' }}</textarea>
+          </div>
+        </div>
+
+        <!-- SKILLS -->
+        <div class="form-section">
+          <div class="form-section-title">Skills</div>
+          <div class="skill-input-row">
+            <input type="text" id="skill-input" placeholder="e.g. Python, React, SQL..." onkeydown="if(event.key==='Enter'){event.preventDefault();addSkill();}">
+            <button type="button" class="btn-add" onclick="addSkill()">Add</button>
+          </div>
+          <div class="skills-list" id="skills-list">
+            {% for skill in user.skills %}
+            <div class="skill-chip">
+              <span>{{ skill.skill }}</span>
+              <input type="hidden" name="skills" value="{{ skill.skill }}">
+              <span class="skill-chip-remove" onclick="removeSkill(this)">×</span>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+
+        <!-- CURRENT COURSES -->
+        <div class="form-section">
+          <div class="form-section-title">Current Courses</div>
+          <div class="hint" style="margin-bottom:14px;">Select the courses you are currently taking at IUS.</div>
+          <div style="margin-bottom:10px;">
+            <input type="text" id="course-search" placeholder="Search courses..." oninput="filterCourses(this.value)" style="width:100%;padding:9px 12px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:var(--r);color:var(--text);font-family:'Outfit',sans-serif;font-size:0.84rem;outline:none;">
+          </div>
+          <div class="tags-wrap" id="courseTagsWrap" style="max-height:260px;overflow-y:auto;">
+            {% set user_courses = user.courses | map(attribute='course') | list %}
+            {% set all_courses = [
+              'CS101 — Intro to Programming','CS121 — Discrete Mathematics','CS201 — Data Structures',
+              'CS202 — Algorithms','CS204 — Computer Organization','CS210 — Database Systems',
+              'CS220 — OOP','CS230 — Operating Systems','CS301 — Computer Networks',
+              'CS302 — Software Engineering','CS303 — Artificial Intelligence','CS304 — Web Programming',
+              'CS305 — Mobile Development','CS310 — Computer Graphics','CS320 — Cybersecurity',
+              'CS401 — Machine Learning','CS402 — Cloud Computing','CS403 — Distributed Systems',
+              'CS404 — Senior Project I','CS405 — Senior Project II',
+              'SE101 — Intro to Software Engineering','SE201 — Requirements Engineering',
+              'SE202 — Software Design & Architecture','SE301 — Software Testing & QA',
+              'SE302 — Agile Development','SE401 — Software Project Management','SE402 — DevOps',
+              'EEE101 — Circuit Theory','EEE201 — Electronics','EEE202 — Digital Logic',
+              'EEE301 — Microprocessors','EEE302 — Signals & Systems','EEE401 — Control Systems',
+              'IE201 — Operations Research','IE202 — Production Planning',
+              'IE301 — Quality Management','IE401 — Supply Chain Management',
+              'ARCH101 — Design Studio I','ARCH201 — Design Studio II',
+              'ARCH301 — Structural Systems','ARCH401 — Urban Design',
+              'BME201 — Biomechanics','BME301 — Medical Imaging','BME401 — Biomedical Instrumentation',
+              'GBE201 — Genetics','GBE301 — Molecular Biology','GBE401 — Bioinformatics',
+              'BA101 — Principles of Management','BA201 — Marketing','BA202 — Financial Accounting',
+              'BA301 — Organizational Behavior','BA302 — Strategic Management','BA401 — Entrepreneurship',
+              'IR201 — International Relations','IR301 — European Studies','IR401 — Diplomacy',
+              'ECON201 — Microeconomics','ECON202 — Macroeconomics','ECON301 — Econometrics',
+              'PSY101 — Intro to Psychology','PSY201 — Social Psychology',
+              'PSY301 — Research Methods in Psychology','PSY401 — Clinical Psychology',
+              'COMM201 — Media & Communication','COMM301 — Design Principles','COMM401 — Digital Media',
+              'LAW101 — Introduction to Law','LAW201 — Constitutional Law',
+              'LAW301 — Criminal Law','LAW401 — International Law',
+              'MATH101 — Calculus I','MATH102 — Calculus II',
+              'MATH201 — Linear Algebra','MATH202 — Statistics & Probability',
+              'PHYS101 — Physics I','PHYS102 — Physics II',
+              'ENG101 — Academic English I','ENG102 — Academic English II',
+              'TUR101 — Turkish I','TUR102 — Turkish II'
+            ] %}
+            {% for c in all_courses %}
+              <div class="sel-tag course-tag {% if c in user_courses %}selected{% endif %}" onclick="toggleCourse(this)">{{ c }}</div>
+            {% endfor %}
+          </div>
+          <div id="course-hidden-container">
+            {% for c in user.courses %}
+              <input type="hidden" name="courses" value="{{ c.course }}">
+            {% endfor %}
+          </div>
+        </div>
+
+        <!-- INTEREST TAGS -->
+        <div class="form-section">
+          <div class="form-section-title">Interest Tags</div>
+          <div class="hint" style="margin-bottom:14px;">Select exactly 5 interest areas. These power your project recommendations.</div>
+          <div class="tags-wrap" id="interestTagsWrap">
+            {% set user_tags = user.interest_tags | map(attribute='tag') | list %}
+            {% for t in [
+              'Python','JavaScript','React','Node.js','SQL / DB','Machine Learning','AI / NLP',
+              'Cloud','Cybersecurity','DevOps','Mobile Dev','Game Dev','Blockchain','IoT',
+              'Data Analysis','Computer Vision','Big Data','UI/UX Design','Flutter','Swift',
+              'Docker / K8s','Networks','Embedded Systems','Electronics','Robotics',
+              'Control Systems','Signal Processing','3D Modeling / CAD','Architecture Design',
+              'Urban Planning','Sustainable Design','BIM / Revit',
+              'Marketing','Finance','Entrepreneurship','Management','Supply Chain',
+              'Business Analytics','E-commerce','HR / People Ops','Consulting',
+              'Psychology','Communication','Media & Journalism','Graphic Design',
+              'Video Editing','Photography','Animation','Translation',
+              'International Relations','Law','Economics','Research & Academia',
+              'Biomedical Research','Genetics','Statistics','Mathematics'
+            ] %}
+              <div class="sel-tag {% if t in user_tags %}selected{% endif %}" onclick="toggleInterest(this)">{{ t }}</div>
+            {% endfor %}
+          </div>
+          <div class="tag-count-lbl"><span id="interestCount">{{ user.interest_tags|length }}</span> / 5 selected</div>
+          <div id="interest-hidden-container">
+            {% for interest in user.interest_tags %}
+              <input type="hidden" name="interest_tags" value="{{ interest.tag }}">
+            {% endfor %}
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn-save">Save Changes</button>
+          <a href="/profile" class="btn-cancel">Cancel</a>
+        </div>
+      </div>
+
+      <!-- PREVIEW -->
+      <div>
+        <div class="preview-card">
+          <div class="preview-title">Profile Preview</div>
+          <div class="preview-av" id="preview-av-el">
+            <img src="" alt="" id="preview-av-img" style="display:none;">
+            <span id="preview-av-initials">{{ user.first_name[0] }}{{ user.last_name[0] }}</span>
+          </div>
+          <div class="preview-name" id="preview-name">{{ user.first_name }} {{ user.last_name }}</div>
+          <div class="preview-sub" id="preview-sub">{{ user.department or 'IUS' }}</div>
+          <div class="preview-interests" id="preview-interests">
+            {% for interest in user.interest_tags %}
+              <span class="preview-tag">{{ interest.tag }}</span>
+            {% endfor %}
+          </div>
+          <div class="preview-bio" id="preview-bio">{{ user.bio or 'No bio yet.' }}</div>
+        </div>
+      </div>
+    </div>
+  </form>
+</main>
+
+<script>
+/* ── CSRF helper — reads Flask-WTF token from meta tag ──────────────────── */
+function _getCsrf(){
+  var m=document.querySelector('meta[name="csrf-token"]');
+  return m?m.getAttribute('content'):'';
+}
+/* Patch all fetch() POST calls to include the CSRF token header automatically */
+(function(){
+  var _origFetch=window.fetch;
+  window.fetch=function(url,opts){
+    opts=opts||{};
+    if(opts.method&&opts.method.toUpperCase()==='POST'){
+      opts.headers=Object.assign({'X-CSRFToken':_getCsrf()},opts.headers||{});
+    }
+    return _origFetch.call(this,url,opts);
+  };
+})();
+</script><script>
+var interestCount = {{ user.interest_tags|length }};
+
+function previewAvatar(input) {
+  var file = input.files[0];
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    var src = e.target.result;
+    // Main preview
+    var img = document.getElementById('avatar-img');
+    var initials = document.getElementById('avatar-initials');
+    if (img) { img.src = src; img.style.display = 'block'; }
+    if (initials) initials.style.display = 'none';
+    // Sidebar preview
+    var pimg = document.getElementById('preview-av-img');
+    var pinit = document.getElementById('preview-av-initials');
+    if (pimg) { pimg.src = src; pimg.style.display = 'block'; }
+    if (pinit) pinit.style.display = 'none';
+    // Show upload button
+    var btn = document.getElementById('avatar-upload-btn');
+    if (btn) btn.style.display = 'inline-block';
+  };
+  reader.readAsDataURL(file);
+}
+
+function addSkill() {
+  var input = document.getElementById('skill-input');
+  var val = input.value.trim();
+  if (!val) return;
+  var list = document.getElementById('skills-list');
+  var chip = document.createElement('div');
+  chip.className = 'skill-chip';
+  chip.innerHTML = '<span>' + val + '</span><input type="hidden" name="skills" value="' + val + '"><span class="skill-chip-remove" onclick="removeSkill(this)">×</span>';
+  list.appendChild(chip);
+  input.value = '';
+}
+
+function removeSkill(btn) {
+  btn.parentElement.remove();
+}
+
+function toggleInterest(el) {
+  if (el.classList.contains('selected')) {
+    el.classList.remove('selected');
+    interestCount--;
+  } else if (interestCount < 5) {
+    el.classList.add('selected');
+    interestCount++;
+  }
+  document.getElementById('interestCount').textContent = interestCount;
+  // Update hidden inputs
+  var container = document.getElementById('interest-hidden-container');
+  container.innerHTML = '';
+  document.querySelectorAll('#interestTagsWrap .sel-tag.selected').forEach(function(t) {
+    var inp = document.createElement('input');
+    inp.type = 'hidden';
+    inp.name = 'interest_tags';
+    inp.value = t.textContent.trim();
+    container.appendChild(inp);
+  });
+  // Update preview
+  var preview = document.getElementById('preview-interests');
+  preview.innerHTML = '';
+  document.querySelectorAll('#interestTagsWrap .sel-tag.selected').forEach(function(t) {
+    var span = document.createElement('span');
+    span.className = 'preview-tag';
+    span.textContent = t.textContent.trim();
+    preview.appendChild(span);
+  });
+}
+
+// Live preview updates
+document.querySelector('input[name=first_name]').addEventListener('input', updatePreview);
+document.querySelector('input[name=last_name]').addEventListener('input', updatePreview);
+document.querySelector('select[name=department]').addEventListener('change', updatePreview);
+document.querySelector('textarea[name=bio]').addEventListener('input', function() {
+  document.getElementById('preview-bio').textContent = this.value || 'No bio yet.';
+});
+
+function updatePreview() {
+  var fn = document.querySelector('input[name=first_name]').value;
+  var ln = document.querySelector('input[name=last_name]').value;
+  var dept = document.querySelector('select[name=department]').value;
+  document.getElementById('preview-name').textContent = fn + ' ' + ln;
+  document.getElementById('preview-sub').textContent = dept || 'IUS';
+  var initials = (fn[0] || '') + (ln[0] || '');
+  var pinit = document.getElementById('preview-av-initials');
+  if (pinit) pinit.textContent = initials;
+}
+
+// Toast
+(function(){
+  var ICONS={success:"",error:""};var TITLES={success:"Done",error:"Error"};
+  window.showToast=function(msg,type,dur){type=type||"info";dur=dur||4200;var c=document.getElementById("toast-container");if(!c)return;var t=document.createElement("div");t.className="toast "+type;t.innerHTML="<div class=\"toast-icon\">"+ICONS[type]+"</div><div class=\"toast-body\"><div class=\"toast-title\">"+TITLES[type]+"</div><div class=\"toast-msg\">"+msg+"</div></div><button class=\"toast-close\" onclick=\"window.dismissToast(this.parentElement)\">×</button><div class=\"toast-progress\"></div>";c.appendChild(t);setTimeout(function(){window.dismissToast(t);},dur);};
+  window.dismissToast=function(t){if(!t||t._d)return;t._d=true;t.style.animation="toastOut 0.28s ease forwards";setTimeout(function(){if(t.parentElement)t.parentElement.removeChild(t);},280);};
+  document.addEventListener("DOMContentLoaded",function(){var el=document.getElementById("flask-messages");if(!el)return;try{JSON.parse(el.getAttribute("data-messages")).forEach(function(m){window.showToast(m[1],m[0]==="error"?"error":"success");});}catch(e){}});
+})();
+
+// Course toggling
+function toggleCourse(el) {
+  el.classList.toggle('selected');
+  var val = el.textContent.trim();
+  var container = document.getElementById('course-hidden-container');
+  var existing = container.querySelector('input[value="' + val + '"]');
+  if (el.classList.contains('selected')) {
+    if (!existing) {
+      var inp = document.createElement('input');
+      inp.type = 'hidden'; inp.name = 'courses'; inp.value = val;
+      container.appendChild(inp);
+    }
+  } else {
+    if (existing) existing.remove();
+  }
+}
+
+function filterCourses(query) {
+  var tags = document.querySelectorAll('.course-tag');
+  var q = query.toLowerCase().trim();
+  tags.forEach(function(t) {
+    t.style.display = (!q || t.textContent.toLowerCase().includes(q)) ? '' : 'none';
+  });
+}
+</script>
+<div id="notif-panel" style="display:none;position:fixed;left:228px;bottom:80px;width:320px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);box-shadow:0 8px 32px rgba(0,0,0,0.6);z-index:200;overflow:hidden;">
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:1px solid var(--border);">
+    <span style="font-family:'DM Serif Display',serif;font-size:0.9rem;">Notifications</span>
+    <button onclick="markAllRead()" style="background:none;border:none;color:var(--muted);font-size:0.72rem;cursor:pointer;font-family:'DM Mono',monospace;">mark all read</button>
+  </div>
+  <div id="notif-list" style="max-height:320px;overflow-y:auto;"></div>
+</div>
+<script>
+function _esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#x27;');}
+function toggleNotifs(){
+  var p=document.getElementById('notif-panel');
+  p.style.display=p.style.display==='none'?'block':'none';
+  if(p.style.display==='block') fetchNotifs();
+}
+async function fetchNotifs(){
+  try{
+    var r=await fetch('/notifications/unread');
+    var d=await r.json();
+    var badge=document.getElementById('notif-badge');
+    var list=document.getElementById('notif-list');
+    if(d.count>0){badge.textContent=d.count;badge.style.display='inline';}
+    else{badge.style.display='none';}
+    if(!list)return;
+    if(d.notifications.length===0){
+      list.innerHTML='<div style="padding:20px;text-align:center;color:var(--muted);font-size:0.8rem;">No new notifications</div>';
+      return;
+    }
+    list.innerHTML=d.notifications.map(function(n){return(
+      '<a href="'+(n.link||'#')+'" onclick="readNotif('+n.id+')" style="display:block;padding:12px 14px;border-bottom:1px solid var(--border);text-decoration:none;color:var(--text);transition:background 0.15s;" onmouseover="this.style.background=\'rgba(255,255,255,0.04)\'" onmouseout="this.style.background=\'none\'">'+
+      '<div style="font-size:0.82rem;line-height:1.4;">'+n.message+'</div>'+
+      '<div style="font-size:0.7rem;color:var(--muted);margin-top:4px;font-family:\'DM Mono\',monospace;">'+n.time_ago+'</div>'+
+      '</a>'
+    );}).join('');
+  }catch(e){}
+}
+async function readNotif(id){
+  await fetch('/notifications/'+id+'/read',{method:'POST'});
+  fetchNotifs();
+}
+async function markAllRead(){
+  await fetch('/notifications/read-all',{method:'POST'});
+  fetchNotifs();
+}
+document.addEventListener('click',function(e){
+  var panel=document.getElementById('notif-panel');
+  var btn=document.getElementById('notif-btn');
+  if(panel&&btn&&!panel.contains(e.target)&&!btn.contains(e.target)){
+    panel.style.display='none';
+  }
+});
+setInterval(fetchNotifs,30000);
+fetchNotifs();
+</script>
+<div id="cursor-glow"></div>
+<script>var cg=document.getElementById('cursor-glow');document.addEventListener('mousemove',function(e){cg.style.left=e.clientX+'px';cg.style.top=e.clientY+'px';});</script>
+</body>
+</html>

@@ -1,0 +1,68 @@
+# ── Secrets & environment (never commit real credentials) ─────────────────────
+.env
+.env.local
+.env.production
+.env.*.local
+.env.*
+!.env.example
+*.pem
+credentials.json
+secrets.json
+
+# ── Python ────────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg-info/
+*.egg
+dist/
+build/
+.eggs/
+
+# ── Virtual environment ───────────────────────────────────────────────────────
+venv/
+.venv/
+env/
+ENV/
+
+# ── Database (SQLite local dev — created on first run) ─────────────────────────
+instance/*
+!instance/.gitkeep
+*.db
+*.sqlite3
+
+# ── Uploads (user-generated content — serve from object storage in production)
+static/uploads/avatars/*
+static/uploads/community/*
+static/uploads/*
+!static/uploads/.gitkeep
+
+# ── Logs ──────────────────────────────────────────────────────────────────────
+logs/
+*.log
+
+# ── Flask / Alembic ───────────────────────────────────────────────────────────
+migrations/versions/*.pyc
+
+# ── Large / binary media (serve from CDN in production) ──────────────────────
+static/images/*.mp4
+static/images/*.jpeg
+static/images/*.jpg
+static/images/*.png
+!static/images/*.svg
+
+# ── macOS ─────────────────────────────────────────────────────────────────────
+.DS_Store
+.AppleDouble
+
+# ── IDEs ──────────────────────────────────────────────────────────────────────
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# ── Coverage / testing ────────────────────────────────────────────────────────
+.coverage
+htmlcov/
+.pytest_cache/
