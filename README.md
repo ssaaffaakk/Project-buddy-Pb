@@ -44,6 +44,7 @@ Finding project partners at university still means posting "anyone want to join?
 ### Study Groups
 - Create public or private study groups by topic
 - Real-time group chat
+- **Voice rooms** — WebRTC peer-to-peer voice calls inside study groups (no external service needed)
 - Share files within the group
 - Invite-based private groups
 
