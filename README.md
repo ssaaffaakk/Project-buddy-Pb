@@ -6,6 +6,12 @@ ProjectBuddy is a web platform built for university students to find project col
 
 ---
 
+## Demo
+
+[![ProjectBuddy Demo](https://img.youtube.com/vi/X3tt5sjE_ns/maxresdefault.jpg)](https://youtu.be/X3tt5sjE_ns)
+
+---
+
 ## The Problem
 
 Finding project partners at university still means posting "anyone want to join?" in group chats. Nobody knows what anyone else can actually do, and there's no way to see who contributed what in past projects. ProjectBuddy fixes that.
