@@ -217,7 +217,7 @@ class Feedback(db.Model):
     project_id = db.Column(db.Integer, db.ForeignKey("projects.id"), nullable=True)
     giver_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
     receiver_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
-    rating = db.Column(db.Integer, nullable=False)
+    rating = db.Column(db.Integer, db.CheckConstraint("rating BETWEEN 1 AND 5"), nullable=False)
     comment = db.Column(db.Text)
     is_instructor_rating = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
