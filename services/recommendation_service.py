@@ -66,7 +66,3 @@ def expand_user_interests(tags):
 
 def normalize_tag(tag):
     return tag.strip().lower()
-
-
-def match_count(user_tags, project_tags):
-    return len(set(user_tags).intersection(set(project_tags)))

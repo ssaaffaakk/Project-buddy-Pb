@@ -136,44 +136,16 @@ def _initialize_extensions(app: Flask) -> None:
         return _redir(_req.referrer or _url_for('auth.login'))
 
     # ── Generic HTTP error pages ───────────────────────────────────────────────
-    from flask import render_template_string
-
-    _404_PAGE = """<!doctype html><html lang="en"><head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>404 — Page Not Found</title>
-<style>*{margin:0;padding:0;box-sizing:border-box;}
-body{background:#0d0c0b;color:#ede8df;font-family:'Outfit',sans-serif;
-  display:flex;align-items:center;justify-content:center;min-height:100vh;text-align:center;padding:20px;}
-.code{font-size:5rem;font-weight:700;color:#FFD700;letter-spacing:-0.04em;line-height:1;}
-.msg{font-size:1.1rem;color:#9a9490;margin:12px 0 28px;}
-a{color:#FFD700;text-decoration:none;border-bottom:1px solid rgba(255,215,0,0.3);padding-bottom:2px;}
-</style></head><body>
-<div><div class="code">404</div>
-<div class="msg">This page doesn't exist.</div>
-<a href="/">← Back to ProjectBuddy</a></div></body></html>"""
-
-    _500_PAGE = """<!doctype html><html lang="en"><head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>500 — Server Error</title>
-<style>*{margin:0;padding:0;box-sizing:border-box;}
-body{background:#0d0c0b;color:#ede8df;font-family:'Outfit',sans-serif;
-  display:flex;align-items:center;justify-content:center;min-height:100vh;text-align:center;padding:20px;}
-.code{font-size:5rem;font-weight:700;color:#c0392b;letter-spacing:-0.04em;line-height:1;}
-.msg{font-size:1.1rem;color:#9a9490;margin:12px 0 28px;}
-a{color:#FFD700;text-decoration:none;border-bottom:1px solid rgba(255,215,0,0.3);padding-bottom:2px;}
-</style></head><body>
-<div><div class="code">500</div>
-<div class="msg">Something went wrong on our end. Please try again.</div>
-<a href="/">← Back to ProjectBuddy</a></div></body></html>"""
+    from flask import render_template
 
     @app.errorhandler(404)
     def not_found(e):
-        return render_template_string(_404_PAGE), 404
+        return render_template("errors/404.html"), 404
 
     @app.errorhandler(500)
     def server_error(e):
         app.logger.error("500 error: %s", e)
-        return render_template_string(_500_PAGE), 500
+        return render_template("errors/500.html"), 500
 
 
 def _register_blueprints(app: Flask) -> None:
@@ -329,4 +301,5 @@ def _configure_logging(app: Flask) -> None:
 if __name__ == "__main__":
     app = create_app()
     port = int(os.environ.get("PORT", 5001))
-    socketio.run(app, debug=app.debug, host="0.0.0.0", port=port, allow_unsafe_werkzeug=True)
+    socketio.run(app, debug=app.debug, host="0.0.0.0", port=port,
+                 allow_unsafe_werkzeug=os.environ.get("FLASK_ENV") != "production")
