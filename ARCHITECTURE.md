@@ -97,6 +97,7 @@ The frontend user interface running in web browsers.
 | Recommendation Service | Suggest projects based on user interests |
 | Deadline Checker | Monitor project deadlines and send reminders |
 | Email Service | Send notifications and transactional emails |
+| Mock Data | Seed realistic sample data for development |
 
 ---
 
@@ -114,6 +115,8 @@ The frontend user interface running in web browsers.
 - UserInterest - Interest tags for recommendations
 - UserSkill - Skills and expertise tracking
 - Message - Chat messages within projects
+
+**ORM:** SQLAlchemy 2.0 — all models use `mapped_column` with `Mapped[type]` annotations for type safety.
 
 **Database:** SQLite (development) or PostgreSQL (production)
 
@@ -213,11 +216,10 @@ ProjectBuddy/
 │   └── email.py           # Email sending
 │
 ├── services/              # Business logic services
-│   ├── badge_service.py       # Badge award logic
+│   ├── badge_service.py           # Badge award logic
 │   ├── recommendation_service.py  # Project recommendations
-│   ├── deadline_checker.py    # Deadline monitoring
-│   ├── bootstrap_service.py   # System initialization
-│   └── mock_data.py           # Sample data for testing
+│   ├── deadline_checker.py        # Deadline monitoring
+│   └── mock_data.py               # Sample data for development
 │
 ├── templates/             # HTML templates
 │   ├── base.html          # Base template
