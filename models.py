@@ -2,8 +2,7 @@
 Database Models
 """
 
-from datetime import datetime, timedelta
-from sqlalchemy import true
+from datetime import datetime, timedelta, timezone
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin
 from extensions import db
@@ -24,7 +23,7 @@ class User(UserMixin, db.Model):
     avatar_url = db.Column(db.String(500))
     is_active = db.Column(db.Boolean, default=True)
     is_banned = db.Column(db.Boolean, default=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
 
     # Relationships
     interest_tags = db.relationship("UserInterest", lazy=True, cascade="all, delete-orphan")
@@ -99,7 +98,7 @@ class Project(db.Model):
     team_size = db.Column(db.Integer, nullable=False)
     status = db.Column(db.String(20), default="open")
     deadline = db.Column(db.DateTime)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
     completed_at = db.Column(db.DateTime)
 
     owner = db.relationship("User", foreign_keys=[owner_id], lazy=True, overlaps="projects_owned")
@@ -120,7 +119,7 @@ class Project(db.Model):
 
     def mark_complete(self):
         self.status = "completed"
-        self.completed_at = datetime.utcnow()
+        self.completed_at = datetime.now(timezone.utc)()
 
     def close(self):
         self.status = "closed"
@@ -159,7 +158,7 @@ class ProjectMember(db.Model):
     project_id = db.Column(db.Integer, db.ForeignKey("projects.id"), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
     role = db.Column(db.String(50), default="member")
-    joined_at = db.Column(db.DateTime, default=datetime.utcnow)
+    joined_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
     removed = db.Column(db.Boolean, default=False)
     removed_at = db.Column(db.DateTime)
 
@@ -176,7 +175,7 @@ class Application(db.Model):
     applicant_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
     message = db.Column(db.Text)
     status = db.Column(db.String(20), default="pending")
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
     reviewed_at = db.Column(db.DateTime)
 
     project = db.relationship("Project", lazy=True, overlaps="applications")
@@ -191,7 +190,7 @@ class ProjectMessage(db.Model):
     project_id = db.Column(db.Integer, db.ForeignKey("projects.id"), nullable=False)
     sender_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
     content = db.Column(db.Text, nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
 
     project = db.relationship("Project", lazy=True)
     sender = db.relationship("User", lazy=True)
@@ -207,7 +206,7 @@ class AdminMessage(db.Model):
     content = db.Column(db.Text, nullable=False)
     is_read = db.Column(db.Boolean, default=False)
     is_warning = db.Column(db.Boolean, default=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
 
 
 class Feedback(db.Model):
@@ -221,7 +220,7 @@ class Feedback(db.Model):
     rating = db.Column(db.Integer, nullable=False)
     comment = db.Column(db.Text)
     is_instructor_rating = db.Column(db.Boolean, default=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
 
     giver = db.relationship("User", foreign_keys=[giver_id], lazy=True)
     receiver = db.relationship("User", foreign_keys=[receiver_id], lazy=True, overlaps="feedback_received")
@@ -235,7 +234,7 @@ class Endorsement(db.Model):
     giver_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
     receiver_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
     skill = db.Column(db.String(80), nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
 
 
 class Badge(db.Model):
@@ -256,7 +255,7 @@ class UserBadge(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
     badge_id = db.Column(db.Integer, db.ForeignKey("badges.id"), nullable=False)
-    earned_at = db.Column(db.DateTime, default=datetime.utcnow)
+    earned_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
 
     badge = db.relationship("Badge", lazy=True)
 
@@ -272,7 +271,7 @@ class Report(db.Model):
     reason = db.Column(db.Text, nullable=False)
     description = db.Column(db.Text)
     status = db.Column(db.String(20), default="pending")
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
     resolved_at = db.Column(db.DateTime)
 
     reporter = db.relationship("User", foreign_keys=[reporter_id])
@@ -289,7 +288,7 @@ class Chat(db.Model):
     subject = db.Column(db.String(200))
     status = db.Column(db.String(20), default="open")
     admin_id = db.Column(db.Integer, db.ForeignKey("users.id"))
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
     closed_at = db.Column(db.DateTime)
 
     user = db.relationship("User", foreign_keys=[user_id], lazy=True)
@@ -305,7 +304,7 @@ class ChatMessage(db.Model):
     chat_id = db.Column(db.Integer, db.ForeignKey("chats.id"), nullable=False)
     sender_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
     message = db.Column(db.Text, nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
 
     chat = db.relationship("Chat", lazy=True, overlaps="messages")
     sender = db.relationship("User", lazy=True)
@@ -321,7 +320,7 @@ class CommunityPost(db.Model):
     body       = db.Column(db.Text, nullable=False)
     media_url  = db.Column(db.String(500))
     media_type = db.Column(db.String(10))   # 'image' | 'video'
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
 
     author   = db.relationship("User", foreign_keys=[author_id], lazy=True)
     comments = db.relationship("CommunityComment", lazy=True, cascade="all, delete-orphan",
@@ -337,7 +336,7 @@ class CommunityComment(db.Model):
     post_id    = db.Column(db.Integer, db.ForeignKey("community_posts.id"), nullable=False)
     author_id  = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
     body       = db.Column(db.Text, nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
 
     author = db.relationship("User", foreign_keys=[author_id], lazy=True)
 
@@ -349,7 +348,7 @@ class CommunityLike(db.Model):
     id         = db.Column(db.Integer, primary_key=True)
     post_id    = db.Column(db.Integer, db.ForeignKey("community_posts.id"), nullable=False)
     user_id    = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
 
     __table_args__ = (db.UniqueConstraint("post_id", "user_id"),)
 
@@ -362,7 +361,7 @@ class ProjectVote(db.Model):
     project_id = db.Column(db.Integer, db.ForeignKey("projects.id"), nullable=False)
     user_id    = db.Column(db.Integer, db.ForeignKey("users.id"),    nullable=False)
     direction  = db.Column(db.String(4), nullable=False)  # "up" or "down"
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
 
     __table_args__ = (db.UniqueConstraint("project_id", "user_id", name="unique_project_vote"),)
 
@@ -377,7 +376,7 @@ class Notification(db.Model):
     message    = db.Column(db.String(300), nullable=False)
     link       = db.Column(db.String(200))  # URL to go to when clicked
     is_read    = db.Column(db.Boolean, default=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
 
 
 class PasswordReset(db.Model):
@@ -387,13 +386,13 @@ class PasswordReset(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
     token = db.Column(db.String(256), unique=True, nullable=False, index=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
 
     user = db.relationship("User", lazy=True)
 
     def is_expired(self, expiry_seconds=86400):
         expiry_time = self.created_at + timedelta(seconds=expiry_seconds)
-        return datetime.utcnow() > expiry_time
+        return datetime.now(timezone.utc)() > expiry_time
 
 
 # ── SHARED FILES ─────────────────────────────────────────────────────────────
@@ -409,7 +408,7 @@ class SharedFile(db.Model):
     stored_name = db.Column(db.String(255), nullable=False)
     file_size   = db.Column(db.Integer, default=0)
     mime_type   = db.Column(db.String(120), default='application/octet-stream')
-    created_at  = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at  = db.Column(db.DateTime, default=datetime.now(timezone.utc))
 
     uploader = db.relationship("User", lazy=True)
 
@@ -426,7 +425,7 @@ class StudyGroup(db.Model):
     description = db.Column(db.Text)
     creator_id  = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
     is_private  = db.Column(db.Boolean, default=False)
-    created_at  = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at  = db.Column(db.DateTime, default=datetime.now(timezone.utc))
 
     creator  = db.relationship("User", foreign_keys=[creator_id], lazy=True)
     members  = db.relationship("StudyGroupMember", lazy=True, cascade="all, delete-orphan")
@@ -448,7 +447,7 @@ class StudyGroupMember(db.Model):
     group_id   = db.Column(db.Integer, db.ForeignKey("study_groups.id"), nullable=False)
     user_id    = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
     role       = db.Column(db.String(20), default="member")   # "admin" | "member"
-    joined_at  = db.Column(db.DateTime, default=datetime.utcnow)
+    joined_at  = db.Column(db.DateTime, default=datetime.now(timezone.utc))
 
     user = db.relationship("User", lazy=True)
 
@@ -463,7 +462,7 @@ class StudyGroupMessage(db.Model):
     group_id   = db.Column(db.Integer, db.ForeignKey("study_groups.id"), nullable=False)
     author_id  = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
     body       = db.Column(db.Text, nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
 
     author = db.relationship("User", lazy=True)
 
@@ -479,4 +478,4 @@ class ChatbotSession(db.Model):
     user_id    = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
     role       = db.Column(db.String(10), nullable=False)   # "user" | "assistant"
     content    = db.Column(db.Text, nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
