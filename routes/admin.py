@@ -1,41 +1,37 @@
 from flask import Blueprint, request, jsonify, render_template, flash, redirect, url_for
-from flask_login import login_required, current_user
-from extensions import db
+from flask_login import login_required
+from extensions import db, admin_required
 from models import Report, User, Project, Application, Badge, AdminMessage
 
 admin_bp = Blueprint("admin", __name__, url_prefix="/admin")
 
-# Admin routes for managing reports, users, projects, and platform stats
+
+# ── REPORTS ───────────────────────────────────────────────────────────────────
+
 @admin_bp.route("/reports", methods=["GET"])
-@login_required
+@admin_required
 def list_reports():
     try:
-        if current_user.role != "admin":
-            return jsonify({"error": "Unauthorized access. Admins only."}), 403
         return jsonify({"reports": [
-            {"id": report.id, "reporter_id": report.reporter_id, "target_user_id": report.target_user_id, "reason": report.reason, "status": report.status}
-            for report in Report.query.all()
+            {"id": r.id, "reporter_id": r.reporter_id, "target_user_id": r.target_user_id,
+             "reason": r.reason, "status": r.status}
+            for r in Report.query.all()
         ]}), 200
     except Exception as e:
         return jsonify({"error": "An error occurred while fetching reports."}), 500
 
-# Admin actions on reports: warn user, ban user, dismiss report
+
 @admin_bp.route("/reports/<int:report_id>/warn", methods=["POST"])
-@login_required
+@admin_required
 def warn_user(report_id):
-    """
-    Issue a warning to the reported user.
-    - Admin only
-    - Mark report status as 'warned'
-    """
+    """Issue a warning to the reported user."""
     try:
-        if current_user.role != "admin":
-            return jsonify({"error": "Unauthorized access. Admins only."}), 403
         report = Report.query.get_or_404(report_id)
         if report.status != "pending":
             return jsonify({"error": "Report has already been processed."}), 400
         if not report.target_user_id:
             return jsonify({"error": "This report has no target user to warn."}), 400
+        from flask_login import current_user
         report.status = "warned"
         db.session.add(AdminMessage(
             user_id=report.target_user_id,
@@ -48,19 +44,12 @@ def warn_user(report_id):
     except Exception as e:
         return jsonify({"error": "An error occurred while processing the report."}), 500
 
-# Admin action to ban user based on report
+
 @admin_bp.route("/reports/<int:report_id>/ban", methods=["POST"])
-@login_required
+@admin_required
 def ban_user(report_id):
-    """
-    Ban the reported user.
-    - Admin only
-    - Set user.is_banned = True
-    - Cannot ban if user is currently an active project member (optional: enforce this)
-    """
+    """Ban the reported user."""
     try:
-        if current_user.role != "admin":
-            return jsonify({"error": "Unauthorized access. Admins only."}), 403
         ban_report = Report.query.get_or_404(report_id)
         if ban_report.status != "pending":
             return jsonify({"error": "Report has already been processed."}), 400
@@ -76,18 +65,12 @@ def ban_user(report_id):
     except Exception as e:
         return jsonify({"error": "An error occurred while banning the user."}), 500
 
-# Admin action to dismiss a report as invalid
+
 @admin_bp.route("/reports/<int:report_id>/dismiss", methods=["POST"])
-@login_required
+@admin_required
 def dismiss_report(report_id):
-    """
-    Dismiss a report as invalid.
-    - Admin only
-    - Mark report status as 'dismissed'
-    """
+    """Dismiss a report as invalid."""
     try:
-        if current_user.role != "admin":
-            return jsonify({"error": "Unauthorized access. Admins only."}), 403
         report = Report.query.get_or_404(report_id)
         if report.status != "pending":
             return jsonify({"error": "Report has already been processed."}), 400
@@ -97,17 +80,14 @@ def dismiss_report(report_id):
     except Exception as e:
         return jsonify({"error": "An error occurred while dismissing the report."}), 500
 
-#admin action to remove a project listing that is fake or misleading
+
+# ── PROJECTS ──────────────────────────────────────────────────────────────────
+
 @admin_bp.route("/projects/<int:project_id>/remove", methods=["DELETE"])
-@login_required
+@admin_required
 def remove_project(project_id):
-    """
-    Remove a fake or misleading project listing.
-    - Admin only
-    """
+    """Remove a fake or misleading project listing."""
     try:
-        if current_user.role != "admin":
-            return jsonify({"error": "Unauthorized access. Admins only."}), 403
         project_to_remove = Project.query.get_or_404(project_id)
         db.session.delete(project_to_remove)
         db.session.commit()
@@ -115,43 +95,31 @@ def remove_project(project_id):
     except Exception as e:
         return jsonify({"error": "An error occurred while removing the project."}), 500
 
-# Admin route to view overall platform stats
+
+# ── STATS ─────────────────────────────────────────────────────────────────────
+
 @admin_bp.route("/stats", methods=["GET"])
-@login_required
+@admin_required
 def platform_stats():
-    """
-    Return overall platform activity stats.
-    - Admin only
-    - Total users, projects, applications, reports, badges awarded
-    """
+    """Return overall platform activity stats."""
     try:
-        if current_user.role != "admin":
-            return jsonify({"error": "Unauthorized access. Admins only."}), 403
-        total_users = User.query.count()
-        total_projects = Project.query.count()
-        total_applications = Application.query.count()
-        total_reports = Report.query.count()
-        total_badges = Badge.query.count()
         return jsonify({
-            "total_users": total_users,
-            "total_projects": total_projects,
-            "total_applications": total_applications,
-            "total_reports": total_reports,
-            "total_badges": total_badges
+            "total_users":        User.query.count(),
+            "total_projects":     Project.query.count(),
+            "total_applications": Application.query.count(),
+            "total_reports":      Report.query.count(),
+            "total_badges":       Badge.query.count(),
         }), 200
     except Exception as e:
         return jsonify({"error": "An error occurred while fetching platform stats."}), 500
 
 
-# ── ADMIN: AI CHAT LOGS ────────────────────────────────────────────────────
+# ── AI CHAT LOGS ──────────────────────────────────────────────────────────────
+
 @admin_bp.route("/ai-chats")
-@login_required
+@admin_required
 def ai_chat_logs():
-    if current_user.role != "admin":
-        flash("Access denied.", "error")
-        return redirect(url_for("main.dashboard"))
-    from models import ChatbotSession, User
-    # Get all users who have chatbot sessions, with their recent messages
+    from models import ChatbotSession
     users_with_chats = (
         db.session.query(User)
         .join(ChatbotSession, ChatbotSession.user_id == User.id)
@@ -169,13 +137,11 @@ def ai_chat_logs():
     return render_template("admin/ai_chats.html", user_sessions=user_sessions)
 
 
-# ── ADMIN: MESSAGES ────────────────────────────────────────────────────────
+# ── MESSAGES ──────────────────────────────────────────────────────────────────
+
 @admin_bp.route("/messages")
-@login_required
+@admin_required
 def admin_messages():
-    if current_user.role != "admin":
-        flash("Access denied.", "error")
-        return redirect(url_for("main.dashboard"))
     msgs = AdminMessage.query.order_by(AdminMessage.created_at.asc()).all()
     user_ids = {m.user_id for m in msgs}
     users = {u.id: u for u in User.query.filter(User.id.in_(user_ids)).all()} if user_ids else {}
@@ -185,11 +151,11 @@ def admin_messages():
             "user_id": m.user_id,
             "user": {
                 "first_name": users[m.user_id].first_name if m.user_id in users else "Unknown",
-                "last_name": users[m.user_id].last_name if m.user_id in users else "",
+                "last_name":  users[m.user_id].last_name  if m.user_id in users else "",
             },
-            "sender_id": m.sender_id,
-            "content": m.content,
-            "is_read": m.is_read,
+            "sender_id":  m.sender_id,
+            "content":    m.content,
+            "is_read":    m.is_read,
             "created_at": m.created_at.isoformat() if m.created_at else None,
         }
         for m in msgs
@@ -198,10 +164,9 @@ def admin_messages():
 
 
 @admin_bp.route("/message/<int:user_id>/reply", methods=["POST"])
-@login_required
+@admin_required
 def admin_reply_message(user_id):
-    if current_user.role != "admin":
-        return jsonify({"error": "Unauthorized"}), 403
+    from flask_login import current_user
     content = request.form.get("content", "").strip()
     if not content:
         return jsonify({"error": "Content required"}), 400
