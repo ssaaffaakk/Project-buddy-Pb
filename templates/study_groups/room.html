@@ -123,7 +123,9 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 .vp-btn.leave:hover{background:rgba(192,57,43,0.1);}
 .vp-btn.muted{border-color:rgba(255,215,0,0.35);color:var(--accent);}
 .voice-participants{flex:1;overflow-y:auto;padding:12px;}
-.vp-empty{font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--muted);text-align:center;padding:20px 0;font-style:italic;}
+.vp-empty{font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--muted);text-align:center;padding:20px 12px;font-style:italic;}
+.vp-join-btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:var(--r);font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.07em;text-transform:uppercase;border:none;background:linear-gradient(135deg,#FFD700 0%,#C8960C 100%);color:#080808;cursor:pointer;font-weight:600;transition:all 0.2s;margin-top:4px;}
+.vp-join-btn:hover{box-shadow:0 0 0 1px rgba(255,215,0,0.5),0 4px 16px rgba(255,215,0,0.2);}
 .voice-participant{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:var(--r);margin-bottom:4px;background:var(--card);border:1px solid var(--border);transition:border-color 0.2s;}
 .voice-participant.speaking{border-color:rgba(74,190,90,0.4);background:rgba(74,190,90,0.05);}
 .vp-av{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#8a6530);color:var(--bg);display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:0.65rem;flex-shrink:0;}
@@ -323,12 +325,17 @@ select{
             <button class="vp-btn" id="mute-btn" onclick="toggleMute()">Mute</button>
             <button class="vp-btn leave" onclick="leaveVoice()">Leave Voice</button>
           </div>
-          <div id="voice-join-hint" style="font-family:'DM Mono',monospace;font-size:0.65rem;color:var(--muted);">
-            Click "Voice" in the header to join
-          </div>
         </div>
         <div class="voice-participants" id="voice-participants">
-          <div class="vp-empty" id="vp-empty">No one in voice yet</div>
+          <div class="vp-empty" id="vp-empty">
+            <div style="margin-bottom:12px;">No one in voice yet</div>
+            {% if is_member %}
+            <button class="vp-join-btn" id="vp-join-btn" onclick="toggleVoice()">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/></svg>
+              Join Voice
+            </button>
+            {% endif %}
+          </div>
         </div>
       </div>
 
@@ -537,27 +544,80 @@ async function toggleVoice(){
 
 async function joinVoice(){
   if(inVoice)return;
-  try{localStream=await navigator.mediaDevices.getUserMedia({audio:true,video:false});}
-  catch(e){toast('Microphone access denied. Allow microphone in browser settings.','error');return;}
 
-  ensureSocket();
-  socket.emit('join_voice',{group_id:GROUP_ID});
-  inVoice=true;
-
-  /* open panel → voice tab */
+  /* Open panel and show "connecting" state immediately */
   openPanel('voice');
 
-  /* show controls, hide hint */
+  /* Show yourself right away — before mic prompt so user sees feedback */
+  _showMyCard(false);
+
+  /* Request microphone */
+  try{
+    localStream=await navigator.mediaDevices.getUserMedia({audio:true,video:false});
+  }catch(e){
+    toast('Microphone access denied. Allow microphone in browser settings.','error');
+    _removeMyCard();
+    return;
+  }
+
+  /* Connect SocketIO and join the voice room */
+  try{
+    ensureSocket();
+    socket.emit('join_voice',{group_id:GROUP_ID});
+  }catch(e){
+    toast('Connection error. Please refresh and try again.','error');
+    if(localStream){localStream.getTracks().forEach(function(t){t.stop();});localStream=null;}
+    _removeMyCard();
+    return;
+  }
+
+  inVoice=true;
+
+  /* Show voice controls */
   document.getElementById('voice-controls').style.display='flex';
-  document.getElementById('voice-join-hint').style.display='none';
 
-  /* add myself */
-  addVpCard({sid:'__me__',name:MY_NAME,initials:MY_INITIALS,is_me:true});
+  /* Mark my card as live (mic active) */
+  _showMyCard(false);
 
-  /* update header button */
+  /* Update header button */
   var btn=document.getElementById('voice-btn');
   btn.classList.add('active-voice');
   btn.innerHTML='<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg> In Voice';
+}
+
+function _showMyCard(muted){
+  /* Remove old "No one in voice" empty state */
+  var container=document.getElementById('voice-participants');
+  var empty=document.getElementById('vp-empty');
+  if(empty)empty.remove();
+
+  var existing=document.getElementById('vp-__me__');
+  var micColor=muted?'rgba(192,57,43,0.7)':'#4abe5a';
+  var micTitle=muted?'Muted':'Speaking';
+  var html=
+    '<div class="vp-av">'+escHtml(MY_INITIALS)+'</div>'+
+    '<div class="vp-name" style="flex:1;">'+escHtml(MY_NAME)+' <span style="font-family:\'DM Mono\',monospace;font-size:0.62rem;color:var(--accent);">(You)</span></div>'+
+    '<svg class="vp-mic'+(muted?' muted':'')+'" title="'+micTitle+'" viewBox="0 0 24 24" fill="none" stroke="'+micColor+'" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/></svg>';
+
+  if(existing){
+    existing.innerHTML=html;
+  }else{
+    var div=document.createElement('div');
+    div.className='voice-participant';
+    div.id='vp-__me__';
+    div.style.borderColor='rgba(255,215,0,0.25)';
+    div.innerHTML=html;
+    container.insertBefore(div,container.firstChild);
+  }
+}
+
+function _removeMyCard(){
+  var el=document.getElementById('vp-__me__');
+  if(el)el.remove();
+  var container=document.getElementById('voice-participants');
+  if(!container.querySelector('.voice-participant')){
+    container.innerHTML='<div class="vp-empty" id="vp-empty"><div style="margin-bottom:12px;">No one in voice yet</div>{% if is_member %}<button class="vp-join-btn" id="vp-join-btn" onclick="toggleVoice()"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/></svg>Join Voice</button>{% endif %}</div>';
+  }
 }
 
 function leaveVoice(){
@@ -576,11 +636,11 @@ function leaveVoice(){
   /* stop mic */
   if(localStream){localStream.getTracks().forEach(function(t){t.stop();});localStream=null;}
 
-  /* reset voice panel */
-  document.getElementById('voice-participants').innerHTML='<div class="vp-empty" id="vp-empty">No one in voice yet</div>';
-  document.getElementById('voice-controls').style.display='none';
-  document.getElementById('voice-join-hint').style.display='';
   isMuted=false;
+
+  /* reset voice panel */
+  _removeMyCard();
+  document.getElementById('voice-controls').style.display='none';
 
   /* reset header button */
   var btn=document.getElementById('voice-btn');
@@ -595,9 +655,8 @@ function toggleMute(){
   var btn=document.getElementById('mute-btn');
   btn.textContent=isMuted?'Unmute':'Mute';
   btn.classList.toggle('muted',isMuted);
-  /* update my card mic icon */
-  var micEl=document.querySelector('#vp-__me__ .vp-mic');
-  if(micEl)micEl.classList.toggle('muted',isMuted);
+  /* re-render my card with updated mic state */
+  _showMyCard(isMuted);
 }
 
 function getOrCreatePC(remoteSid){
@@ -631,6 +690,8 @@ async function createOffer(remoteSid){
 }
 
 function addVpCard(user){
+  /* Use dedicated function for own card */
+  if(user.sid==='__me__'||user.is_me){_showMyCard(isMuted);return;}
   var container=document.getElementById('voice-participants');
   var empty=document.getElementById('vp-empty');
   if(empty)empty.remove();
@@ -641,8 +702,8 @@ function addVpCard(user){
   div.id='vp-'+user.sid;
   div.innerHTML=
     '<div class="vp-av">'+escHtml(user.initials)+'</div>'+
-    '<div class="vp-name">'+escHtml(user.name)+(user.is_me?' (You)':'')+'</div>'+
-    '<svg class="vp-mic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/></svg>';
+    '<div class="vp-name" style="flex:1;">'+escHtml(user.name)+'</div>'+
+    '<svg class="vp-mic" viewBox="0 0 24 24" fill="none" stroke="#4abe5a" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/></svg>';
   container.appendChild(div);
 }
 
@@ -650,8 +711,9 @@ function removeVpCard(sid){
   var el=document.getElementById('vp-'+sid);
   if(el)el.remove();
   var container=document.getElementById('voice-participants');
-  if(!container.querySelector('.voice-participant')){
-    container.innerHTML='<div class="vp-empty" id="vp-empty">No one in voice yet</div>';
+  /* Only show empty state if we are also not in voice */
+  if(!inVoice&&!container.querySelector('.voice-participant')){
+    _removeMyCard();
   }
 }
 
