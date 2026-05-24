@@ -114,13 +114,12 @@ def _initialize_extensions(app: Flask) -> None:
         # Remove server fingerprint
         response.headers.pop("Server", None)
         # Content Security Policy:
-        #   - script-src: nonce-based (blocks unsigned inline scripts)
-        #   - style-src: nonce for <style> blocks + unsafe-inline for
-        #     element-level style="..." attributes (cannot use nonces)
-        nonce = getattr(_g, "csp_nonce", "")
+        # unsafe-inline is required for both script and style because the
+        # templates use inline event handlers (onclick=) and inline style
+        # attributes throughout. frame-ancestors blocks clickjacking.
         response.headers["Content-Security-Policy"] = (
             "default-src 'self'; "
-            f"script-src 'self' 'nonce-{nonce}' https://cdn.jsdelivr.net; "
+            "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
             "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
             "font-src 'self' https://fonts.gstatic.com; "
             "img-src 'self' data: https:; "
