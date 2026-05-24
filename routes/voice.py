@@ -26,17 +26,35 @@ logger = logging.getLogger(__name__)
 
 # ── Room state backend ────────────────────────────────────────────────────────
 
+# Module-level Redis client singleton — created once, reuses the connection pool.
+# Creating a new client on every event would exhaust Redis connections under load.
+_redis_client = None
+_redis_checked = False
+
+
 def _get_redis():
-    """Return a Redis client if REDIS_URL is configured, else None."""
+    """Return the module-level Redis client if REDIS_URL is configured, else None.
+
+    Lazily initialised on first call; result is cached for the process lifetime
+    so we reuse the connection pool rather than opening a new connection per event.
+    """
+    global _redis_client, _redis_checked
+    if _redis_checked:
+        return _redis_client
+    _redis_checked = True
     redis_url = os.environ.get('REDIS_URL')
     if not redis_url:
         return None
     try:
-        import redis
-        return redis.from_url(redis_url, decode_responses=True)
+        import redis as _redis_lib
+        _redis_client = _redis_lib.from_url(redis_url, decode_responses=True)
+        # Verify the connection is actually reachable at startup
+        _redis_client.ping()
+        logger.info("Voice room state: Redis (%s)", redis_url.split("@")[-1])
     except Exception as e:
         logger.warning("Redis unavailable, falling back to in-memory voice state: %s", e)
-        return None
+        _redis_client = None
+    return _redis_client
 
 
 # Fallback: in-process dict used when Redis is not available.

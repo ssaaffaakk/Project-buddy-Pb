@@ -22,26 +22,31 @@ def send_email(recipient_email, subject, body, is_html=False):
         True if successful, False otherwise
     """
     try:
+        username = current_app.config.get('MAIL_USERNAME', '')
+        password = current_app.config.get('MAIL_PASSWORD', '')
+        sender   = current_app.config.get('MAIL_DEFAULT_SENDER') or username
+
+        if not sender:
+            logger.warning("Email not sent: MAIL_USERNAME / MAIL_DEFAULT_SENDER not configured.")
+            return False
+
         msg = MIMEMultipart('alternative')
         msg['Subject'] = subject
-        msg['From'] = current_app.config['MAIL_USERNAME']
-        msg['To'] = recipient_email
-        
+        msg['From']    = sender
+        msg['To']      = recipient_email
+
         if is_html:
             msg.attach(MIMEText(body, 'html'))
         else:
             msg.attach(MIMEText(body, 'plain'))
-        
+
         with smtplib.SMTP(current_app.config['MAIL_SERVER'], current_app.config['MAIL_PORT']) as server:
-            if current_app.config['MAIL_USE_TLS']:
+            if current_app.config.get('MAIL_USE_TLS', True):
                 server.starttls()
-            
-            server.login(
-                current_app.config['MAIL_USERNAME'],
-                current_app.config['MAIL_PASSWORD']
-            )
+            if username and password:
+                server.login(username, password)
             server.send_message(msg)
-        
+
         return True
     except Exception as e:
         logger.exception("Failed to send email to %s: %s", recipient_email, e)
