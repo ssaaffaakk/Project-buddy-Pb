@@ -481,12 +481,7 @@ var inVoice      = false;
 var mySid        = null;
 var peers        = {};   // {sid: RTCPeerConnection}
 
-var ICE_CFG = {
-  iceServers:[
-    {urls:'stun:stun.l.google.com:19302'},
-    {urls:'stun:stun1.l.google.com:19302'},
-  ]
-};
+var ICE_CFG = { iceServers: {{ ice_servers | safe }} };
 
 function ensureSocket(){
   if(socket)return;

@@ -3,14 +3,35 @@ Study Groups — mini Discord-style group chat rooms.
 """
 
 import os
+import json
 import uuid
 from datetime import datetime
-from flask import Blueprint, render_template, request, jsonify, redirect, url_for, flash, send_from_directory
+from flask import Blueprint, render_template, request, jsonify, redirect, url_for, flash, send_from_directory, current_app
 from flask_login import login_required, current_user
 from werkzeug.utils import secure_filename
 from extensions import db
 from models import StudyGroup, StudyGroupMember, StudyGroupMessage, Notification, SharedFile
 from services.file_storage import storage
+
+
+def _ice_servers():
+    """Build ICE server list from environment variables.
+
+    TURN_URLS  — comma-separated turn:/turns: URLs from Xirsys (or any provider)
+    TURN_USERNAME / TURN_CREDENTIAL — shared credential for all TURN URLs
+    Falls back to Google STUN only when TURN vars are not set (dev mode).
+    """
+    servers = [
+        {"urls": "stun:stun.l.google.com:19302"},
+        {"urls": "stun:stun1.l.google.com:19302"},
+    ]
+    urls_raw  = os.environ.get("TURN_URLS", "")
+    username  = os.environ.get("TURN_USERNAME", "")
+    credential = os.environ.get("TURN_CREDENTIAL", "")
+    if urls_raw and username and credential:
+        for url in [u.strip() for u in urls_raw.split(",") if u.strip()]:
+            servers.append({"urls": url, "username": username, "credential": credential})
+    return servers
 
 # ── File upload config ────────────────────────────────────────────────────────
 UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'static', 'uploads')
@@ -103,6 +124,7 @@ def room(group_id):
         "study_groups/room.html",
         group=group, messages=messages,
         is_member=is_member, user=current_user,
+        ice_servers=json.dumps(_ice_servers()),
     )
 
 
