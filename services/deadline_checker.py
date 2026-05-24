@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from models import Project
 from extensions import db
 
@@ -10,12 +10,12 @@ def flag_overdue_projects():
     """
     for project in Project.query.filter(
         Project.deadline.isnot(None),
-        Project.deadline < datetime.utcnow(),
+        Project.deadline < datetime.now(timezone.utc).replace(tzinfo=None),
         Project.status.in_(["open", "closed"])
     ).all():
         project.status = "completed"
         if not project.completed_at:
-            project.completed_at = datetime.utcnow()
+            project.completed_at = datetime.now(timezone.utc)
         db.session.add(project)
     db.session.commit()
     

@@ -23,7 +23,7 @@ def create_notification(user_id, message, link=None, type=None):
     db.session.add(n)
 from services.recommendation_service import get_recommended_projects
 from services.badge_service import check_and_award_badges
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 from werkzeug.utils import secure_filename
 
 ALLOWED_AVATAR_EXTENSIONS = {"jpg", "jpeg", "png", "webp"}
@@ -415,7 +415,7 @@ def complete_project_page(project_id):
         flash("Project is already completed.", "error")
         return redirect(url_for("main.project_detail", project_id=project_id))
     project.status = "completed"
-    project.completed_at = datetime.utcnow()
+    project.completed_at = datetime.now(timezone.utc)
     db.session.commit()
     for member in project.members:
         check_and_award_badges(member.user_id)
@@ -886,7 +886,7 @@ def process_report(report_id):
 
     if action == "warn":
         report.status = "warned"
-        report.resolved_at = datetime.utcnow()
+        report.resolved_at = datetime.now(timezone.utc)
         if report.target_user_id:
             db.session.add(AdminMessage(
                 user_id=report.target_user_id,
@@ -898,7 +898,7 @@ def process_report(report_id):
 
     elif action == "ban":
         report.status = "banned"
-        report.resolved_at = datetime.utcnow()
+        report.resolved_at = datetime.now(timezone.utc)
         if report.target_user_id:
             user = User.query.get(report.target_user_id)
             if user:
@@ -907,7 +907,7 @@ def process_report(report_id):
 
     elif action == "dismiss":
         report.status = "dismissed"
-        report.resolved_at = datetime.utcnow()
+        report.resolved_at = datetime.now(timezone.utc)
         flash("Report dismissed.", "success")
 
     else:
@@ -1012,7 +1012,7 @@ def admin_analytics():
     total_users   = User.query.count()  # User.query.count()
     total_students = User.query.filter_by(role="student").count()
 
-    thirty_days_ago = datetime.utcnow() - timedelta(days=30)
+    thirty_days_ago = datetime.now(timezone.utc) - timedelta(days=30)
     new_users_30d = User.query.filter(User.created_at >= thirty_days_ago).count()
 
     # --- PROJECT COUNTS ---
@@ -1047,7 +1047,7 @@ def admin_analytics():
     signup_data   = []
 
     for i in range(5, -1, -1):
-        target = datetime.utcnow() - timedelta(days=30 * i)
+        target = datetime.now(timezone.utc) - timedelta(days=30 * i)
         label  = target.strftime("%b")
         count  = User.query.filter(
             func.strftime('%Y-%m', User.created_at) == target.strftime('%Y-%m')

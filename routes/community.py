@@ -4,7 +4,7 @@ Community learning feed — posts, comments, likes, @mentions.
 
 import os
 import secrets
-from datetime import datetime
+from datetime import datetime, timezone
 from werkzeug.utils import secure_filename
 from flask import (
     Blueprint, render_template, request, jsonify,
@@ -80,7 +80,7 @@ def _save_media(file):
     # Prefix with a random token so filenames are not guessable/enumerable
     rand_token = secrets.token_hex(8)
     filename = secure_filename(
-        f"p_{current_user.id}_{int(datetime.utcnow().timestamp())}_{rand_token}.{ext}"
+        f"p_{current_user.id}_{int(datetime.now(timezone.utc).timestamp())}_{rand_token}.{ext}"
     )
     file.save(os.path.join(upload_dir, filename))
     return f"/static/uploads/community/{filename}", mtype

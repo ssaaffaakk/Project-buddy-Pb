@@ -2,7 +2,7 @@ from flask import Blueprint, request, jsonify
 from flask_login import login_required, current_user
 from extensions import db
 from models import Project, ProjectTag, ProjectSkill, ProjectMember, Application, Feedback, Endorsement, User
-from datetime import datetime
+from datetime import datetime, timezone
 from services.badge_service import check_and_award_badges
 from services.recommendation_service import get_recommended_projects
 projects_bp = Blueprint("projects", __name__, url_prefix="/projects")
@@ -200,7 +200,7 @@ def complete_project(project_id):
             return jsonify({"error": "Project is already completed."}), 400
         
         project.status = "completed"
-        project.completed_at = datetime.utcnow()
+        project.completed_at = datetime.now(timezone.utc)
         db.session.commit()
         
         # Award badges to all members
@@ -387,7 +387,7 @@ def remove_member(project_id, user_id):
             return jsonify({"error": "User is not an active member."}), 400
         
         remove_user.removed = True
-        remove_user.removed_at = datetime.utcnow()
+        remove_user.removed_at = datetime.now(timezone.utc)
         db.session.commit()
         return jsonify({"message": "Member removed successfully"}), 200
     except Exception as e:

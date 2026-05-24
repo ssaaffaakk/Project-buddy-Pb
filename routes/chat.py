@@ -2,7 +2,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash,
 from flask_login import login_required, current_user
 from extensions import db
 from models import Chat, ChatMessage
-from datetime import datetime
+from datetime import datetime, timezone
 
 chat_bp = Blueprint('chat', __name__, url_prefix='/chat')
 
@@ -151,7 +151,7 @@ def finish_chat(chat_id):
         return redirect(url_for('main.dashboard'))
     
     chat.status = 'closed'
-    chat.closed_at = datetime.utcnow()
+    chat.closed_at = datetime.now(timezone.utc)
     db.session.commit()
     
     flash('Chat closed. Thank you for reaching out!', 'success')

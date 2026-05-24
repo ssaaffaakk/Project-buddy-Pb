@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from sqlalchemy import or_
 
 from extensions import db
@@ -439,7 +439,7 @@ MOCK_SUPPORT_CHATS = [
 
 
 def seed_mock_data():
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     admin = _ensure_admin_user(now)
     if _mock_data_is_seeded():
         return
