@@ -670,8 +670,16 @@ function getOrCreatePC(remoteSid){
   /* receive remote audio */
   pc.ontrack=function(e){
     var audio=document.getElementById('audio-'+remoteSid);
-    if(!audio){audio=document.createElement('audio');audio.id='audio-'+remoteSid;audio.autoplay=true;document.body.appendChild(audio);}
-    audio.srcObject=e.streams[0];
+    if(!audio){
+      audio=document.createElement('audio');
+      audio.id='audio-'+remoteSid;
+      audio.autoplay=true;
+      audio.playsInline=true;
+      document.body.appendChild(audio);
+    }
+    /* Use stream if available, otherwise wrap track in a new MediaStream */
+    audio.srcObject=(e.streams&&e.streams[0])?e.streams[0]:new MediaStream([e.track]);
+    audio.play().catch(function(err){console.warn('Audio play blocked:',err);});
   };
 
   /* relay ICE */
