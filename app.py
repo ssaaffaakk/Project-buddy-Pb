@@ -259,7 +259,7 @@ def _sync_admin() -> None:
     else:
         admin = User(
             first_name='Admin',
-            last_name='IUS',
+            last_name='Admin',
             email=email,
             role='admin',
         )

@@ -284,7 +284,7 @@ MOCK_PROJECTS = [
         ],
     },
     {
-        "title": "IUS Bus Tracker Dashboard",
+        "title": "Bus Tracker Dashboard",
         "owner": "emir",
         "description": (
             "Web dashboard for bus ETAs, route delays, and occupancy estimates so commuting "
@@ -331,14 +331,14 @@ MOCK_PROJECTS = [
 
 MOCK_FEEDBACK = [
     {
-        "project": "IUS Bus Tracker Dashboard",
+        "project": "Bus Tracker Dashboard",
         "giver": "selma",
         "receiver": "emir",
         "rating": 5,
         "comment": "Emir kept the backend stable and always shared progress clearly.",
     },
     {
-        "project": "IUS Bus Tracker Dashboard",
+        "project": "Bus Tracker Dashboard",
         "giver": "faris",
         "receiver": "selma",
         "rating": 5,

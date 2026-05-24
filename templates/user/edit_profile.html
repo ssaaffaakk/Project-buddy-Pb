@@ -182,7 +182,7 @@ textarea{resize:vertical;min-height:100px;line-height:1.6;}
       </div>
       <div>
         <div class="user-name">{{ current_user.first_name }} {{ current_user.last_name }}</div>
-        <div class="user-role">{{ current_user.department or 'IUS' }} &middot; {{ current_user.role.title() }}</div>
+        <div class="user-role">{{ current_user.department or '' }} &middot; {{ current_user.role.title() }}</div>
       </div>
     </div>
   </div>
@@ -303,7 +303,7 @@ textarea{resize:vertical;min-height:100px;line-height:1.6;}
         <!-- CURRENT COURSES -->
         <div class="form-section">
           <div class="form-section-title">Current Courses</div>
-          <div class="hint" style="margin-bottom:14px;">Select the courses you are currently taking at IUS.</div>
+          <div class="hint" style="margin-bottom:14px;">Select the courses you are currently taking.</div>
           <div style="margin-bottom:10px;">
             <input type="text" id="course-search" placeholder="Search courses..." oninput="filterCourses(this.value)" style="width:100%;padding:9px 12px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:var(--r);color:var(--text);font-family:'Outfit',sans-serif;font-size:0.84rem;outline:none;">
           </div>
@@ -400,7 +400,7 @@ textarea{resize:vertical;min-height:100px;line-height:1.6;}
             <span id="preview-av-initials">{{ user.first_name[0] }}{{ user.last_name[0] }}</span>
           </div>
           <div class="preview-name" id="preview-name">{{ user.first_name }} {{ user.last_name }}</div>
-          <div class="preview-sub" id="preview-sub">{{ user.department or 'IUS' }}</div>
+          <div class="preview-sub" id="preview-sub">{{ user.department or '' }}</div>
           <div class="preview-interests" id="preview-interests">
             {% for interest in user.interest_tags %}
               <span class="preview-tag">{{ interest.tag }}</span>
@@ -515,7 +515,7 @@ function updatePreview() {
   var ln = document.querySelector('input[name=last_name]').value;
   var dept = document.querySelector('select[name=department]').value;
   document.getElementById('preview-name').textContent = fn + ' ' + ln;
-  document.getElementById('preview-sub').textContent = dept || 'IUS';
+  document.getElementById('preview-sub').textContent = dept || '';
   var initials = (fn[0] || '') + (ln[0] || '');
   var pinit = document.getElementById('preview-av-initials');
   if (pinit) pinit.textContent = initials;

@@ -198,7 +198,7 @@ select{
       </div>
       <div>
         <div class="user-name">{{ current_user.first_name }} {{ current_user.last_name }}</div>
-        <div class="user-role">{{ current_user.department or 'IUS' }} &middot; {{ current_user.role.title() }}</div>
+        <div class="user-role">{{ current_user.department or '' }} &middot; {{ current_user.role.title() }}</div>
       </div>
     </div>
   </div>
@@ -217,7 +217,7 @@ select{
     <div class="ph-info">
       <div>
         <h1>{{ user.first_name }} {{ user.last_name }}</h1>
-        <div class="ph-sub">{{ user.department or 'IUS' }} · {{ user.role.upper() }}</div>
+        <div class="ph-sub">{{ user.department or '' }} · {{ user.role.upper() }}</div>
         {% if user.role != 'admin' %}<div class="ph-tags">{% for i in user.interest_tags %}<span class="tag">{{ i.tag }}</span>{% endfor %}</div>{% endif %}
       </div>
       <div style="display:flex;gap:8px;align-items:center;">

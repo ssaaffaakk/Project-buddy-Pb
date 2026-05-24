@@ -152,7 +152,7 @@ select{
       </div>
       <div>
         <div class="user-name">{{ current_user.first_name }} {{ current_user.last_name }}</div>
-        <div class="user-role">{{ current_user.department or 'IUS' }} &middot; {{ current_user.role.title() }}</div>
+        <div class="user-role">{{ current_user.department or '' }} &middot; {{ current_user.role.title() }}</div>
       </div>
     </div>
   </div>

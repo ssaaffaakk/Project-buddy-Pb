@@ -209,7 +209,7 @@ textarea{width:100%;padding:10px 12px;background:var(--bg3);border:1px solid var
       </div>
       <div>
         <div class="user-name">{{ current_user.first_name }} {{ current_user.last_name }}</div>
-        <div class="user-role">{{ current_user.department or 'IUS' }} &middot; {{ current_user.role.title() }}</div>
+        <div class="user-role">{{ current_user.department or '' }} &middot; {{ current_user.role.title() }}</div>
       </div>
     </div>
   </div>
@@ -236,7 +236,7 @@ textarea{width:100%;padding:10px 12px;background:var(--bg3);border:1px solid var
     </div>
     <div class="profile-info">
       <div class="profile-name">{{ profile_user.first_name }} {{ profile_user.last_name }}</div>
-      <div class="profile-role">{{ profile_user.role }} • {{ profile_user.department or 'IUS' }}</div>
+      <div class="profile-role">{{ profile_user.role }} • {{ profile_user.department or '' }}</div>
       {% if profile_user.bio %}
         <div class="profile-bio">{{ profile_user.bio }}</div>
       {% endif %}

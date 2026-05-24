@@ -117,10 +117,8 @@ def register():
             flash('An account with this email already exists.', 'error')
             return redirect(url_for('auth.register'))
 
-        # Determine role
-        # Only IUS faculty domain addresses can auto-receive instructor role.
-        # Any other "faculty" string in an external address is ignored.
-        faculty_domain = current_app.config.get('IUS_FACULTY_DOMAIN', '@faculty.ius.edu.ba')
+        # Determine role — faculty domain addresses auto-receive instructor role.
+        faculty_domain = current_app.config.get('FACULTY_DOMAIN', '@faculty.university.edu')
         role = 'instructor' if email.endswith(faculty_domain) else 'student'
 
         # Create user

@@ -77,7 +77,7 @@ class Config:
     )
 
     # ── Role rules ─────────────────────────────────────────────────────────────
-    IUS_FACULTY_DOMAIN = os.environ.get('IUS_FACULTY_DOMAIN', '@faculty.ius.edu.ba')
+    FACULTY_DOMAIN = os.environ.get('FACULTY_DOMAIN', '@faculty.university.edu')
 
     # ── AI chatbot ───────────────────────────────────────────────────────────────
     GROQ_API_KEY      = os.environ.get('GROQ_API_KEY', '')

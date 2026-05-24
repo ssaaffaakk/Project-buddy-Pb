@@ -19,7 +19,7 @@ HISTORY_LIMIT = 20   # keep last 20 turns per user
 
 _SYSTEM_PROMPT = (
     "You are ProjectBuddy AI — a friendly academic collaboration assistant "
-    "for students at the International University of Sarajevo (IUS). "
+    "for university students. "
     "Help users with project planning, finding teammates, managing deadlines, "
     "skill development, and general study advice. "
     "Be concise, warm, and practical. Keep replies under 150 words unless asked for more."
@@ -60,7 +60,7 @@ _MOCK = {
     ],
     "default": [
         "That's a great question! I'm here to help with project planning, team coordination, and academic collaboration. Tell me more?",
-        "From helping IUS students: consistent communication and small daily progress beat big last-minute pushes.",
+        "Consistent communication and small daily progress beat big last-minute pushes.",
         "Focus on the deliverable first, then optimise. What's your current blocker?",
         "Have you checked the Projects board on ProjectBuddy? There might be teammates looking for exactly what you need.",
     ],

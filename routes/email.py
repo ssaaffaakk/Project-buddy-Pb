@@ -94,7 +94,7 @@ def send_password_reset_email(user_email, user_name, reset_token):
                     <p style="font-size:0.75rem;">Or copy this link into your browser:</p>
                     <div class="link-box">{reset_url}</div>
                     <hr class="divider">
-                    <div class="footer">© 2025 ProjectBuddy — International University of Sarajevo</div>
+                    <div class="footer">© 2025 ProjectBuddy</div>
                 </div>
             </div>
         </body>
