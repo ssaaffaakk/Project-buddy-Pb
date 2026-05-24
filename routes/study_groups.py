@@ -43,7 +43,11 @@ def _ice_servers():
             token = base64.b64encode(f"{ident}:{secret}".encode()).decode()
             resp = _req.put(
                 f"https://global.xirsys.net/_turn/{channel}",
-                headers={"Authorization": f"Basic {token}"},
+                headers={
+                    "Authorization": f"Basic {token}",
+                    "Content-Type": "application/json",
+                },
+                json={"format": "urls"},
                 timeout=5,
             )
             data = resp.json()
