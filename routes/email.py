@@ -1,8 +1,11 @@
+import logging
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-from flask import render_template_string, current_app
+from flask import current_app
 import secrets
+
+logger = logging.getLogger(__name__)
 
 # Utility function to send email
 def send_email(recipient_email, subject, body, is_html=False):
@@ -41,7 +44,7 @@ def send_email(recipient_email, subject, body, is_html=False):
         
         return True
     except Exception as e:
-        print(f"Error sending email: {e}")
+        logger.exception("Failed to send email to %s: %s", recipient_email, e)
         return False
 
 # Function to send password reset email
