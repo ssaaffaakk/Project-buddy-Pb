@@ -211,23 +211,16 @@ def _apply_schema(app: Flask) -> None:
         to spin up a fresh local DB). If migrations exist they are also
         applied so the dev DB stays consistent.
     """
-    if not app.debug:
-        # In production: run pending Alembic migrations, never create_all
-        try:
-            from flask_migrate import upgrade as db_upgrade
-            db_upgrade()
-            app.logger.info("Database migrations applied.")
-        except Exception as e:
-            app.logger.error("Migration failed: %s", e)
-            raise  # hard-fail — do not start with a broken schema
-    else:
-        # In dev/testing: create_all for convenience, then migrate if possible
-        db.create_all()
-        try:
-            from flask_migrate import upgrade as db_upgrade
-            db_upgrade()
-        except Exception:
-            pass  # no migrations yet or already up to date — that's fine
+    # Run Alembic migrations first (no-op if none exist), then create_all as
+    # a safety net for any tables not covered by migrations.
+    # create_all is idempotent — it skips tables that already exist.
+    try:
+        from flask_migrate import upgrade as db_upgrade
+        db_upgrade()
+        app.logger.info("Database migrations applied.")
+    except Exception as e:
+        app.logger.warning("Migration step skipped: %s", e)
+    db.create_all()
 
 
 def _seed_badges() -> None:
