@@ -22,7 +22,9 @@ db = SQLAlchemy()
 migrate = Migrate()
 login_manager = LoginManager()
 csrf = CSRFProtect()
-socketio = SocketIO(async_mode='threading')  # cors_allowed_origins configured per-environment in create_app
+# async_mode='eventlet' matches the eventlet worker used in wsgi.py + gunicorn.
+# cors_allowed_origins and message_queue are set per-environment in create_app.
+socketio = SocketIO(async_mode='eventlet')
 
 # Rate limiter — keyed by client IP
 # Default: 200 per day, 50 per hour (overridden per-route where needed)

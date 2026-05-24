@@ -76,7 +76,11 @@ def _initialize_extensions(app: Flask) -> None:
     cors_origins = (
         os.environ.get("CORS_ORIGINS", "").split(",") if is_prod else "*"
     )
-    socketio.init_app(app, cors_allowed_origins=cors_origins)
+    # Redis message queue: required when running multiple Gunicorn workers so
+    # SocketIO events (including voice signaling) are broadcast across all
+    # processes. Falls back to None (in-process only) when REDIS_URL is unset.
+    redis_url = os.environ.get("REDIS_URL") or None
+    socketio.init_app(app, cors_allowed_origins=cors_origins, message_queue=redis_url)
 
     # Disable Secure cookie flag outside of production
     # (allows login over plain http://localhost in dev)
