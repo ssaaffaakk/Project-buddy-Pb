@@ -113,14 +113,15 @@ def _initialize_extensions(app: Flask) -> None:
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
         # Remove server fingerprint
         response.headers.pop("Server", None)
-        # Content Security Policy — nonce-based (no unsafe-inline):
-        #   Every inline <script nonce="…"> and <style nonce="…"> must carry
-        #   the per-request nonce generated in _generate_csp_nonce().
+        # Content Security Policy:
+        #   - script-src: nonce-based (blocks unsigned inline scripts)
+        #   - style-src: nonce for <style> blocks + unsafe-inline for
+        #     element-level style="..." attributes (cannot use nonces)
         nonce = getattr(_g, "csp_nonce", "")
         response.headers["Content-Security-Policy"] = (
             "default-src 'self'; "
             f"script-src 'self' 'nonce-{nonce}' https://cdn.jsdelivr.net; "
-            f"style-src 'self' 'nonce-{nonce}' https://fonts.googleapis.com; "
+            f"style-src 'self' 'unsafe-inline' 'nonce-{nonce}' https://fonts.googleapis.com; "
             "font-src 'self' https://fonts.gstatic.com; "
             "img-src 'self' data: https:; "
             "connect-src 'self' ws: wss:; "
