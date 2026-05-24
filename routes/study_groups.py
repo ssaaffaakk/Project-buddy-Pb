@@ -43,21 +43,15 @@ def _ice_servers():
             token = base64.b64encode(f"{ident}:{secret}".encode()).decode()
             resp = _req.put(
                 f"https://global.xirsys.net/_turn/{channel}",
-                headers={
-                    "Authorization": f"Basic {token}",
-                    "Content-Type": "application/json",
-                },
-                json={"format": "urls"},
+                headers={"Authorization": f"Basic {token}"},
                 timeout=5,
             )
             data = resp.json()
             if data.get("s") == "ok":
-                ice = data["v"]["iceServers"]
-                # Xirsys returns either a list or a single dict depending on format.
-                # RTCPeerConnection requires iceServers to be a list.
-                if isinstance(ice, dict):
-                    ice = [ice]
-                return ice
+                # data["v"] = {"iceServers": [...]} — pass iceServers list directly
+                ice = data["v"].get("iceServers", [])
+                if isinstance(ice, list) and ice:
+                    return ice
             logger.warning("Xirsys API error: %s", data)
         except Exception as e:
             logger.warning("Xirsys API call failed: %s", e)
