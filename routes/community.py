@@ -2,7 +2,6 @@
 Community learning feed — posts, comments, likes, @mentions.
 """
 
-import os
 import secrets
 from datetime import datetime, timezone
 from werkzeug.utils import secure_filename
@@ -13,6 +12,7 @@ from flask import (
 from flask_login import login_required, current_user
 from extensions import db, csrf
 from models import CommunityPost, CommunityComment, CommunityLike, Notification
+from services.file_storage import storage
 
 community_bp = Blueprint("community", __name__, url_prefix="/community")
 
@@ -74,16 +74,14 @@ def _save_media(file):
         return "TOO_LARGE", None
 
     # 5. Save with a sanitised, non-guessable filename
-    upload_dir = os.path.join(current_app.root_path, "static", "uploads", "community")
-    os.makedirs(upload_dir, exist_ok=True)
-    ext      = file.filename.rsplit(".", 1)[-1].lower()
-    # Prefix with a random token so filenames are not guessable/enumerable
+    ext        = file.filename.rsplit(".", 1)[-1].lower()
     rand_token = secrets.token_hex(8)
-    filename = secure_filename(
+    filename   = secure_filename(
         f"p_{current_user.id}_{int(datetime.now(timezone.utc).timestamp())}_{rand_token}.{ext}"
     )
-    file.save(os.path.join(upload_dir, filename))
-    return f"/static/uploads/community/{filename}", mtype
+    data = file.read()
+    url  = storage.save(data, filename, category="community")
+    return url, mtype
 
 
 # ── FEED ─────────────────────────────────────────────────────────────────────

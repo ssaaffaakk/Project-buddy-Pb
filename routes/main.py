@@ -23,6 +23,7 @@ def create_notification(user_id, message, link=None, type=None):
     db.session.add(n)
 from services.recommendation_service import get_recommended_projects
 from services.badge_service import check_and_award_badges
+from services.file_storage import storage
 from datetime import datetime, timezone, timedelta
 from werkzeug.utils import secure_filename
 
@@ -689,12 +690,10 @@ def upload_avatar():
         flash("Image must be under 2 MB.", "error")
         return redirect(url_for("main.edit_profile"))
 
-    upload_dir = os.path.join(current_app.root_path, "static", "uploads", "avatars")
-    os.makedirs(upload_dir, exist_ok=True)
-    ext = avatar_file.filename.rsplit(".", 1)[1].lower()
+    ext      = avatar_file.filename.rsplit(".", 1)[1].lower()
     filename = secure_filename(f"user_{user.id}.{ext}")
-    avatar_file.save(os.path.join(upload_dir, filename))
-    user.avatar_url = f"/static/uploads/avatars/{filename}"
+    data     = avatar_file.read()
+    user.avatar_url = storage.save(data, filename, category="avatars")
     db.session.commit()
 
     flash("Profile photo updated!", "success")
@@ -741,12 +740,10 @@ def edit_profile():
             if file_size > MAX_AVATAR_BYTES:
                 flash("Avatar image must be under 2MB.", "error")
                 return redirect(url_for("main.edit_profile"))
-            upload_dir = os.path.join(current_app.root_path, "static", "uploads", "avatars")
-            os.makedirs(upload_dir, exist_ok=True)
-            ext = avatar_file.filename.rsplit(".", 1)[1].lower()
+            ext      = avatar_file.filename.rsplit(".", 1)[1].lower()
             filename = secure_filename(f"user_{user.id}.{ext}")
-            avatar_file.save(os.path.join(upload_dir, filename))
-            user.avatar_url = f"/static/uploads/avatars/{filename}"
+            data     = avatar_file.read()
+            user.avatar_url = storage.save(data, filename, category="avatars")
 
         # Update skills
         UserSkill.query.filter_by(user_id=user.id).delete()

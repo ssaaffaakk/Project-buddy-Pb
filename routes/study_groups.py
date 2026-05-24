@@ -10,6 +10,7 @@ from flask_login import login_required, current_user
 from werkzeug.utils import secure_filename
 from extensions import db
 from models import StudyGroup, StudyGroupMember, StudyGroupMessage, Notification, SharedFile
+from services.file_storage import storage
 
 # ── File upload config ────────────────────────────────────────────────────────
 UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'static', 'uploads')
@@ -198,11 +199,9 @@ def upload_file(group_id):
     if len(data) > MAX_FILE_BYTES:
         return jsonify({"error": "File too large (max 25 MB)."}), 400
 
-    os.makedirs(UPLOAD_FOLDER, exist_ok=True)
     ext = f.filename.rsplit('.', 1)[1].lower()
     stored_name = f"{uuid.uuid4().hex}.{ext}"
-    with open(os.path.join(UPLOAD_FOLDER, stored_name), 'wb') as out:
-        out.write(data)
+    storage.save(data, stored_name, category="study_groups")
 
     sf = SharedFile(
         group_id=group_id,
@@ -251,8 +250,17 @@ def download_file(group_id, file_id):
     if not group.is_member(current_user.id):
         return jsonify({"error": "Join the group first."}), 403
     sf = SharedFile.query.filter_by(id=file_id, group_id=group_id).first_or_404()
+
+    # S3: redirect to a pre-signed URL
+    presigned = storage.download_url(f"study_groups/{sf.stored_name}")
+    if presigned:
+        from flask import redirect as _redirect
+        return _redirect(presigned)
+
+    # Local: serve directly from disk
+    local_dir = storage.local_path("study_groups", sf.stored_name)
     return send_from_directory(
-        UPLOAD_FOLDER,
+        local_dir,
         sf.stored_name,
         as_attachment=True,
         download_name=sf.filename,
