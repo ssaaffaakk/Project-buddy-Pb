@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
 from flask_login import login_required, current_user
-from extensions import db
+from extensions import db, admin_required
 from models import Chat, ChatMessage
 from datetime import datetime, timezone
 
@@ -160,12 +160,8 @@ def finish_chat(chat_id):
 
 # ── ADMIN: VIEW ALL CHATS ──────────────────────────────────────────────────
 @chat_bp.route('/admin/all', methods=['GET'])
-@login_required
+@admin_required
 def admin_view_all():
-    if not current_user.is_admin():
-        flash('Access denied.', 'error')
-        return redirect(url_for('main.dashboard'))
-    
     all_chats = Chat.query.order_by(Chat.created_at.desc()).all()
     chat_items = []
     for chat in all_chats:
@@ -198,12 +194,8 @@ def admin_view_all():
 
 # ── ADMIN: VIEW SPECIFIC CHAT HISTORY ──────────────────────────────────────
 @chat_bp.route('/admin/<int:chat_id>', methods=['GET'])
-@login_required
+@admin_required
 def admin_view_chat(chat_id):
-    if not current_user.is_admin():
-        flash('Access denied.', 'error')
-        return redirect(url_for('main.dashboard'))
-    
     chat = Chat.query.get_or_404(chat_id)
     messages = (ChatMessage.query
                 .filter_by(chat_id=chat_id)

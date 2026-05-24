@@ -3,16 +3,27 @@ Main page routes — renders all HTML templates.
 """
 
 import os
-from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app
+from datetime import datetime, timezone, timedelta
+from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app, jsonify
 from flask_login import login_required, current_user
+from werkzeug.utils import secure_filename
 from extensions import db
-from flask import jsonify
 from models import (
     User, Project, ProjectMember, Application, Feedback, Endorsement,
     UserBadge, Badge, Report, Chat, AdminMessage, UserInterest, UserSkill, UserCourse,
     ProjectMessage, ProjectVote, CommunityPost, CommunityComment, CommunityLike,
     Notification
 )
+from services.recommendation_service import get_recommended_projects
+from services.badge_service import check_and_award_badges
+from services.file_storage import storage
+
+ALLOWED_AVATAR_EXTENSIONS = {"jpg", "jpeg", "png", "webp"}
+MAX_AVATAR_BYTES = 2 * 1024 * 1024  # 2 MB
+
+
+def _allowed_avatar(filename):
+    return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_AVATAR_EXTENSIONS
 
 
 def create_notification(user_id, message, link=None, type=None):
@@ -22,17 +33,6 @@ def create_notification(user_id, message, link=None, type=None):
     n = Notification(user_id=user_id, message=message, link=link, type=type)
     db.session.add(n)
 
-from services.recommendation_service import get_recommended_projects
-from services.badge_service import check_and_award_badges
-from services.file_storage import storage
-from datetime import datetime, timezone, timedelta
-from werkzeug.utils import secure_filename
-
-ALLOWED_AVATAR_EXTENSIONS = {"jpg", "jpeg", "png", "webp"}
-MAX_AVATAR_BYTES = 2 * 1024 * 1024  # 2 MB
-
-def _allowed_avatar(filename):
-    return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_AVATAR_EXTENSIONS
 
 main_bp = Blueprint("main", __name__)
 
@@ -41,7 +41,6 @@ main_bp = Blueprint("main", __name__)
 @main_bp.route("/health")
 def health():
     """Deployment platform healthcheck — returns 200 OK when the app is up."""
-    from flask import jsonify
     return jsonify({"status": "ok"}), 200
 
 
