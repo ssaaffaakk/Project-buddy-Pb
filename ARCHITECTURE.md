@@ -2,13 +2,18 @@
 
 ## Project Overview
 
-ProjectBuddy is a university project collaboration platform where students and instructors can post projects, form teams, communicate, and provide peer feedback.
+ProjectBuddy is a university project collaboration platform where students and instructors can post projects, form teams, communicate, and build a verified reputation.
 
 **Tech Stack:**
-- Backend: Flask (Python)
-- Database: SQLAlchemy ORM (SQLite/PostgreSQL)
-- Frontend: HTML + CSS + JavaScript
-- Authentication: Flask-Login + werkzeug
+- Backend: Python 3.9 · Flask 3.1
+- Database: SQLAlchemy 2.0 ORM (SQLite dev / PostgreSQL prod)
+- Frontend: Jinja2 · HTML · CSS · JavaScript
+- Real-time: Flask-SocketIO + eventlet · WebRTC (voice)
+- Auth: Flask-Login · GitHub OAuth (HMAC-signed state)
+- File Storage: Local disk (dev) · AWS S3 (prod)
+- Cache / Queue: Redis (rate limiting + SocketIO multi-worker + voice state)
+- Scheduler: APScheduler (deadline auto-complete, every 1h)
+- Security: CSRF (Flask-WTF) · CSP nonces · HSTS · security headers
 
 ---
 
@@ -26,17 +31,21 @@ architecture-beta
     service auth(server)[Auth Routes] in app
     service admin(server)[Admin Routes] in app
     service projects_route(server)[Projects Routes] in app
-    service chat_route(server)[Chat Routes] in app
+    service chat_route(server)[Chat + Voice Routes] in app
     service users_route(server)[Users Routes] in app
     service main_route(server)[Main Routes] in app
+    service community_route(server)[Community Routes] in app
+    service study_route(server)[Study Groups Routes] in app
+    service chatbot_route(server)[Chatbot Routes] in app
 
     service badge_svc(server)[Badge Service] in services
     service recommend_svc(server)[Recommendation Service] in services
     service deadline_svc(server)[Deadline Checker] in services
     service email_svc(server)[Email Service] in services
+    service storage_svc(server)[File Storage Service] in services
 
     service db(database)[SQLAlchemy Database] in data
-    service cache(disk)[Session Storage] in data
+    service redis(disk)[Redis] in data
 
     web:R --> L:main_route
     web:R --> L:auth
@@ -44,12 +53,18 @@ architecture-beta
     web:R --> L:chat_route
     web:R --> L:admin
     web:R --> L:users_route
+    web:R --> L:community_route
+    web:R --> L:study_route
+    web:R --> L:chatbot_route
 
     auth:B --> T:db
     projects_route:B --> T:db
     chat_route:B --> T:db
     users_route:B --> T:db
     admin:B --> T:db
+    community_route:B --> T:db
+    study_route:B --> T:db
+    chatbot_route:B --> T:db
 
     projects_route:R --> L:recommend_svc
     projects_route:R --> L:badge_svc
@@ -57,9 +72,12 @@ architecture-beta
     deadline_svc:B --> T:db
 
     auth:R --> L:email_svc
-    users_route:R --> L:email_svc
+    community_route:R --> L:storage_svc
+    study_route:R --> L:storage_svc
+    main_route:R --> L:storage_svc
 
-    admin:B --> T:cache
+    chat_route:B --> T:redis
+    admin:B --> T:redis
 ```
 
 ---
@@ -68,10 +86,10 @@ architecture-beta
 
 The frontend user interface running in web browsers.
 
-- templates/ - HTML pages (Jinja2 templating)
-- static/css/ - Styling and layout
-- static/js/ - Interactive functionality
-- static/images/ - UI assets
+- `templates/` — HTML pages (Jinja2 templating, CSP nonce-aware)
+- `static/css/` — Styling and layout
+- `static/js/` — Interactive functionality
+- `static/images/` — UI assets
 
 ---
 
@@ -79,13 +97,17 @@ The frontend user interface running in web browsers.
 
 | Route Module | Responsibility |
 |---|---|
-| auth.py | User registration, login, password reset |
-| main.py | Home page, navigation, public endpoints |
-| projects.py | Create, browse, apply to projects |
-| users.py | User profiles, skill endorsements, feedback |
-| chat.py | Real-time messaging between users and support |
-| admin.py | Admin dashboard, user management, reports |
-| email.py | Transactional and notification emails |
+| `auth.py` | Registration, login, GitHub OAuth (HMAC state), password reset |
+| `main.py` | Dashboard, profiles, avatar upload, project UI |
+| `projects.py` | Project CRUD, applications, feedback, skill endorsements |
+| `users.py` | User search (no email exposure), public profiles (login-gated) |
+| `chat.py` | User ↔ admin support chat |
+| `community.py` | Community feed, posts (media upload), comments, likes, mentions |
+| `study_groups.py` | Study groups, real-time chat, file upload/download |
+| `voice.py` | WebRTC signaling via SocketIO (Redis-backed room state) |
+| `chatbot.py` | AI assistant — Groq → Anthropic → keyword mock fallback |
+| `admin.py` | Moderation, reports, bans, stats (all routes use @admin_required) |
+| `email.py` | Transactional email via SMTP/STARTTLS |
 
 ---
 
@@ -93,32 +115,56 @@ The frontend user interface running in web browsers.
 
 | Service | Function |
 |---|---|
-| Badge Service | Award achievements based on user activity |
-| Recommendation Service | Suggest projects based on user interests |
-| Deadline Checker | Monitor project deadlines and send reminders |
-| Email Service | Send notifications and transactional emails |
-| Mock Data | Seed realistic sample data for development |
+| `badge_service.py` | Award badges on project completion and skill endorsement |
+| `recommendation_service.py` | Interest-based project recommendations (tag expansion + scoring) |
+| `deadline_checker.py` | Auto-complete overdue projects — runs every 1h via APScheduler |
+| `file_storage.py` | Upload abstraction: local disk (dev) or AWS S3 (prod) |
+| `mock_data.py` | Seed realistic demo data on first run |
 
 ---
 
-## Layer 4: Data Layer (Database & Models)
+## Layer 4: Data Layer
 
-**Core Database Models:**
+**Core Database Models (25 total, SQLAlchemy 2.0):**
 
-- User - Account info, roles (student/instructor/admin), profile
-- Project - Project listings with details, deadline, team size
-- ProjectMember - Team membership tracking
-- Application - User applications to join projects
-- Feedback - Peer feedback and ratings
-- Endorsement - Skill endorsements from peers
-- UserBadge - Earned achievements
-- UserInterest - Interest tags for recommendations
-- UserSkill - Skills and expertise tracking
-- Message - Chat messages within projects
+All models use `Mapped[type]` + `mapped_column` (full SQLAlchemy 2.0 syntax). All timestamps use `datetime.now(timezone.utc)`.
 
-**ORM:** SQLAlchemy 2.0 — all models use `mapped_column` with `Mapped[type]` annotations for type safety.
+| Model | Description |
+|---|---|
+| `User` | Account, roles (student/instructor/admin), profile |
+| `Project` | Listings with tags, skills, deadline, team size |
+| `ProjectMember` | Team membership with soft-delete (removed flag) |
+| `Application` | Join requests with status |
+| `Feedback` | Peer ratings (1-5, DB-level CheckConstraint) |
+| `Endorsement` | Skill endorsements (requires shared completed project) |
+| `Badge` / `UserBadge` | Achievement system |
+| `Report` | User/project reports with moderation status |
+| `Chat` / `ChatMessage` | Support chat between users and admins |
+| `CommunityPost` / `CommunityComment` / `CommunityLike` | Social feed |
+| `StudyGroup` / `StudyGroupMember` / `StudyGroupMessage` | Study rooms |
+| `SharedFile` | File metadata for study group uploads |
+| `Notification` | In-app notification feed |
+| `PasswordReset` | Token-based reset (24h expiry) |
+| `ChatbotSession` | AI conversation history (last 20 turns per user) |
 
-**Database:** SQLite (development) or PostgreSQL (production)
+**Database:** SQLite (dev) / PostgreSQL (prod)
+**Migrations:** Flask-Migrate (Alembic) — production runs `flask db upgrade` on startup
+
+---
+
+## Security Architecture
+
+| Layer | Implementation |
+|---|---|
+| Passwords | `pbkdf2:sha256` via Werkzeug |
+| Sessions | `__Host-` prefix cookie, HttpOnly, SameSite=Lax, 8h lifetime |
+| CSRF | Flask-WTF global protection, failure → flash + redirect |
+| CSP | Per-request nonce (`secrets.token_urlsafe(16)`), no `unsafe-inline` |
+| Rate Limiting | Flask-Limiter per IP — Redis backend (prod), memory (dev) |
+| OAuth State | HMAC-SHA256 signed timestamp, `hmac.compare_digest` verification |
+| Security Headers | X-Content-Type-Options, X-Frame-Options, Referrer-Policy, HSTS (prod) |
+| Access Control | `@login_required` + `@admin_required` decorators |
+| File Uploads | Extension whitelist + Content-Type check + magic-byte sniff + size cap |
 
 ---
 
@@ -129,16 +175,15 @@ flowchart TD
     A[User Browses Projects] --> B[Projects Route]
     B --> C[Query Database]
     C --> D{Apply to Project?}
-    D -->|Yes| E[Create Application Record]
-    E --> F[Store in Database]
+    D -->|Yes| E[Validate: not owner, not member, not applied, under 3-project cap]
+    E --> F[Create Application Record]
     F --> G[Notify Project Owner]
     G --> H[Email Service Sends Notification]
     H --> I[Project Owner Reviews Application]
     I --> J{Accept or Reject?}
     J -->|Accept| K[Create ProjectMember Record]
-    K --> L[Badge Service Awards Achievement]
-    L --> M[Send Acceptance Email]
-    M --> N[Add to Recommendations Cache]
+    K --> L[Auto-close listing if team full]
+    L --> M[Badge Service checks milestones]
 ```
 
 ---
@@ -146,52 +191,19 @@ flowchart TD
 ## User Roles and Permissions
 
 **Admin**
-- User management
+- Full platform access via `@admin_required` decorator
+- User management, warnings, bans
 - Report handling and moderation
-- System-wide warnings and bans
-- Analytics and statistics
+- Analytics, stats, chatbot log inspection
 
 **Instructor**
 - Post and manage projects
-- Manage team members
-- Give peer feedback
-- View project analytics
+- Manage team members and give peer feedback
 
 **Student**
-- Browse projects
-- Apply to projects
-- Join teams
-- Give and receive feedback
-- Earn badges
-
----
-
-## Key Architecture Features
-
-**Authentication and Authorization**
-- Password hashing with werkzeug
-- Flask-Login session management
-- Role-based access control (RBAC)
-- Email-based identity verification
-
-**Project Management**
-- Project creation and posting
-- Application system for joining
-- Team member management
-- Project deadline tracking with automated reminders
-- Team chat for collaboration
-
-**Reputation and Social Features**
-- Badge system for achievements
-- Skill endorsements from peers
-- Project completion feedback and ratings
-- User profile reputation scores
-
-**Support and Moderation**
-- Admin support chat
-- Report submission system
-- User warnings and account restrictions
-- Content moderation dashboard
+- Browse and apply to projects (max 3 active)
+- Join teams, give and receive feedback
+- Earn badges through activity
 
 ---
 
@@ -199,73 +211,69 @@ flowchart TD
 
 ```
 ProjectBuddy/
-├── app.py                  # Flask app factory and initialization
-├── config.py               # Environment configuration
-├── extensions.py           # Flask extensions setup
-├── models.py               # Database models
+├── app.py                  # App factory, security headers, CSP nonces, APScheduler
+├── config.py               # Dev / Test / Prod config classes
+├── extensions.py           # Flask extensions + admin_required decorator
+├── models.py               # 25 SQLAlchemy 2.0 models
+├── wsgi.py                 # Production entry point (gunicorn + eventlet)
 ├── requirements.txt        # Python dependencies
+├── .env.example            # Environment variable template
 │
-├── routes/                 # Route handlers
-│   ├── __init__.py
-│   ├── auth.py            # Authentication endpoints
-│   ├── main.py            # Home and navigation
-│   ├── projects.py        # Project CRUD operations
-│   ├── users.py           # User profiles and endorsements
-│   ├── chat.py            # Messaging system
-│   ├── admin.py           # Admin dashboard
-│   └── email.py           # Email sending
+├── routes/
+│   ├── auth.py             # Auth, GitHub OAuth, password reset
+│   ├── main.py             # Dashboard, profiles, avatar upload
+│   ├── projects.py         # Projects, applications, feedback, endorsements
+│   ├── users.py            # Search, public profiles
+│   ├── chat.py             # Support chat
+│   ├── community.py        # Feed, posts, media upload
+│   ├── study_groups.py     # Study groups, file upload/download
+│   ├── voice.py            # WebRTC signaling (Redis-backed state)
+│   ├── chatbot.py          # AI assistant
+│   ├── admin.py            # Admin panel (@admin_required on all routes)
+│   └── email.py            # SMTP email
 │
-├── services/              # Business logic services
-│   ├── badge_service.py           # Badge award logic
-│   ├── recommendation_service.py  # Project recommendations
-│   ├── deadline_checker.py        # Deadline monitoring
-│   └── mock_data.py               # Sample data for development
+├── services/
+│   ├── badge_service.py            # Event-driven badge awards
+│   ├── recommendation_service.py   # Interest tag matching
+│   ├── deadline_checker.py         # Auto-complete overdue projects
+│   ├── file_storage.py             # Local / S3 storage abstraction
+│   └── mock_data.py                # Demo data seeding
 │
-├── templates/             # HTML templates
-│   ├── base.html          # Base template
-│   ├── auth.html          # Login and Registration
-│   ├── dashboard.html     # User dashboard
-│   ├── projects.html      # Project listings
-│   ├── project_detail.html
-│   ├── admin_dashboard.html
-│   └── ... (16 total templates)
-│
-├── static/                # Static assets
-│   ├── css/
-│   │   └── style.css      # Stylesheet
-│   ├── js/
-│   │   └── main.js        # JavaScript functionality
-│   └── images/            # UI images
-│
-├── scripts/               # Utility scripts
-│   ├── init_db.py         # Initialize database
-│   ├── create_admin.py    # Create admin user
-│   └── mock.py            # Load sample data
-│
-├── logs/                  # Application logs
-├── instance/              # Instance-specific files
-└── README.md              # Project documentation
+├── templates/              # Jinja2 templates (all script/style tags have CSP nonces)
+├── static/                 # CSS, JS, images
+├── migrations/             # Alembic migrations (single source of truth in prod)
+└── logs/                   # Rotating application logs (10MB × 10 files)
 ```
 
 ---
 
 ## Getting Started
 
-1. Clone or download the project
-2. `python -m venv venv` and activate it
-3. `pip install -r requirements.txt`
-4. `cp .env.example .env` and fill in secrets (never commit `.env`)
-5. Run: `python app.py` (creates DB, admin, optional mock data on first start)
-6. Open: `http://localhost:5001` (or your `PORT` in `.env`)
+1. Clone: `git clone https://github.com/ssaaffaakk/Project-buddy-Pb.git`
+2. Create venv: `python -m venv venv && source venv/bin/activate`
+3. Install deps: `pip install -r requirements.txt`
+4. Configure: `cp .env.example .env` — fill in `SECRET_KEY`, `ADMIN_EMAIL`, `ADMIN_PASSWORD`
+5. Migrate: `flask db upgrade`
+6. Run: `python app.py` → open `http://localhost:5001`
 
-Optional: `flask db upgrade` after pulling new migrations; `python scripts/create_admin.py` if admin was not created.
+On first run: database schema applied, admin account created, mock data seeded (if `SEED_MOCK_DATA=true`).
 
 ---
 
 ## Key Dependencies
 
-- Flask - Web framework
-- SQLAlchemy - ORM for database
-- Flask-Login - User session management
-- Flask-Mail - Email sending
-- Werkzeug - Utilities for authentication
+| Package | Purpose |
+|---|---|
+| Flask 3.1 | Web framework |
+| SQLAlchemy 2.0 | ORM |
+| Flask-Migrate | Alembic migrations |
+| Flask-Login | Session management |
+| Flask-Limiter | Rate limiting |
+| Flask-WTF | CSRF protection |
+| Flask-SocketIO | WebSocket / real-time |
+| eventlet | Async I/O for SocketIO |
+| APScheduler | Background task scheduler |
+| boto3 | AWS S3 file storage |
+| redis | Redis client (rate limiter + SocketIO + voice state) |
+| gunicorn | Production WSGI server |
+| Werkzeug | Password hashing, file utilities |
