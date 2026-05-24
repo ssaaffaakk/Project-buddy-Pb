@@ -127,3 +127,4 @@ class ProductionConfig(Config):
     TESTING = False
     SESSION_COOKIE_SECURE = True
     WTF_CSRF_SSL_STRICT   = True   # enforce HTTPS Referer check for CSRF on prod
+    SEED_MOCK_DATA        = False  # never seed mock data in production
