@@ -157,13 +157,14 @@ Tech Stack
 |Database    |SQLAlchemy 2.0 ORM · SQLite (dev) / PostgreSQL (prod)          |
 |Migrations  |Flask-Migrate (Alembic)                                        |
 |Frontend    |Jinja2 · HTML · CSS · JavaScript                               |
-|Real-time   |Flask-SocketIO · eventlet · WebRTC (voice)                     |
+|Real-time   |Flask-SocketIO · eventlet · WebRTC (voice) · Xirsys TURN       |
 |Auth        |Flask-Login · GitHub OAuth · HMAC-signed state                 |
 |Email       |smtplib · STARTTLS (Gmail)                                     |
 |AI          |Groq API (Llama 3) · Anthropic API (Claude) · built-in mock    |
 |Scheduler   |APScheduler (deadline auto-complete, runs every 1h)            |
 |File Storage|Local disk (dev) · AWS S3 / S3-compatible (prod)               |
-|Rate Limiting|Flask-Limiter · Redis (prod) / in-memory (dev)                |
+|Deployment  |Render (hosting) · PostgreSQL (prod DB)                        |
+|Rate Limiting|Flask-Limiter · Redis (prod) / in-memory (dev)               |
 |Security    |CSRF (Flask-WTF) · CSP nonces · HSTS · security headers        |
 
 Project Structure
