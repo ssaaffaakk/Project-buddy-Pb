@@ -369,8 +369,8 @@ select{
   <div id="notif-list" style="max-height:320px;overflow-y:auto;"></div>
 </div>
 
-<!-- Socket.IO client (served by Flask-SocketIO) -->
-<script src="/socket.io/socket.io.js"></script>
+<!-- Socket.IO client — loaded from CDN to avoid Render/eventlet serving issues -->
+<script src="https://cdn.jsdelivr.net/npm/socket.io-client@4.7.5/dist/socket.io.min.js"></script>
 
 <script nonce="{{ csp_nonce }}">
 /* ── CSRF ───────────────────────────────────────────────────────────────── */
