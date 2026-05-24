@@ -40,12 +40,23 @@ def send_email(recipient_email, subject, body, is_html=False):
         else:
             msg.attach(MIMEText(body, 'plain'))
 
-        with smtplib.SMTP(current_app.config['MAIL_SERVER'], current_app.config['MAIL_PORT'], timeout=10) as server:
-            if current_app.config.get('MAIL_USE_TLS', True):
-                server.starttls()
-            if username and password:
-                server.login(username, password)
-            server.send_message(msg)
+        port = current_app.config['MAIL_PORT']
+        use_tls = current_app.config.get('MAIL_USE_TLS', True)
+
+        if port == 465:
+            # SSL from the start
+            with smtplib.SMTP_SSL(current_app.config['MAIL_SERVER'], port, timeout=10) as server:
+                if username and password:
+                    server.login(username, password)
+                server.send_message(msg)
+        else:
+            # STARTTLS (port 587)
+            with smtplib.SMTP(current_app.config['MAIL_SERVER'], port, timeout=10) as server:
+                if use_tls:
+                    server.starttls()
+                if username and password:
+                    server.login(username, password)
+                server.send_message(msg)
 
         return True
     except Exception as e:
