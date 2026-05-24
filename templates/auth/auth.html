@@ -7,7 +7,7 @@
 <title>ProjectBuddy — Sign In</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
-<style>
+<style nonce="{{ csp_nonce }}">
   *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
   html { scrollbar-gutter: stable; overflow-y: scroll; }
   :root{
@@ -192,7 +192,7 @@ select{
   .github-oauth-btn svg { width: 20px; height: 20px; flex-shrink: 0; }
   html.light-mode .github-oauth-btn { background: #24292e; border-color: rgba(0,0,0,0.25); }
 </style>
-<script>if(localStorage.getItem('theme')==='light')document.documentElement.classList.add('light-mode');document.addEventListener('DOMContentLoaded',function(){var t=document.getElementById('themeToggle');if(t)t.textContent=document.documentElement.classList.contains('light-mode')?'Dark':'Light';});</script>
+<script nonce="{{ csp_nonce }}">if(localStorage.getItem('theme')==='light')document.documentElement.classList.add('light-mode');document.addEventListener('DOMContentLoaded',function(){var t=document.getElementById('themeToggle');if(t)t.textContent=document.documentElement.classList.contains('light-mode')?'Dark':'Light';});</script>
 </head>
 <body>
 
@@ -424,7 +424,7 @@ select{
   </div>
 </div>
 
-<script>
+<script nonce="{{ csp_nonce }}">
 let selectedTags = 0;
 
 function submitRegister() {

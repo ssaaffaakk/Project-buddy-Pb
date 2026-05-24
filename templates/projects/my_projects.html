@@ -7,7 +7,7 @@
 <title>ProjectBuddy — My Projects</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
-<style>
+<style nonce="{{ csp_nonce }}">
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
 html{scrollbar-gutter:stable;overflow-y:scroll;}
 :root{
@@ -116,7 +116,7 @@ select{
 @keyframes toastIn{from{opacity:0;transform:translateX(30px);}to{opacity:1;transform:translateX(0);}}
 @keyframes toastProgress{from{transform:scaleX(1);}to{transform:scaleX(0);}}
 </style>
-<script>if(localStorage.getItem('theme')==='light')document.documentElement.classList.add('light-mode');document.addEventListener('DOMContentLoaded',function(){var t=document.getElementById('themeToggle');if(t)t.textContent=document.documentElement.classList.contains('light-mode')?'Dark':'Light';});</script>
+<script nonce="{{ csp_nonce }}">if(localStorage.getItem('theme')==='light')document.documentElement.classList.add('light-mode');document.addEventListener('DOMContentLoaded',function(){var t=document.getElementById('themeToggle');if(t)t.textContent=document.documentElement.classList.contains('light-mode')?'Dark':'Light';});</script>
 </head>
 <body>
 
@@ -270,7 +270,7 @@ select{
   </div>
 </main>
 
-<script>
+<script nonce="{{ csp_nonce }}">
 /* ── CSRF helper — reads Flask-WTF token from meta tag ──────────────────── */
 function _getCsrf(){
   var m=document.querySelector('meta[name="csrf-token"]');
@@ -299,7 +299,7 @@ function _getCsrf(){
       </div>
     {% endfor %}
   </div>
-  <script>
+  <script nonce="{{ csp_nonce }}">
     setTimeout(() => {
       const toasts = document.querySelectorAll('.toast');
       toasts.forEach(t => t.style.opacity = '0');
@@ -314,7 +314,7 @@ function _getCsrf(){
   </div>
   <div id="notif-list" style="max-height:320px;overflow-y:auto;"></div>
 </div>
-<script>
+<script nonce="{{ csp_nonce }}">
 function _esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#x27;');}
 function toggleNotifs(){
   var p=document.getElementById('notif-panel');
@@ -361,6 +361,6 @@ setInterval(fetchNotifs,30000);
 fetchNotifs();
 </script>
 <div id="cursor-glow"></div>
-<script>var cg=document.getElementById('cursor-glow');document.addEventListener('mousemove',function(e){cg.style.left=e.clientX+'px';cg.style.top=e.clientY+'px';});</script>
+<script nonce="{{ csp_nonce }}">var cg=document.getElementById('cursor-glow');document.addEventListener('mousemove',function(e){cg.style.left=e.clientX+'px';cg.style.top=e.clientY+'px';});</script>
 </body>
 </html>

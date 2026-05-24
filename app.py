@@ -87,6 +87,17 @@ def _initialize_extensions(app: Flask) -> None:
     if not app.config.get("TESTING") and os.environ.get("FLASK_ENV") != "production":
         app.config["SESSION_COOKIE_SECURE"] = False
 
+    # ── Per-request CSP nonce ─────────────────────────────────────────────────
+    import secrets as _secrets
+    from flask import g as _g
+
+    @app.before_request
+    def _generate_csp_nonce():
+        """Generate a fresh random nonce for every request.
+        Templates access it via {{ csp_nonce }} (injected by context processor).
+        """
+        _g.csp_nonce = _secrets.token_urlsafe(16)
+
     # ── Security headers on every response ────────────────────────────────────
     @app.after_request
     def set_security_headers(response):
@@ -100,19 +111,14 @@ def _initialize_extensions(app: Flask) -> None:
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
         # Remove server fingerprint
         response.headers.pop("Server", None)
-        # Content Security Policy:
-        #   - default: only our own origin
-        #   - scripts: self + CDN (Chart.js), unsafe-inline needed for our inline <script> blocks
-        #   - styles:  self + Google Fonts + inline (we use <style> tags throughout)
-        #   - fonts:   Google Fonts CDN
-        #   - images:  self, data URIs, and any https (GitHub/IUS avatars)
-        #   - connect: self + WebSocket (SocketIO voice chat)
-        #   - media: self (microphone audio streams)
-        #   - frame-ancestors: none (double-blocks clickjacking beyond X-Frame-Options)
+        # Content Security Policy — nonce-based (no unsafe-inline):
+        #   Every inline <script nonce="…"> and <style nonce="…"> must carry
+        #   the per-request nonce generated in _generate_csp_nonce().
+        nonce = getattr(_g, "csp_nonce", "")
         response.headers["Content-Security-Policy"] = (
             "default-src 'self'; "
-            "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
-            "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
+            f"script-src 'self' 'nonce-{nonce}' https://cdn.jsdelivr.net; "
+            f"style-src 'self' 'nonce-{nonce}' https://fonts.googleapis.com; "
             "font-src 'self' https://fonts.gstatic.com; "
             "img-src 'self' data: https:; "
             "connect-src 'self' ws: wss:; "
@@ -264,9 +270,17 @@ def _fix_broken_passwords() -> None:
 
 
 def _register_context_processors(app: Flask) -> None:
-    """Inject admin sidebar badge counts on all admin templates."""
+    """Inject variables available in every template."""
+
+    @app.context_processor
+    def inject_csp_nonce():
+        """Make the per-request CSP nonce available as {{ csp_nonce }}."""
+        from flask import g
+        return {"csp_nonce": getattr(g, "csp_nonce", "")}
+
     @app.context_processor
     def inject_admin_sidebar():
+        """Inject admin sidebar badge counts on all admin templates."""
         from flask_login import current_user
         if not current_user.is_authenticated or not current_user.is_admin():
             return {}

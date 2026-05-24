@@ -8,7 +8,7 @@
 <title>ProjectBuddy — Assistant</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
-<style>
+<style nonce="{{ csp_nonce }}">
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
 :root{
   color-scheme:dark;
@@ -116,7 +116,7 @@ select{
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236e6a64' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
   background-repeat:no-repeat;background-position:right 12px center;padding-right:36px;}
 </style>
-<script>if(localStorage.getItem('theme')==='light')document.documentElement.classList.add('light-mode');document.addEventListener('DOMContentLoaded',function(){var t=document.getElementById('themeToggle');if(t)t.textContent=document.documentElement.classList.contains('light-mode')?'Dark':'Light';});</script>
+<script nonce="{{ csp_nonce }}">if(localStorage.getItem('theme')==='light')document.documentElement.classList.add('light-mode');document.addEventListener('DOMContentLoaded',function(){var t=document.getElementById('themeToggle');if(t)t.textContent=document.documentElement.classList.contains('light-mode')?'Dark':'Light';});</script>
 </head>
 <body>
 
@@ -228,7 +228,7 @@ select{
   <div id="notif-list" style="max-height:320px;overflow-y:auto;"></div>
 </div>
 
-<script>
+<script nonce="{{ csp_nonce }}">
 /* ── CSRF helper — reads Flask-WTF token from meta tag ──────────────────── */
 function _getCsrf(){
   var m=document.querySelector('meta[name="csrf-token"]');
@@ -245,7 +245,7 @@ function _getCsrf(){
     return _origFetch.call(this,url,opts);
   };
 })();
-</script><script>
+</script><script nonce="{{ csp_nonce }}">
 function scrollBottom(smooth){
   var el=document.getElementById('messages');
   el.scrollTo({top:el.scrollHeight,behavior:smooth?'smooth':'instant'});
@@ -369,6 +369,6 @@ document.addEventListener('click',function(e){
 setInterval(fetchNotifs,30000); fetchNotifs();
 </script>
 <div id="cursor-glow"></div>
-<script>var cg=document.getElementById('cursor-glow');document.addEventListener('mousemove',function(e){cg.style.left=e.clientX+'px';cg.style.top=e.clientY+'px';});</script>
+<script nonce="{{ csp_nonce }}">var cg=document.getElementById('cursor-glow');document.addEventListener('mousemove',function(e){cg.style.left=e.clientX+'px';cg.style.top=e.clientY+'px';});</script>
 </body>
 </html>

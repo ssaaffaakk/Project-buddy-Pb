@@ -7,7 +7,7 @@
 <title>ProjectBuddy — Find Your Perfect Teammate</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
-<style>
+<style nonce="{{ csp_nonce }}">
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
 html{scrollbar-gutter:stable;overflow-y:scroll;}
 :root{
@@ -277,7 +277,7 @@ footer p{font-family:'DM Mono',monospace;font-size:0.64rem;letter-spacing:0.04em
   </div>
 </footer>
 
-<script>
+<script nonce="{{ csp_nonce }}">
 var obs=new IntersectionObserver(function(entries){
   entries.forEach(function(e){if(e.isIntersecting)e.target.classList.add('visible');});
 },{threshold:0.1});

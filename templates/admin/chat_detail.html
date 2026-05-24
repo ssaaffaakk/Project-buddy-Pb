@@ -8,7 +8,7 @@
 <title>Admin — Chat Detail</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
-<style>
+<style nonce="{{ csp_nonce }}">
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
 html{scrollbar-gutter:stable;overflow-y:scroll;}
 :root{
@@ -59,7 +59,7 @@ input[type="text"]:focus{outline:none;border-color:var(--accent);}
 .btn-back{background:var(--card);color:var(--text);margin-left:auto;}
 .btn-back:hover{background:var(--card-h);}
 </style>
-<script>if(localStorage.getItem('theme')==='light')document.documentElement.classList.add('light-mode');document.addEventListener('DOMContentLoaded',function(){var t=document.getElementById('themeToggle');if(t)t.textContent=document.documentElement.classList.contains('light-mode')?'Dark':'Light';});</script>
+<script nonce="{{ csp_nonce }}">if(localStorage.getItem('theme')==='light')document.documentElement.classList.add('light-mode');document.addEventListener('DOMContentLoaded',function(){var t=document.getElementById('themeToggle');if(t)t.textContent=document.documentElement.classList.contains('light-mode')?'Dark':'Light';});</script>
 </head>
 <body>
 {% set admin_active = 'support_chats' %}
@@ -119,7 +119,7 @@ input[type="text"]:focus{outline:none;border-color:var(--accent);}
   {% endif %}
 </main>
 
-<script>
+<script nonce="{{ csp_nonce }}">
 const chatId = {{ chat.id }};
 const currentUserId = {{ current_user.id }};
 const messageInput = document.getElementById('message-input');
@@ -213,7 +213,7 @@ messageInput.focus();
 // Auto-scroll to bottom
 messagesContainer.scrollTop = messagesContainer.scrollHeight;
 </script>
-<script>
+<script nonce="{{ csp_nonce }}">
 function _getCsrf(){var m=document.querySelector('meta[name="csrf-token"]');return m?m.getAttribute('content'):'';}
 (function(){var o=window.fetch;window.fetch=function(url,opts){opts=opts||{};if(opts.method&&opts.method.toUpperCase()==='POST'){opts.headers=Object.assign({'X-CSRFToken':_getCsrf()},opts.headers||{});}return o.call(this,url,opts);};})();
 </script>

@@ -8,7 +8,7 @@
 <link rel="icon" href="/static/images/logo.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
-<style>
+<style nonce="{{ csp_nonce }}">
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
 html{scrollbar-gutter:stable;overflow-y:scroll;}
 :root{
@@ -172,7 +172,7 @@ body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;disp
 .section-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;}
 .section-card-inner{padding:0 4px;}
 </style>
-<script>if(localStorage.getItem('theme')==='light')document.documentElement.classList.add('light-mode');document.addEventListener('DOMContentLoaded',function(){var t=document.getElementById('themeToggle');if(t)t.textContent=document.documentElement.classList.contains('light-mode')?'Dark':'Light';});</script>
+<script nonce="{{ csp_nonce }}">if(localStorage.getItem('theme')==='light')document.documentElement.classList.add('light-mode');document.addEventListener('DOMContentLoaded',function(){var t=document.getElementById('themeToggle');if(t)t.textContent=document.documentElement.classList.contains('light-mode')?'Dark':'Light';});</script>
 </head>
 <body>
 
@@ -451,7 +451,7 @@ body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;disp
   </div>
 </main>
 
-<script>
+<script nonce="{{ csp_nonce }}">
 function switchTab(e, tabId) {
   document.querySelectorAll('.tab-content').forEach(function(t){t.classList.remove('active');});
   document.querySelectorAll('.tab-btn').forEach(function(b){b.classList.remove('active');});

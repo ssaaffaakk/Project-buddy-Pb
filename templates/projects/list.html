@@ -8,7 +8,7 @@
 <title>ProjectBuddy — Projects</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
-<style>
+<style nonce="{{ csp_nonce }}">
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
 html{scrollbar-gutter:stable;overflow-y:scroll;}
 :root{
@@ -139,7 +139,7 @@ select{
 .modal-apply{display:block;width:100%;padding:12px;background:linear-gradient(135deg,#FFD700 0%,#C8960C 100%);border:none;border-radius:var(--r);color:#080808;font-family:'DM Mono',monospace;font-size:0.74rem;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;text-decoration:none;text-align:center;margin-top:22px;transition:all 0.18s;}
 .modal-apply:hover{background:#b8963d;}
 </style>
-<script>if(localStorage.getItem('theme')==='light')document.documentElement.classList.add('light-mode');document.addEventListener('DOMContentLoaded',function(){var t=document.getElementById('themeToggle');if(t)t.textContent=document.documentElement.classList.contains('light-mode')?'Dark':'Light';});</script>
+<script nonce="{{ csp_nonce }}">if(localStorage.getItem('theme')==='light')document.documentElement.classList.add('light-mode');document.addEventListener('DOMContentLoaded',function(){var t=document.getElementById('themeToggle');if(t)t.textContent=document.documentElement.classList.contains('light-mode')?'Dark':'Light';});</script>
 </head>
 <body>
 <div id="toast-container"></div>
@@ -280,7 +280,7 @@ select{
   </div>
 </div>
 
-<script>
+<script nonce="{{ csp_nonce }}">
 /* ── CSRF helper — reads Flask-WTF token from meta tag ──────────────────── */
 function _getCsrf(){
   var m=document.querySelector('meta[name="csrf-token"]');
@@ -297,7 +297,7 @@ function _getCsrf(){
     return _origFetch.call(this,url,opts);
   };
 })();
-</script><script>
+</script><script nonce="{{ csp_nonce }}">
 /* ── VOTING ─────────────────────────────────────────── */
 async function castVote(btn){
   var id = btn.dataset.id;
@@ -357,7 +357,7 @@ document.addEventListener('keydown',function(e){if(e.key==='Escape')closeModal()
   </div>
   <div id="notif-list" style="max-height:320px;overflow-y:auto;"></div>
 </div>
-<script>
+<script nonce="{{ csp_nonce }}">
 function _esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#x27;');}
 function toggleNotifs(){
   var p=document.getElementById('notif-panel');
@@ -404,6 +404,6 @@ setInterval(fetchNotifs,30000);
 fetchNotifs();
 </script>
 <div id="cursor-glow"></div>
-<script>var cg=document.getElementById('cursor-glow');document.addEventListener('mousemove',function(e){cg.style.left=e.clientX+'px';cg.style.top=e.clientY+'px';});</script>
+<script nonce="{{ csp_nonce }}">var cg=document.getElementById('cursor-glow');document.addEventListener('mousemove',function(e){cg.style.left=e.clientX+'px';cg.style.top=e.clientY+'px';});</script>
 </body>
 </html>

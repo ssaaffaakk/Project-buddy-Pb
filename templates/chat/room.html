@@ -8,7 +8,7 @@
 <title>Chat - ProjectBuddy</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
-<style>
+<style nonce="{{ csp_nonce }}">
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
 html{scrollbar-gutter:stable;overflow-y:scroll;}
 :root{
@@ -96,7 +96,7 @@ select{
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236e6a64' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
   background-repeat:no-repeat;background-position:right 12px center;padding-right:36px;}
 </style>
-<script>if(localStorage.getItem('theme')==='light')document.documentElement.classList.add('light-mode');document.addEventListener('DOMContentLoaded',function(){var t=document.getElementById('themeToggle');if(t)t.textContent=document.documentElement.classList.contains('light-mode')?'Dark':'Light';});</script>
+<script nonce="{{ csp_nonce }}">if(localStorage.getItem('theme')==='light')document.documentElement.classList.add('light-mode');document.addEventListener('DOMContentLoaded',function(){var t=document.getElementById('themeToggle');if(t)t.textContent=document.documentElement.classList.contains('light-mode')?'Dark':'Light';});</script>
 </head>
 <body>
 <aside class="sidebar">
@@ -185,7 +185,7 @@ select{
   {% endif %}
 </main>
 
-<script>
+<script nonce="{{ csp_nonce }}">
 const chatId = {{ chat.id }};
 const messageInput = document.getElementById('message-input');
 const sendBtn = document.getElementById('send-btn');
@@ -254,7 +254,7 @@ if (sendBtn && messageInput) {
 
 messagesContainer.scrollTop = messagesContainer.scrollHeight;
 </script>
-<script>
+<script nonce="{{ csp_nonce }}">
 function _getCsrf(){var m=document.querySelector('meta[name="csrf-token"]');return m?m.getAttribute('content'):'';}
 (function(){var o=window.fetch;window.fetch=function(url,opts){opts=opts||{};if(opts.method&&opts.method.toUpperCase()==='POST'){opts.headers=Object.assign({'X-CSRFToken':_getCsrf()},opts.headers||{});}return o.call(this,url,opts);};})();
 </script>
@@ -265,7 +265,7 @@ function _getCsrf(){var m=document.querySelector('meta[name="csrf-token"]');retu
   </div>
   <div id="notif-list" style="max-height:320px;overflow-y:auto;"></div>
 </div>
-<script>
+<script nonce="{{ csp_nonce }}">
 function toggleNotifs(){var p=document.getElementById('notif-panel');p.style.display=p.style.display==='none'?'block':'none';if(p.style.display==='block')fetchNotifs();}
 async function fetchNotifs(){try{var r=await fetch('/notifications/unread');var d=await r.json();var badge=document.getElementById('notif-badge');var list=document.getElementById('notif-list');if(d.count>0){badge.textContent=d.count;badge.style.display='inline';}else{badge.style.display='none';}if(!list)return;if(d.notifications.length===0){list.innerHTML='<div style="padding:20px;text-align:center;color:var(--muted);font-size:0.8rem;">No new notifications</div>';return;}list.innerHTML=d.notifications.map(function(n){return('<a href="'+(n.link||'#')+'" onclick="readNotif('+n.id+')" style="display:block;padding:12px 14px;border-bottom:1px solid var(--border);text-decoration:none;color:var(--text);"><div style="font-size:0.82rem;line-height:1.4;">'+n.message+'</div><div style="font-size:0.7rem;color:var(--muted);margin-top:4px;font-family:\'DM Mono\',monospace;">'+n.time_ago+'</div></a>');}).join('');}catch(e){}}
 async function readNotif(id){await fetch('/notifications/'+id+'/read',{method:'POST'});fetchNotifs();}
@@ -274,6 +274,6 @@ document.addEventListener('click',function(e){var panel=document.getElementById(
 setInterval(fetchNotifs,30000);fetchNotifs();
 </script>
 <div id="cursor-glow"></div>
-<script>var cg=document.getElementById('cursor-glow');document.addEventListener('mousemove',function(e){cg.style.left=e.clientX+'px';cg.style.top=e.clientY+'px';});</script>
+<script nonce="{{ csp_nonce }}">var cg=document.getElementById('cursor-glow');document.addEventListener('mousemove',function(e){cg.style.left=e.clientX+'px';cg.style.top=e.clientY+'px';});</script>
 </body>
 </html>
