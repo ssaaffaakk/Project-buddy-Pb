@@ -52,7 +52,12 @@ def _ice_servers():
             )
             data = resp.json()
             if data.get("s") == "ok":
-                return data["v"]["iceServers"]
+                ice = data["v"]["iceServers"]
+                # Xirsys returns either a list or a single dict depending on format.
+                # RTCPeerConnection requires iceServers to be a list.
+                if isinstance(ice, dict):
+                    ice = [ice]
+                return ice
             logger.warning("Xirsys API error: %s", data)
         except Exception as e:
             logger.warning("Xirsys API call failed: %s", e)
