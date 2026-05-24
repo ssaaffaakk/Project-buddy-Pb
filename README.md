@@ -1,11 +1,26 @@
-ProjectBuddy
-Find the right teammates. Build real projects. Earn your reputation.
+# ProjectBuddy
+
+**Find the right teammates. Build real projects. Earn your reputation.**
+
 ProjectBuddy is a web platform built for university students to find project collaborators, form teams, and build a verified reputation — without the chaos of WhatsApp groups.
 
-Demo
-![ProjectBuddy Demo](https://img.youtube.com/vi/X3tt5sjE_ns/maxresdefault.jpg)](https://youtu.be/X3tt5sjE_ns)
+---
 
-Why I Built This
+## 🚀 Live Demo
+
+**[https://project-buddy-pb.onrender.com](https://project-buddy-pb.onrender.com)**
+
+> First load may take ~30 seconds (Render free tier spins down after inactivity).
+
+---
+
+## 🎬 Video Demo
+
+[![ProjectBuddy Demo](https://img.youtube.com/vi/X3tt5sjE_ns/maxresdefault.jpg)](https://youtu.be/X3tt5sjE_ns)
+
+---
+
+## Why I Built This
 Last semester, a project I worked on got rejected. Not because of my work — but because my partner didn't deliver. The semester before that, I couldn't find a partner at all, and my professor refused to accept a solo submission.
 Two projects. Two failures. Neither one was about my ability. Both were about a broken system for forming teams.
 Finding project partners at university still means posting "anyone want to join?" in a WhatsApp group. You pick someone based on nothing — no visibility into their skills, their work ethic, or how they perform under pressure. When that goes wrong, it doesn't just slow you down. It costs you grades.

@@ -4,6 +4,8 @@
 
 ProjectBuddy is a university project collaboration platform where students and instructors can post projects, form teams, communicate, and build a verified reputation.
 
+**Live:** [https://project-buddy-pb.onrender.com](https://project-buddy-pb.onrender.com)
+
 **Tech Stack:**
 - Backend: Python 3.9 · Flask 3.1
 - Database: SQLAlchemy 2.0 ORM (SQLite dev / PostgreSQL prod)
