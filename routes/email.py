@@ -7,20 +7,9 @@ import secrets
 
 logger = logging.getLogger(__name__)
 
-# Utility function to send email
+
 def send_email(recipient_email, subject, body, is_html=False):
-    """
-    Send email using SMTP
-    
-    Args:
-        recipient_email: Email address of recipient
-        subject: Email subject
-        body: Email body (HTML or plain text)
-        is_html: If True, body is HTML; if False, plain text
-    
-    Returns:
-        True if successful, False otherwise
-    """
+    """Send email via SMTP (Brevo)."""
     try:
         username = current_app.config.get('MAIL_USERNAME', '')
         password = current_app.config.get('MAIL_PASSWORD', '')
@@ -40,46 +29,25 @@ def send_email(recipient_email, subject, body, is_html=False):
         else:
             msg.attach(MIMEText(body, 'plain'))
 
-        port = current_app.config['MAIL_PORT']
-        use_tls = current_app.config.get('MAIL_USE_TLS', True)
-
-        if port == 465:
-            # SSL from the start
-            with smtplib.SMTP_SSL(current_app.config['MAIL_SERVER'], port, timeout=10) as server:
-                if username and password:
-                    server.login(username, password)
-                server.send_message(msg)
-        else:
-            # STARTTLS (port 587)
-            with smtplib.SMTP(current_app.config['MAIL_SERVER'], port, timeout=10) as server:
-                if use_tls:
-                    server.starttls()
-                if username and password:
-                    server.login(username, password)
-                server.send_message(msg)
+        with smtplib.SMTP(current_app.config['MAIL_SERVER'], current_app.config['MAIL_PORT'], timeout=10) as server:
+            if current_app.config.get('MAIL_USE_TLS', True):
+                server.starttls()
+            if username and password:
+                server.login(username, password)
+            server.send_message(msg)
 
         return True
     except Exception as e:
         logger.exception("Failed to send email to %s: %s", recipient_email, e)
         return False
 
-# Function to send password reset email
+
 def send_password_reset_email(user_email, user_name, reset_token):
-    """
-    Send password reset email to user
-    
-    Args:
-        user_email: User's email address
-        user_name: User's first name
-        reset_token: Generated reset token
-    
-    Returns:
-        True if successful, False otherwise
-    """
+    """Send password reset email to user."""
     from flask import url_for
-    
+
     reset_url = url_for('auth.reset_password', token=reset_token, _external=True)
-    
+
     html_body = f"""
     <html>
         <head>
@@ -116,11 +84,11 @@ def send_password_reset_email(user_email, user_name, reset_token):
         </body>
     </html>
     """
-    
+
     subject = "Password Reset Request - ProjectBuddy"
     return send_email(user_email, subject, html_body, is_html=True)
 
-# Utility function to generate secure token for password reset
+
 def generate_reset_token():
-    """Generate a secure random token for password reset"""
+    """Generate a secure random token for password reset."""
     return secrets.token_urlsafe(32)
