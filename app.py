@@ -73,8 +73,9 @@ def _initialize_extensions(app: Flask) -> None:
     # Restrict SocketIO CORS: allow only our own origin in production,
     # all origins in development (needed for hot-reload / test clients).
     is_prod = os.environ.get("FLASK_ENV") == "production"
+    _raw_origins = os.environ.get("CORS_ORIGINS", "")
     cors_origins = (
-        os.environ.get("CORS_ORIGINS", "").split(",") if is_prod else "*"
+        [o.strip() for o in _raw_origins.split(",") if o.strip()] if is_prod else "*"
     )
     # Redis message queue: required when running multiple Gunicorn workers so
     # SocketIO events (including voice signaling) are broadcast across all
