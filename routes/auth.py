@@ -46,7 +46,7 @@ def login():
         return redirect(url_for('main.dashboard'))
 
     if request.method == 'POST':
-        email    = request.form.get('email', '').strip()
+        email    = request.form.get('email', '').strip().lower()
         password = request.form.get('password', '')
 
         if not email or not password:
@@ -163,7 +163,7 @@ def admin_login():
         return redirect(url_for('main.dashboard'))
 
     if request.method == 'POST':
-        email    = request.form.get('email', '').strip()
+        email    = request.form.get('email', '').strip().lower()
         password = request.form.get('password', '')
 
         if not email or not password:
