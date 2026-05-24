@@ -40,7 +40,7 @@ def send_email(recipient_email, subject, body, is_html=False):
         else:
             msg.attach(MIMEText(body, 'plain'))
 
-        with smtplib.SMTP(current_app.config['MAIL_SERVER'], current_app.config['MAIL_PORT']) as server:
+        with smtplib.SMTP(current_app.config['MAIL_SERVER'], current_app.config['MAIL_PORT'], timeout=10) as server:
             if current_app.config.get('MAIL_USE_TLS', True):
                 server.starttls()
             if username and password:
