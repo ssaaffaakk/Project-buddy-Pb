@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, current_app
 from flask_login import login_required, current_user
 from extensions import db
 from models import Project, ProjectTag, ProjectSkill, ProjectMember, Application, Feedback, Endorsement, User
@@ -17,6 +17,7 @@ def list_projects():
                          "deadline": p.deadline.isoformat() if p.deadline else None}
                         for p in projects]), 200
     except Exception as e:
+        current_app.logger.exception(e)
         return jsonify({"error": "An error occurred while fetching projects."}), 500
 
 
@@ -30,6 +31,7 @@ def recommended():
             for p, m in results
         ]), 200
     except Exception as e:
+        current_app.logger.exception(e)
         return jsonify({"error": "An error occurred while fetching recommended projects."}), 500
 
 
@@ -51,6 +53,7 @@ def get_project(project_id):
             "member_count": project.current_member_count()
         })
     except Exception as e:
+        current_app.logger.exception(e)
         return jsonify({"error": "An error occurred while fetching project details."}), 500
 
 
@@ -115,6 +118,7 @@ def create_project():
         return redirect(url_for("main.dashboard"))
 
     except Exception as e:
+        current_app.logger.exception(e)
         db.session.rollback()
         import traceback
         traceback.print_exc()
@@ -152,6 +156,7 @@ def update_project(project_id):
         db.session.commit()
         return jsonify({"message": "Project updated successfully"}), 200
     except Exception as e:
+        current_app.logger.exception(e)
         db.session.rollback()
         return jsonify({"error": "An error occurred while updating the project."}), 500
 
@@ -177,6 +182,7 @@ def close_project(project_id):
         db.session.commit()
         return jsonify({"message": "Project closed successfully"}), 200
     except Exception as e:
+        current_app.logger.exception(e)
         db.session.rollback()
         return jsonify({"error": "An error occurred while closing the project."}), 500
 
@@ -209,6 +215,7 @@ def complete_project(project_id):
         
         return jsonify({"message": "Project marked as completed successfully"}), 200
     except Exception as e:
+        current_app.logger.exception(e)
         db.session.rollback()
         return jsonify({"error": "An error occurred while marking the project as completed."}), 500
 
@@ -264,6 +271,7 @@ def apply(project_id):
         db.session.commit()
         return jsonify({"message": "Application submitted successfully"}), 201
     except Exception as e:
+        current_app.logger.exception(e)
         db.session.rollback()
         return jsonify({"error": "An error occurred while submitting the application."}), 500
 
@@ -289,6 +297,7 @@ def get_applications(project_id):
             for app in applications
         ]}), 200
     except Exception as e:
+        current_app.logger.exception(e)
         return jsonify({"error": "An error occurred while fetching applications."}), 500
 
 
@@ -331,6 +340,7 @@ def accept_application(project_id, app_id):
         db.session.commit()
         return jsonify({"message": "Application accepted successfully"}), 200
     except Exception as e:
+        current_app.logger.exception(e)
         db.session.rollback()
         return jsonify({"error": "An error occurred while accepting the application."}), 500
 
@@ -358,6 +368,7 @@ def reject_application(project_id, app_id):
         db.session.commit()
         return jsonify({"message": "Application rejected successfully"}), 200
     except Exception as e:
+        current_app.logger.exception(e)
         db.session.rollback()
         return jsonify({"error": "An error occurred while rejecting the application."}), 500
 
@@ -391,6 +402,7 @@ def remove_member(project_id, user_id):
         db.session.commit()
         return jsonify({"message": "Member removed successfully"}), 200
     except Exception as e:
+        current_app.logger.exception(e)
         db.session.rollback()
         return jsonify({"error": "An error occurred while removing the member."}), 500
 
@@ -454,6 +466,7 @@ def submit_feedback(project_id):
         db.session.commit()
         return jsonify({"message": "Feedback submitted successfully"}), 201
     except Exception as e:
+        current_app.logger.exception(e)
         db.session.rollback()
         return jsonify({"error": "An error occurred while submitting feedback."}), 500
 
@@ -517,5 +530,6 @@ def endorse_skill():
         
         return jsonify({"message": "Skill endorsed successfully"}), 201
     except Exception as e:
+        current_app.logger.exception(e)
         db.session.rollback()
         return jsonify({"error": "An error occurred while endorsing the skill."}), 500

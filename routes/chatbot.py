@@ -10,7 +10,7 @@ import random
 import requests
 from flask import Blueprint, render_template, request, jsonify, current_app
 from flask_login import login_required, current_user
-from extensions import db
+from extensions import db, limiter
 from models import ChatbotSession
 
 chatbot_bp = Blueprint("chatbot", __name__, url_prefix="/chatbot")
@@ -152,6 +152,7 @@ def page():
 
 @chatbot_bp.route("/ask", methods=["POST"])
 @login_required
+@limiter.limit("20 per minute; 200 per day")
 def ask():
     data = request.get_json(silent=True) or {}
     user_message = (data.get("message") or "").strip()

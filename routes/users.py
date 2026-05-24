@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, current_app
 from flask_login import login_required, current_user
 from extensions import db
 from models import User, UserSkill, UserInterest, Report, Project
@@ -76,6 +76,7 @@ def get_profile(user_id):
         }
         return jsonify(profile_data), 200
     except Exception as e:
+        current_app.logger.exception(e)
         return jsonify({"error": "An error occurred while fetching the profile."}), 500
 
 
@@ -100,6 +101,7 @@ def get_my_profile():
         }
         return jsonify(profile_data), 200
     except Exception as e:
+        current_app.logger.exception(e)
         return jsonify({"error": "An error occurred while fetching the profile."}), 500
 
 @users_bp.route("/me", methods=["PUT"])
@@ -132,6 +134,7 @@ def update_profile():
         db.session.rollback()
         return jsonify({"error": f"Invalid data: {str(e)}"}), 400
     except Exception as e:
+        current_app.logger.exception(e)
         db.session.rollback()
         return jsonify({"error": "An error occurred while updating the profile."}), 500
 
@@ -165,6 +168,7 @@ def update_interests():
         
         return jsonify({"message": "Interests updated successfully."}), 200
     except Exception as e:
+        current_app.logger.exception(e)
         db.session.rollback()
         return jsonify({"error": "An error occurred while updating interests."}), 500
 
@@ -198,6 +202,7 @@ def report_user(user_id):
         db.session.commit()
         return jsonify({"message": "Report submitted"}), 201
     except Exception as e:
+        current_app.logger.exception(e)
         db.session.rollback()
         return jsonify({"error": "An error occurred while submitting the report."}), 500
 
@@ -229,5 +234,6 @@ def report_project(project_id):
 
         return jsonify({"message": "Project report submitted"}), 201
     except Exception as e:
+        current_app.logger.exception(e)
         db.session.rollback()
         return jsonify({"error": "An error occurred while submitting the report."}), 500

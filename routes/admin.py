@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify, render_template, flash, redirect, url_for
+from flask import Blueprint, request, jsonify, render_template, flash, redirect, url_for, current_app
 from flask_login import login_required
 from extensions import db, admin_required
 from models import Report, User, Project, Application, Badge, AdminMessage
@@ -18,6 +18,7 @@ def list_reports():
             for r in Report.query.all()
         ]}), 200
     except Exception as e:
+        current_app.logger.exception(e)
         return jsonify({"error": "An error occurred while fetching reports."}), 500
 
 
@@ -42,6 +43,7 @@ def warn_user(report_id):
         db.session.commit()
         return jsonify({"message": "User has been warned."}), 200
     except Exception as e:
+        current_app.logger.exception(e)
         return jsonify({"error": "An error occurred while processing the report."}), 500
 
 
@@ -63,6 +65,7 @@ def ban_user(report_id):
         db.session.commit()
         return jsonify({"message": "User has been banned."}), 200
     except Exception as e:
+        current_app.logger.exception(e)
         return jsonify({"error": "An error occurred while banning the user."}), 500
 
 
@@ -78,6 +81,7 @@ def dismiss_report(report_id):
         db.session.commit()
         return jsonify({"message": "Report has been dismissed."}), 200
     except Exception as e:
+        current_app.logger.exception(e)
         return jsonify({"error": "An error occurred while dismissing the report."}), 500
 
 
@@ -93,6 +97,7 @@ def remove_project(project_id):
         db.session.commit()
         return jsonify({"message": "Project has been removed."}), 200
     except Exception as e:
+        current_app.logger.exception(e)
         return jsonify({"error": "An error occurred while removing the project."}), 500
 
 
@@ -111,6 +116,7 @@ def platform_stats():
             "total_badges":       Badge.query.count(),
         }), 200
     except Exception as e:
+        current_app.logger.exception(e)
         return jsonify({"error": "An error occurred while fetching platform stats."}), 500
 
 
