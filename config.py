@@ -125,6 +125,7 @@ class ProductionConfig(Config):
 
     DEBUG = False
     TESTING = False
+    SESSION_COOKIE_NAME   = 'pb-session'  # __Host- prefix requires no proxy; Render uses proxy
     SESSION_COOKIE_SECURE = True
-    WTF_CSRF_SSL_STRICT   = True   # enforce HTTPS Referer check for CSRF on prod
+    WTF_CSRF_SSL_STRICT   = False  # Render proxy strips/changes Referer, token check still active
     SEED_MOCK_DATA        = False  # never seed mock data in production
