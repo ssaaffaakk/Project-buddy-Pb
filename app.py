@@ -130,7 +130,7 @@ def _initialize_extensions(app: Flask) -> None:
             "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
             "font-src 'self' https://fonts.gstatic.com; "
             "img-src 'self' data: https:; "
-            "connect-src 'self' ws: wss:; "
+            "connect-src 'self' ws: wss: https://cdn.jsdelivr.net; "
             "media-src 'self' blob:; "
             "frame-ancestors 'none';"
         )
