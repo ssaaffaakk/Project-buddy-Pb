@@ -43,13 +43,17 @@ def create_app(config_class=None):
     _register_blueprints(app)
 
     _register_context_processors(app)
-    
+
     # Set up shell context
     _setup_shell_context(app)
-    
+
     # Configure logging
     _configure_logging(app)
-    
+
+    # Start background scheduler (skipped in testing)
+    if not app.config.get("TESTING"):
+        _start_scheduler(app)
+
     return app
 
 
@@ -296,6 +300,42 @@ def _configure_logging(app: Flask) -> None:
         
         app.logger.setLevel(logging.INFO)
         app.logger.info("Application startup")
+
+
+def _start_scheduler(app: Flask) -> None:
+    """Start APScheduler to run background tasks periodically.
+
+    Uses BackgroundScheduler (thread-based).  Guards against double-start:
+    Flask debug mode spawns a reloader child process — we only want the
+    scheduler running in the actual worker, not the reloader parent.
+    """
+    # In Flask debug mode the reloader forks a child. WERKZEUG_RUN_MAIN is
+    # set only in the child (the real server). Skip the parent to avoid two
+    # scheduler instances fighting over the same DB.
+    if app.debug and not os.environ.get("WERKZEUG_RUN_MAIN"):
+        return
+
+    from apscheduler.schedulers.background import BackgroundScheduler
+
+    def _run_deadline_check():
+        with app.app_context():
+            try:
+                from services.deadline_checker import flag_overdue_projects
+                flag_overdue_projects()
+                app.logger.info("Deadline check completed.")
+            except Exception as e:
+                app.logger.exception("Deadline checker failed: %s", e)
+
+    scheduler = BackgroundScheduler(daemon=True)
+    scheduler.add_job(
+        _run_deadline_check,
+        trigger="interval",
+        hours=1,
+        id="deadline_checker",
+        replace_existing=True,
+    )
+    scheduler.start()
+    app.logger.info("Background scheduler started (deadline check every 1h).")
 
 
 if __name__ == "__main__":
