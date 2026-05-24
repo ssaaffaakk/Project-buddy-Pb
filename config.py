@@ -86,7 +86,9 @@ class Config:
     ANTHROPIC_MODEL   = os.environ.get('ANTHROPIC_MODEL', 'claude-3-haiku-20240307')
 
     # ── Rate limiting ──────────────────────────────────────────────────────────
-    RATELIMIT_STORAGE_URI      = 'memory://'
+    # Use Redis if REDIS_URL is set (required for multi-worker deployments),
+    # fall back to in-process memory for single-worker / dev environments.
+    RATELIMIT_STORAGE_URI      = os.environ.get('REDIS_URL', 'memory://')
     RATELIMIT_HEADERS_ENABLED  = True    # sends X-RateLimit-* headers
 
     # ── SocketIO CORS (production) ─────────────────────────────────────────────

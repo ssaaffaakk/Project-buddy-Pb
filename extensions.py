@@ -5,6 +5,7 @@ This module initializes Flask extensions without immediately binding them
 to an application instance (using the application factory pattern).
 """
 
+import os
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_login import LoginManager, current_user
@@ -25,10 +26,13 @@ socketio = SocketIO(async_mode='threading')  # cors_allowed_origins configured p
 
 # Rate limiter — keyed by client IP
 # Default: 200 per day, 50 per hour (overridden per-route where needed)
+# Uses Redis when REDIS_URL is set (production/multi-worker), falls back to
+# in-process memory for dev / single-worker deployments.
+_ratelimit_storage = os.environ.get('REDIS_URL', 'memory://')
 limiter = Limiter(
     key_func=get_remote_address,
     default_limits=["200 per day", "50 per hour"],
-    storage_uri="memory://",
+    storage_uri=_ratelimit_storage,
 )
 login_manager.login_view = "auth.login"
 login_manager.login_message = "Please log in to access this page."
