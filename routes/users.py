@@ -22,17 +22,15 @@ def search():
     if target_type in ["", "user"]:
         # Search users
         users = User.query.filter(
-            (User.first_name.ilike(f"%{query}%")) | 
-            (User.last_name.ilike(f"%{query}%")) |
-            (User.email.ilike(f"%{query}%"))
+            (User.first_name.ilike(f"%{query}%")) |
+            (User.last_name.ilike(f"%{query}%"))
         ).limit(10).all()
-        
+
         for user in users:
             results.append({
                 "id": user.id,
                 "type": "user",
                 "name": f"{user.first_name} {user.last_name}",
-                "email": user.email,
                 "display": f"{user.first_name} {user.last_name} ({user.role})"
             })
     
@@ -55,10 +53,11 @@ def search():
 
 
 @users_bp.route("/<int:user_id>", methods=["GET"])
+@login_required
 def get_profile(user_id):
     try:
         user = User.query.get_or_404(user_id)
-        # Return public profile info (exclude email, bio, department)
+        # Public profile — private fields (email, application history) excluded
         profile_data = {
             "id": user.id,
             "first_name": user.first_name,
@@ -72,7 +71,6 @@ def get_profile(user_id):
             "badges": [ub.badge_id for ub in user.badges],
             "projects_owned": [{"id": p.id, "title": p.title} for p in user.projects_owned],
             "memberships": [{"project_id": m.project_id} for m in user.memberships],
-            "applications_sent": [{"project_id": a.project_id, "status": a.status} for a in user.applications_sent],
             "feedback_received": [{"giver_id": f.giver_id, "rating": f.rating} for f in user.feedback_received],
             "endorsements_received": [{"giver_id": e.giver_id, "skill": e.skill} for e in user.endorsements_received]
         }
