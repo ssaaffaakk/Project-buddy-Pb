@@ -6,6 +6,14 @@ ProjectBuddy is a web platform built for university students to find project col
 
 ---
 
+## Live Demo
+
+**[https://project-buddy-pb.onrender.com](https://project-buddy-pb.onrender.com)**
+
+> First load may take ~30 seconds (Render free tier spins down after inactivity).
+
+---
+
 ## Video Demo
 
 [![ProjectBuddy Demo](https://img.youtube.com/vi/X3tt5sjE_ns/maxresdefault.jpg)](https://youtu.be/X3tt5sjE_ns)
