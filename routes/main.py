@@ -21,6 +21,7 @@ def create_notification(user_id, message, link=None, type=None):
         return
     n = Notification(user_id=user_id, message=message, link=link, type=type)
     db.session.add(n)
+
 from services.recommendation_service import get_recommended_projects
 from services.badge_service import check_and_award_badges
 from services.file_storage import storage
@@ -34,6 +35,14 @@ def _allowed_avatar(filename):
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_AVATAR_EXTENSIONS
 
 main_bp = Blueprint("main", __name__)
+
+
+# ── HEALTHCHECK ───────────────────────────────────────────────────────────────
+@main_bp.route("/health")
+def health():
+    """Deployment platform healthcheck — returns 200 OK when the app is up."""
+    from flask import jsonify
+    return jsonify({"status": "ok"}), 200
 
 
 # ── HOME ──────────────────────────────────────────────────────────────────────
