@@ -15,22 +15,52 @@ from services.file_storage import storage
 
 
 def _ice_servers():
-    """Build ICE server list from environment variables.
+    """Build ICE server list.
 
-    TURN_URLS  — comma-separated turn:/turns: URLs from Xirsys (or any provider)
-    TURN_USERNAME / TURN_CREDENTIAL — shared credential for all TURN URLs
-    Falls back to Google STUN only when TURN vars are not set (dev mode).
+    If XIRSYS_IDENT + XIRSYS_SECRET + XIRSYS_CHANNEL are set, calls the
+    Xirsys API to get fresh time-limited credentials on every room load
+    (Xirsys tokens expire in ~24 h, so static env vars don't work long-term).
+
+    Falls back to static TURN_URLS / TURN_USERNAME / TURN_CREDENTIAL env vars
+    for non-Xirsys providers, then to Google STUN only if nothing is configured.
     """
+    import logging
+    logger = logging.getLogger(__name__)
+
     servers = [
         {"urls": "stun:stun.l.google.com:19302"},
         {"urls": "stun:stun1.l.google.com:19302"},
     ]
-    urls_raw  = os.environ.get("TURN_URLS", "")
-    username  = os.environ.get("TURN_USERNAME", "")
+
+    # ── Xirsys: fetch fresh credentials via API ───────────────────────────────
+    ident   = os.environ.get("XIRSYS_IDENT", "")
+    secret  = os.environ.get("XIRSYS_SECRET", "")
+    channel = os.environ.get("XIRSYS_CHANNEL", "")
+    if ident and secret and channel:
+        try:
+            import requests as _req
+            import base64
+            token = base64.b64encode(f"{ident}:{secret}".encode()).decode()
+            resp = _req.put(
+                f"https://global.xirsys.net/_turn/{channel}",
+                headers={"Authorization": f"Basic {token}"},
+                timeout=5,
+            )
+            data = resp.json()
+            if data.get("s") == "ok":
+                return data["v"]["iceServers"]
+            logger.warning("Xirsys API error: %s", data)
+        except Exception as e:
+            logger.warning("Xirsys API call failed: %s", e)
+
+    # ── Static fallback (non-Xirsys providers) ────────────────────────────────
+    urls_raw   = os.environ.get("TURN_URLS", "")
+    username   = os.environ.get("TURN_USERNAME", "")
     credential = os.environ.get("TURN_CREDENTIAL", "")
     if urls_raw and username and credential:
         for url in [u.strip() for u in urls_raw.split(",") if u.strip()]:
             servers.append({"urls": url, "username": username, "credential": credential})
+
     return servers
 
 # ── File upload config ────────────────────────────────────────────────────────
