@@ -29,7 +29,14 @@ def create_app(config_class=None):
     
     app = Flask(__name__)
     app.config.from_object(config_class)
-    
+
+    # ProxyFix: trust one level of reverse proxy headers (Render, Heroku, etc.)
+    # Without this: url_for generates http:// instead of https://,
+    # rate limiting sees proxy IP instead of real client IP,
+    # and OAuth/password-reset links break.
+    from werkzeug.middleware.proxy_fix import ProxyFix
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
+
     # Initialize extensions
     _initialize_extensions(app)
     
