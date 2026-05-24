@@ -72,10 +72,11 @@ def _initialize_extensions(app: Flask) -> None:
 
     # Restrict SocketIO CORS: allow only our own origin in production,
     # all origins in development (needed for hot-reload / test clients).
-    is_prod = os.environ.get("FLASK_ENV") == "production"
+    # Use app.debug (set by config class) rather than FLASK_ENV env var so
+    # wsgi.py's ProductionConfig is the single source of truth.
     _raw_origins = os.environ.get("CORS_ORIGINS", "")
     cors_origins = (
-        [o.strip() for o in _raw_origins.split(",") if o.strip()] if is_prod else "*"
+        [o.strip() for o in _raw_origins.split(",") if o.strip()] if not app.debug else "*"
     )
     # Redis message queue: required when running multiple Gunicorn workers so
     # SocketIO events (including voice signaling) are broadcast across all
@@ -85,7 +86,7 @@ def _initialize_extensions(app: Flask) -> None:
 
     # Disable Secure cookie flag outside of production
     # (allows login over plain http://localhost in dev)
-    if not app.config.get("TESTING") and os.environ.get("FLASK_ENV") != "production":
+    if not app.config.get("TESTING") and app.debug:
         app.config["SESSION_COOKIE_SECURE"] = False
 
     # ── Per-request CSP nonce ─────────────────────────────────────────────────
@@ -127,7 +128,7 @@ def _initialize_extensions(app: Flask) -> None:
             "frame-ancestors 'none';"
         )
         # HSTS — only sent in production (where HTTPS is enforced)
-        if os.environ.get("FLASK_ENV") == "production":
+        if not app.debug:
             response.headers["Strict-Transport-Security"] = (
                 "max-age=63072000; includeSubDomains; preload"
             )
@@ -210,9 +211,7 @@ def _apply_schema(app: Flask) -> None:
         to spin up a fresh local DB). If migrations exist they are also
         applied so the dev DB stays consistent.
     """
-    is_prod = os.environ.get("FLASK_ENV") == "production"
-
-    if is_prod:
+    if not app.debug:
         # In production: run pending Alembic migrations, never create_all
         try:
             from flask_migrate import upgrade as db_upgrade
@@ -395,4 +394,4 @@ if __name__ == "__main__":
     app = create_app()
     port = int(os.environ.get("PORT", 5001))
     socketio.run(app, debug=app.debug, host="0.0.0.0", port=port,
-                 allow_unsafe_werkzeug=os.environ.get("FLASK_ENV") != "production")
+                 allow_unsafe_werkzeug=app.debug)
