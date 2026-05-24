@@ -496,13 +496,16 @@ function ensureSocket(){
 
   socket.on('connect',function(){console.log('SocketIO connected',socket.id);});
 
-  /* Someone new joined — existing peers send them an offer */
+  /* Someone new joined — just show their card.
+     The new joiner sends us an offer (they call createOffer in voice_existing_participants).
+     We must NOT also send them an offer — that causes WebRTC glare (both sides in
+     "have-local-offer" state simultaneously, setRemoteDescription fails). */
   socket.on('voice_user_joined',function(user){
     addVpCard(user);
-    createOffer(user.sid);
   });
 
-  /* I just joined — connect to existing participants */
+  /* I just joined — I send offers to everyone already in the room.
+     Existing participants will answer; no one else creates offers. */
   socket.on('voice_existing_participants',function(data){
     mySid=data.my_sid;
     data.participants.forEach(function(user){
