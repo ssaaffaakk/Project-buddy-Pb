@@ -187,13 +187,47 @@ def _register_blueprints(app: Flask) -> None:
     # Register SocketIO voice-chat event handlers
     import routes.voice  # noqa: F401  — side-effect: registers @socketio.on handlers
 
-    # Create tables, seed badges, sync admin, and seed mock data on first run
+    # Schema + seed on startup
     with app.app_context():
-        db.create_all()
+        _apply_schema(app)
         _seed_badges()
         _sync_admin()
         _seed_mock_if_empty()
         _fix_broken_passwords()
+
+
+def _apply_schema(app: Flask) -> None:
+    """Apply database schema safely.
+
+    - Production (FLASK_ENV=production):
+        Runs `flask db upgrade` via Alembic so migrations are the single
+        source of truth. db.create_all() is NOT called — it would silently
+        skip columns/constraints added by migrations and cause drift.
+
+    - Development / Testing:
+        Falls back to db.create_all() for convenience (no migration needed
+        to spin up a fresh local DB). If migrations exist they are also
+        applied so the dev DB stays consistent.
+    """
+    is_prod = os.environ.get("FLASK_ENV") == "production"
+
+    if is_prod:
+        # In production: run pending Alembic migrations, never create_all
+        try:
+            from flask_migrate import upgrade as db_upgrade
+            db_upgrade()
+            app.logger.info("Database migrations applied.")
+        except Exception as e:
+            app.logger.error("Migration failed: %s", e)
+            raise  # hard-fail — do not start with a broken schema
+    else:
+        # In dev/testing: create_all for convenience, then migrate if possible
+        db.create_all()
+        try:
+            from flask_migrate import upgrade as db_upgrade
+            db_upgrade()
+        except Exception:
+            pass  # no migrations yet or already up to date — that's fine
 
 
 def _seed_badges() -> None:

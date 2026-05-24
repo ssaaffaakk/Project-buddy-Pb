@@ -127,7 +127,7 @@ def _guess_content_type(filename: str) -> str:
     return ct or "application/octet-stream"
 
 
-def _build_storage() -> LocalStorage | S3Storage:
+def _build_storage():
     if os.environ.get("AWS_S3_BUCKET"):
         try:
             s = S3Storage()
