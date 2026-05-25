@@ -1051,12 +1051,21 @@ def admin_analytics():
     signup_labels = []
     signup_data   = []
 
+    db_url = current_app.config.get('SQLALCHEMY_DATABASE_URI', '')
+    is_postgres = db_url.startswith('postgresql') or db_url.startswith('postgres')
+
     for i in range(5, -1, -1):
         target = datetime.now(timezone.utc) - timedelta(days=30 * i)
         label  = target.strftime("%b")
-        count  = User.query.filter(
-            func.strftime('%Y-%m', User.created_at) == target.strftime('%Y-%m')
-        ).count()
+        ym     = target.strftime('%Y-%m')
+        if is_postgres:
+            count = User.query.filter(
+                func.to_char(User.created_at, 'YYYY-MM') == ym
+            ).count()
+        else:
+            count = User.query.filter(
+                func.strftime('%Y-%m', User.created_at) == ym
+            ).count()
         signup_labels.append(label)
         signup_data.append(count)
 
