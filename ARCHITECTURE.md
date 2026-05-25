@@ -12,6 +12,7 @@ ProjectBuddy is a university project collaboration platform where students and i
 - Frontend: Jinja2 · HTML · CSS · JavaScript
 - Real-time: Flask-SocketIO + eventlet · WebRTC (voice)
 - Auth: Flask-Login · GitHub OAuth (HMAC-signed state)
+- Email: Brevo HTTP API (transactional email, bypasses cloud SMTP restrictions)
 - File Storage: Local disk (dev) · AWS S3 (prod)
 - Cache / Queue: Redis (rate limiting + SocketIO multi-worker + voice state)
 - Scheduler: APScheduler (deadline auto-complete, every 1h)

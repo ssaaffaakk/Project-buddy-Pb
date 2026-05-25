@@ -159,7 +159,7 @@ Tech Stack
 |Frontend    |Jinja2 · HTML · CSS · JavaScript                               |
 |Real-time   |Flask-SocketIO · eventlet · WebRTC (voice) · Xirsys TURN       |
 |Auth        |Flask-Login · GitHub OAuth · HMAC-signed state                 |
-|Email       |smtplib · STARTTLS (Gmail)                                     |
+|Email       |Brevo HTTP API (transactional email)                           |
 |AI          |Groq API (Llama 3) · Anthropic API (Claude) · built-in mock    |
 |Scheduler   |APScheduler (deadline auto-complete, runs every 1h)            |
 |File Storage|Local disk (dev) · AWS S3 / S3-compatible (prod)               |
