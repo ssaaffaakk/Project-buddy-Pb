@@ -1017,7 +1017,7 @@ def admin_analytics():
     total_users   = User.query.count()  # User.query.count()
     total_students = User.query.filter_by(role="student").count()
 
-    thirty_days_ago = datetime.now(timezone.utc) - timedelta(days=30)
+    thirty_days_ago = (datetime.now(timezone.utc) - timedelta(days=30)).replace(tzinfo=None)
     new_users_30d = User.query.filter(User.created_at >= thirty_days_ago).count()
 
     # --- PROJECT COUNTS ---
@@ -1030,7 +1030,7 @@ def admin_analytics():
     # --- COMMUNITY COUNTS ---
     total_posts    = CommunityPost.query.count()
     total_comments = CommunityComment.query.count()
-    new_posts_30d  = CommunityPost.query.filter(CommunityPost.created_at >= thirty_days_ago).count()
+    new_posts_30d  = CommunityPost.query.filter(CommunityPost.created_at >= thirty_days_ago).count()  # thirty_days_ago already naive
 
     # --- VOTE / LIKE COUNTS ---
     total_votes = ProjectVote.query.count()
