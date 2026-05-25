@@ -79,6 +79,9 @@ class Config:
     # ── Role rules ─────────────────────────────────────────────────────────────
     FACULTY_DOMAIN = os.environ.get('FACULTY_DOMAIN', '@faculty.university.edu')
 
+    # ── Email API ─────────────────────────────────────────────────────────────────
+    BREVO_API_KEY = os.environ.get('BREVO_API_KEY', '')
+
     # ── AI chatbot ───────────────────────────────────────────────────────────────
     GROQ_API_KEY      = os.environ.get('GROQ_API_KEY', '')
     ANTHROPIC_API_KEY = os.environ.get('ANTHROPIC_API_KEY', '')
