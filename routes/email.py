@@ -1,7 +1,5 @@
 import logging
-import smtplib
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
+import requests
 from flask import current_app
 import secrets
 
@@ -9,34 +7,42 @@ logger = logging.getLogger(__name__)
 
 
 def send_email(recipient_email, subject, body, is_html=False):
-    """Send email via SMTP (Brevo)."""
+    """Send email via Brevo HTTP API (works on all cloud platforms)."""
     try:
-        username = current_app.config.get('MAIL_USERNAME', '')
-        password = current_app.config.get('MAIL_PASSWORD', '')
-        sender   = current_app.config.get('MAIL_DEFAULT_SENDER') or username
+        api_key = current_app.config.get('BREVO_API_KEY', '')
+        sender  = current_app.config.get('MAIL_DEFAULT_SENDER', 'surmelisafak773@gmail.com')
 
-        if not sender:
-            logger.warning("Email not sent: MAIL_USERNAME / MAIL_DEFAULT_SENDER not configured.")
+        if not api_key:
+            logger.warning("Email not sent: BREVO_API_KEY not configured.")
             return False
 
-        msg = MIMEMultipart('alternative')
-        msg['Subject'] = subject
-        msg['From']    = sender
-        msg['To']      = recipient_email
+        payload = {
+            "sender":  {"email": sender},
+            "to":      [{"email": recipient_email}],
+            "subject": subject,
+        }
 
         if is_html:
-            msg.attach(MIMEText(body, 'html'))
+            payload["htmlContent"] = body
         else:
-            msg.attach(MIMEText(body, 'plain'))
+            payload["textContent"] = body
 
-        with smtplib.SMTP(current_app.config['MAIL_SERVER'], current_app.config['MAIL_PORT'], timeout=10) as server:
-            if current_app.config.get('MAIL_USE_TLS', True):
-                server.starttls()
-            if username and password:
-                server.login(username, password)
-            server.send_message(msg)
+        resp = requests.post(
+            "https://api.brevo.com/v3/smtp/email",
+            json=payload,
+            headers={
+                "api-key": api_key,
+                "Content-Type": "application/json",
+            },
+            timeout=10,
+        )
 
-        return True
+        if resp.status_code in (200, 201):
+            return True
+
+        logger.error("Brevo API error %s: %s", resp.status_code, resp.text)
+        return False
+
     except Exception as e:
         logger.exception("Failed to send email to %s: %s", recipient_email, e)
         return False
