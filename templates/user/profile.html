@@ -169,6 +169,7 @@ select{
     <a href="{{ url_for('chat.admin_view_all') }}" class="nav-item"><span class="nav-mark">&#8212;</span> Support Chats</a>
     <a href="#" id="themeToggle" class="nav-item" onclick="var h=document.documentElement;h.classList.toggle('light-mode');var l=h.classList.contains('light-mode');localStorage.setItem('theme',l?'light':'dark');this.textContent=l?'Dark':'Light';return false;"><span class="nav-mark">&#8212;</span> Light</a>
     <a href="/auth/logout" class="nav-item"><span class="nav-mark">&#8212;</span> Log Out</a>
+  <div style="padding:16px 10px 8px;border-top:1px solid rgba(255,255,255,0.05);margin-top:8px;text-align:center;font-size:0.72rem;color:var(--muted);">&copy; 2025 ProjectBuddy &middot; Safak Surmeli</div>
   {% else %}
   <a href="/dashboard" class="nav-item"><span class="nav-mark">&#8212;</span> Dashboard</a>
   <a href="/projects-page" class="nav-item"><span class="nav-mark">&#8212;</span> Browse Projects</a>
@@ -182,6 +183,7 @@ select{
   <a href="/report-issue" class="nav-item"><span class="nav-mark">&#8212;</span> Report Issue</a>
   <a href="#" id="themeToggle" class="nav-item" onclick="var h=document.documentElement;h.classList.toggle('light-mode');var l=h.classList.contains('light-mode');localStorage.setItem('theme',l?'light':'dark');this.textContent=l?'Dark':'Light';return false;"><span class="nav-mark">&#8212;</span> Light</a>
   <a href="/auth/logout" class="nav-item"><span class="nav-mark">&#8212;</span> Log Out</a>
+  <div style="padding:16px 10px 8px;border-top:1px solid rgba(255,255,255,0.05);margin-top:8px;text-align:center;font-size:0.72rem;color:var(--muted);">&copy; 2025 ProjectBuddy &middot; Safak Surmeli</div>
   {% endif %}
   <div style="padding:0 6px;margin-bottom:6px;">
     <button onclick="toggleNotifs()" id="notif-btn" style="width:100%;display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:var(--r);background:none;border:1px solid transparent;cursor:pointer;color:var(--soft);font-family:'Outfit',sans-serif;font-size:0.84rem;font-weight:500;transition:all 0.18s;">
