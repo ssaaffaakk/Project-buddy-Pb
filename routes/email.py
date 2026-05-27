@@ -1,13 +1,29 @@
 import logging
-import requests
+import threading
 from flask import current_app
 import secrets
 
 logger = logging.getLogger(__name__)
 
 
+def _do_send(api_key, sender, recipient_email, subject, payload):
+    """Run the actual HTTP request in a background thread — never blocks eventlet."""
+    try:
+        import requests as _req
+        resp = _req.post(
+            "https://api.brevo.com/v3/smtp/email",
+            json=payload,
+            headers={"api-key": api_key, "Content-Type": "application/json"},
+            timeout=10,
+        )
+        if resp.status_code not in (200, 201):
+            logger.error("Brevo API error %s: %s", resp.status_code, resp.text)
+    except Exception as e:
+        logger.exception("Brevo send failed: %s", e)
+
+
 def send_email(recipient_email, subject, body, is_html=False):
-    """Send email via Brevo HTTP API (works on all cloud platforms)."""
+    """Send email via Brevo HTTP API in a background thread."""
     try:
         api_key = current_app.config.get('BREVO_API_KEY', '')
         sender  = current_app.config.get('MAIL_DEFAULT_SENDER', 'surmelisafak773@gmail.com')
@@ -17,7 +33,7 @@ def send_email(recipient_email, subject, body, is_html=False):
             return False
 
         payload = {
-            "sender":  {"email": sender},
+            "sender":  {"email": sender, "name": "ProjectBuddy"},
             "to":      [{"email": recipient_email}],
             "subject": subject,
         }
@@ -27,21 +43,9 @@ def send_email(recipient_email, subject, body, is_html=False):
         else:
             payload["textContent"] = body
 
-        resp = requests.post(
-            "https://api.brevo.com/v3/smtp/email",
-            json=payload,
-            headers={
-                "api-key": api_key,
-                "Content-Type": "application/json",
-            },
-            timeout=10,
-        )
-
-        if resp.status_code in (200, 201):
-            return True
-
-        logger.error("Brevo API error %s: %s", resp.status_code, resp.text)
-        return False
+        t = threading.Thread(target=_do_send, args=(api_key, sender, recipient_email, subject, payload), daemon=True)
+        t.start()
+        return True
 
     except Exception as e:
         logger.exception("Failed to send email to %s: %s", recipient_email, e)
