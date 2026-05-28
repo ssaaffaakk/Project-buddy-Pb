@@ -98,10 +98,12 @@
     padding-top: 56px !important;
   }
 
-  /* Admin main area */
-  .admin-main-offset {
-    margin-left: 0 !important;
-    padding-top: 64px;
+  /* Notif panel: move away from where sidebar was */
+  #notif-panel {
+    left: 12px !important;
+    right: 12px !important;
+    width: auto !important;
+    bottom: 16px !important;
   }
 
   /* Profile: two-column layout to single */
@@ -366,13 +368,6 @@
   .topbar h1,
   .topbar > div > h1 {
     font-size: 1.3rem !important;
-  }
-
-  /* Notif panel */
-  #notif-panel {
-    width: calc(100vw - 24px) !important;
-    right: 0 !important;
-    left: 12px !important;
   }
 
   /* Prevent iOS zoom on inputs */
