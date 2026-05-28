@@ -1,0 +1,397 @@
+/* ╔══════════════════════════════════════════════════════════╗
+   ║  ProjectBuddy — Mobile / Responsive Stylesheet           ║
+   ║  Loaded on every page via <link> in <head>               ║
+   ╚══════════════════════════════════════════════════════════╝ */
+
+/* ── Hamburger button (hidden on desktop) ───────────────── */
+.ham-btn {
+  display: none;
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  z-index: 200;
+  background: var(--bg2, #0f0e0d);
+  border: 1px solid var(--border, rgba(255,255,255,0.08));
+  border-radius: 8px;
+  width: 42px;
+  height: 42px;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--text, #ede8df);
+  flex-shrink: 0;
+  transition: background 0.18s, border-color 0.18s;
+  -webkit-tap-highlight-color: transparent;
+}
+.ham-btn:hover {
+  background: var(--bg3, #181614);
+  border-color: rgba(255,255,255,0.14);
+}
+
+/* ── Sidebar overlay (hidden on desktop) ────────────────── */
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  z-index: 99;
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  opacity: 0;
+  transition: opacity 0.28s ease;
+}
+.sidebar-overlay.open {
+  display: block;
+  opacity: 1;
+}
+
+/* ╔══════════════════════════════════════════════════════════╗
+   ║  TABLET  (≤ 900px)                                       ║
+   ╚══════════════════════════════════════════════════════════╝ */
+@media (max-width: 900px) {
+
+  /* ── Dashboard: 4-col stats → 2-col ── */
+  .stats-row {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  /* ── Dashboard: 2-col layout → single col ── */
+  .grid-2 {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* ── Admin analytics section rows ── */
+  .section-row,
+  .section-row.thirds {
+    grid-template-columns: 1fr !important;
+  }
+
+}
+
+/* ╔══════════════════════════════════════════════════════════╗
+   ║  MOBILE  (≤ 768px)                                       ║
+   ╚══════════════════════════════════════════════════════════╝ */
+@media (max-width: 768px) {
+
+  /* ── Show hamburger ── */
+  .ham-btn {
+    display: flex;
+  }
+
+  /* ── Sidebar: slide off-screen, animate in ── */
+  .sidebar {
+    transform: translateX(-100%) !important;
+    transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    z-index: 150 !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+  }
+  .sidebar.open {
+    transform: translateX(0) !important;
+  }
+
+  /* ── Main content: full width, no left margin ── */
+  .main {
+    margin-left: 0 !important;
+    padding: 72px 16px 24px !important;
+  }
+
+  /* ── Chat room (study groups) ── */
+  .chat-wrap {
+    margin-left: 0 !important;
+    padding-top: 56px !important;
+  }
+
+  /* ── Admin main area ── */
+  .admin-main-offset {
+    margin-left: 0 !important;
+    padding-top: 64px;
+  }
+
+  /* ── Profile: two-column layout → single ── */
+  .content {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* ── Topbar: stack elements ── */
+  .topbar {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 14px !important;
+    margin-bottom: 24px !important;
+    padding-bottom: 20px !important;
+  }
+
+  /* ── Report cards in admin ── */
+  .report-card {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* ── Tables: scroll horizontally ── */
+  .users-table {
+    display: block !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+    white-space: nowrap;
+  }
+
+  /* ── Toast notifications ── */
+  #toast-container {
+    left: 12px !important;
+    right: 12px !important;
+    top: auto !important;
+    bottom: 16px !important;
+  }
+  .toast {
+    min-width: unset !important;
+    max-width: 100% !important;
+  }
+
+  /* ── Rec grid ── */
+  .rec-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* ── Auth pages ── */
+  .auth-wrap {
+    flex-direction: column !important;
+  }
+  .left-panel,
+  .left-content {
+    display: none !important;
+  }
+  .auth-box {
+    max-width: 100% !important;
+    padding: 32px 20px !important;
+  }
+  .form-row {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* ─────────────────────────────────────────────────────────
+     INDEX.HTML — Landing page
+  ──────────────────────────────────────────────────────────*/
+
+  /* Nav */
+  nav {
+    padding: 12px 20px !important;
+  }
+  .nav-links {
+    display: none !important;
+  }
+  /* Mobile nav drawer */
+  .mobile-nav-drawer {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--bg, #080808);
+    z-index: 300;
+    flex-direction: column;
+    padding: 80px 32px 40px;
+    gap: 8px;
+    overflow-y: auto;
+  }
+  .mobile-nav-drawer.open {
+    display: flex;
+  }
+  .mobile-nav-drawer a {
+    display: block;
+    padding: 14px 0;
+    font-size: 1.1rem;
+    color: var(--text, #ede8df);
+    text-decoration: none;
+    border-bottom: 1px solid var(--border, rgba(255,255,255,0.06));
+    font-family: 'Outfit', sans-serif;
+  }
+  .mobile-nav-close {
+    position: fixed;
+    top: 14px;
+    right: 16px;
+    z-index: 301;
+    background: none;
+    border: 1px solid var(--border, rgba(255,255,255,0.08));
+    border-radius: 8px;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--text, #ede8df);
+    font-size: 1.2rem;
+    -webkit-tap-highlight-color: transparent;
+  }
+  /* Index hamburger (top-right in nav) */
+  .nav-ham {
+    display: flex !important;
+  }
+  .nav-cta .btn-12 {
+    display: none !important;
+  }
+  .btn-theme-toggle {
+    font-size: 0.6rem !important;
+    padding: 6px 10px !important;
+  }
+
+  /* Hero */
+  .hero {
+    padding: 100px 24px 60px !important;
+    min-height: auto !important;
+  }
+  .hero h1 {
+    font-size: clamp(2rem, 9vw, 3rem) !important;
+    line-height: 1.12 !important;
+  }
+  .hero-sub {
+    font-size: 0.88rem !important;
+    max-width: 100% !important;
+  }
+  .hero-actions {
+    flex-direction: column !important;
+    gap: 10px !important;
+    margin-top: 28px !important;
+  }
+  .hero-actions .btn-12 {
+    width: 100% !important;
+    text-align: center !important;
+    justify-content: center !important;
+  }
+  .hero-stats {
+    flex-wrap: wrap !important;
+    gap: 16px !important;
+    margin-top: 40px !important;
+  }
+  .hero-stat {
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* Manifesto */
+  .manifesto {
+    grid-template-columns: 1fr !important;
+    gap: 20px !important;
+    padding: 48px 24px !important;
+  }
+
+  /* Features */
+  .features-header {
+    grid-template-columns: 1fr !important;
+  }
+  .features-header-left {
+    padding: 36px 24px !important;
+    border-right: none !important;
+    border-bottom: 1px solid var(--border, rgba(255,255,255,0.06)) !important;
+  }
+  .features-header-right {
+    padding: 36px 24px !important;
+  }
+  .features-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .feature-item {
+    padding: 28px 24px !important;
+    border-right: none !important;
+  }
+
+  /* Roles */
+  .roles {
+    grid-template-columns: 1fr !important;
+  }
+  .role-item {
+    padding: 32px 24px !important;
+    border-right: none !important;
+  }
+
+  /* CTA */
+  .cta-section {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    padding: 48px 24px !important;
+    gap: 28px !important;
+  }
+
+  /* Footer */
+  footer {
+    padding: 28px 24px !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 16px !important;
+  }
+  .footer-links {
+    flex-wrap: wrap !important;
+    gap: 12px !important;
+  }
+
+}
+
+/* ╔══════════════════════════════════════════════════════════╗
+   ║  SMALL MOBILE  (≤ 480px)                                 ║
+   ╚══════════════════════════════════════════════════════════╝ */
+@media (max-width: 480px) {
+
+  /* Stats: 2 per row on very small */
+  .stats-row,
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  .stat-card {
+    padding: 16px 14px !important;
+  }
+
+  /* Project grid: single col */
+  .project-grid {
+    grid-template-columns: 1fr !important;
+    background: transparent !important;
+  }
+
+  /* Tighter main padding */
+  .main {
+    padding: 68px 12px 20px !important;
+  }
+
+  /* Section cards */
+  .section-card {
+    padding: 16px !important;
+  }
+
+  /* Proj items: stack icon + text */
+  .proj-item {
+    flex-wrap: wrap !important;
+  }
+
+  /* Buttons */
+  .btn-gold {
+    font-size: 0.68rem !important;
+    padding: 9px 14px !important;
+  }
+
+  /* Topbar title */
+  .topbar h1,
+  .topbar > div > h1 {
+    font-size: 1.3rem !important;
+  }
+
+  /* Notif panel */
+  #notif-panel {
+    width: calc(100vw - 24px) !important;
+    right: 0 !important;
+    left: 12px !important;
+  }
+
+  /* Forms */
+  input, select, textarea {
+    font-size: 16px !important; /* prevents iOS zoom */
+  }
+
+}
+
+/* ── Prevent body scroll when sidebar open (mobile) ──── */
+body.sidebar-open {
+  overflow: hidden;
+}

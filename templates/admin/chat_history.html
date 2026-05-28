@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -42,9 +42,14 @@ body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;disp
 .empty-message{text-align:center;color:var(--muted);padding:60px 20px;}
 </style>
 <script nonce="{{ csp_nonce }}">if(localStorage.getItem('theme')==='light')document.documentElement.classList.add('light-mode');document.addEventListener('DOMContentLoaded',function(){var t=document.getElementById('themeToggle');if(t)t.textContent=document.documentElement.classList.contains('light-mode')?'Dark':'Light';});</script>
+<link rel="stylesheet" href="/static/css/mobile.css">
 </head>
 <body>
 {% set admin_active = 'support_chats' %}
+<button class="ham-btn" id="ham-btn" aria-label="Open menu" onclick="pbSidebar(true)">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+</button>
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="pbSidebar(false)"></div>
 {% include 'admin/_sidebar.html' %}
 
 
@@ -91,5 +96,20 @@ body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;disp
   </div>
   {% endif %}
 </main>
+<script>
+function pbSidebar(open){
+  var s=document.querySelector('.sidebar');
+  var o=document.getElementById('sidebar-overlay');
+  if(!s||!o)return;
+  s.classList.toggle('open',open);
+  o.classList.toggle('open',open);
+  document.body.classList.toggle('sidebar-open',open);
+}
+document.addEventListener('keydown',function(e){if(e.key==='Escape')pbSidebar(false);});
+document.addEventListener('DOMContentLoaded',function(){
+  var links=document.querySelectorAll('.sidebar .nav-item');
+  links.forEach(function(l){l.addEventListener('click',function(){pbSidebar(false);});});
+});
+</script>
 </body>
 </html>
