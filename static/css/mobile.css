@@ -149,16 +149,16 @@
   }
 
   /* Auth pages */
-  .auth-wrap {
-    flex-direction: column !important;
-  }
-  .left-panel,
-  .left-content {
+  .left {
     display: none !important;
+  }
+  .right {
+    padding: 40px 20px !important;
+    align-items: flex-start !important;
+    padding-top: 60px !important;
   }
   .auth-box {
     max-width: 100% !important;
-    padding: 32px 20px !important;
   }
   .form-row {
     grid-template-columns: 1fr !important;
