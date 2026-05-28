@@ -1,9 +1,6 @@
-/* ╔══════════════════════════════════════════════════════════╗
-   ║  ProjectBuddy — Mobile / Responsive Stylesheet           ║
-   ║  Loaded on every page via <link> in <head>               ║
-   ╚══════════════════════════════════════════════════════════╝ */
+/* ProjectBuddy - Mobile / Responsive Stylesheet */
 
-/* ── Hamburger button (hidden on desktop) ───────────────── */
+/* Hamburger button (hidden on desktop) */
 .ham-btn {
   display: none;
   position: fixed;
@@ -28,7 +25,7 @@
   border-color: rgba(255,255,255,0.14);
 }
 
-/* ── Sidebar overlay (hidden on desktop) ────────────────── */
+/* Sidebar overlay (hidden on desktop) */
 .sidebar-overlay {
   display: none;
   position: fixed;
@@ -45,12 +42,10 @@
   opacity: 1;
 }
 
-/* ╔══════════════════════════════════════════════════════════╗
-   ║  TABLET  (≤ 900px)                                       ║
-   ╚══════════════════════════════════════════════════════════╝ */
+/* === TABLET (max-width: 900px) === */
 @media (max-width: 900px) {
 
-  /* ── Dashboard: 4-col stats → 2-col ── */
+  /* Dashboard: 4-col stats to 2-col */
   .stats-row {
     grid-template-columns: repeat(2, 1fr) !important;
   }
@@ -58,12 +53,12 @@
     grid-template-columns: repeat(2, 1fr) !important;
   }
 
-  /* ── Dashboard: 2-col layout → single col ── */
+  /* Dashboard: 2-col layout to single col */
   .grid-2 {
     grid-template-columns: 1fr !important;
   }
 
-  /* ── Admin analytics section rows ── */
+  /* Admin analytics section rows */
   .section-row,
   .section-row.thirds {
     grid-template-columns: 1fr !important;
@@ -71,17 +66,15 @@
 
 }
 
-/* ╔══════════════════════════════════════════════════════════╗
-   ║  MOBILE  (≤ 768px)                                       ║
-   ╚══════════════════════════════════════════════════════════╝ */
+/* === MOBILE (max-width: 768px) === */
 @media (max-width: 768px) {
 
-  /* ── Show hamburger ── */
+  /* Show hamburger */
   .ham-btn {
     display: flex;
   }
 
-  /* ── Sidebar: slide off-screen, animate in ── */
+  /* Sidebar: slide off-screen, animate in */
   .sidebar {
     transform: translateX(-100%) !important;
     transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1) !important;
@@ -93,30 +86,30 @@
     transform: translateX(0) !important;
   }
 
-  /* ── Main content: full width, no left margin ── */
+  /* Main content: full width, no left margin */
   .main {
     margin-left: 0 !important;
     padding: 72px 16px 24px !important;
   }
 
-  /* ── Chat room (study groups) ── */
+  /* Chat room (study groups) */
   .chat-wrap {
     margin-left: 0 !important;
     padding-top: 56px !important;
   }
 
-  /* ── Admin main area ── */
+  /* Admin main area */
   .admin-main-offset {
     margin-left: 0 !important;
     padding-top: 64px;
   }
 
-  /* ── Profile: two-column layout → single ── */
+  /* Profile: two-column layout to single */
   .content {
     grid-template-columns: 1fr !important;
   }
 
-  /* ── Topbar: stack elements ── */
+  /* Topbar: stack elements */
   .topbar {
     flex-direction: column !important;
     align-items: flex-start !important;
@@ -125,12 +118,12 @@
     padding-bottom: 20px !important;
   }
 
-  /* ── Report cards in admin ── */
+  /* Report cards in admin */
   .report-card {
     grid-template-columns: 1fr !important;
   }
 
-  /* ── Tables: scroll horizontally ── */
+  /* Tables: scroll horizontally */
   .users-table {
     display: block !important;
     overflow-x: auto !important;
@@ -138,7 +131,7 @@
     white-space: nowrap;
   }
 
-  /* ── Toast notifications ── */
+  /* Toast notifications */
   #toast-container {
     left: 12px !important;
     right: 12px !important;
@@ -150,12 +143,12 @@
     max-width: 100% !important;
   }
 
-  /* ── Rec grid ── */
+  /* Rec grid */
   .rec-grid {
     grid-template-columns: 1fr !important;
   }
 
-  /* ── Auth pages ── */
+  /* Auth pages */
   .auth-wrap {
     flex-direction: column !important;
   }
@@ -171,9 +164,7 @@
     grid-template-columns: 1fr !important;
   }
 
-  /* ─────────────────────────────────────────────────────────
-     INDEX.HTML — Landing page
-  ──────────────────────────────────────────────────────────*/
+  /* === INDEX.HTML - Landing page === */
 
   /* Nav */
   nav {
@@ -182,6 +173,7 @@
   .nav-links {
     display: none !important;
   }
+
   /* Mobile nav drawer */
   .mobile-nav-drawer {
     display: none;
@@ -227,7 +219,8 @@
     font-size: 1.2rem;
     -webkit-tap-highlight-color: transparent;
   }
-  /* Index hamburger (top-right in nav) */
+
+  /* Index hamburger (shown via CSS on mobile) */
   .nav-ham {
     display: flex !important;
   }
@@ -330,12 +323,10 @@
 
 }
 
-/* ╔══════════════════════════════════════════════════════════╗
-   ║  SMALL MOBILE  (≤ 480px)                                 ║
-   ╚══════════════════════════════════════════════════════════╝ */
+/* === SMALL MOBILE (max-width: 480px) === */
 @media (max-width: 480px) {
 
-  /* Stats: 2 per row on very small */
+  /* Stats: 2 per row */
   .stats-row,
   .stats-grid {
     grid-template-columns: repeat(2, 1fr) !important;
@@ -360,7 +351,7 @@
     padding: 16px !important;
   }
 
-  /* Proj items: stack icon + text */
+  /* Proj items */
   .proj-item {
     flex-wrap: wrap !important;
   }
@@ -384,14 +375,14 @@
     left: 12px !important;
   }
 
-  /* Forms */
+  /* Prevent iOS zoom on inputs */
   input, select, textarea {
-    font-size: 16px !important; /* prevents iOS zoom */
+    font-size: 16px !important;
   }
 
 }
 
-/* ── Prevent body scroll when sidebar open (mobile) ──── */
+/* Prevent body scroll when sidebar open */
 body.sidebar-open {
   overflow: hidden;
 }
