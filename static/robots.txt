@@ -1,0 +1,24 @@
+User-agent: *
+Allow: /
+Allow: /auth/login
+Allow: /auth/register
+Allow: /auth/forgot-password
+Allow: /static/
+
+Disallow: /dashboard
+Disallow: /admin
+Disallow: /profile
+Disallow: /edit-profile
+Disallow: /projects-page
+Disallow: /my-projects
+Disallow: /post-project-page
+Disallow: /project/
+Disallow: /community
+Disallow: /study-groups
+Disallow: /chatbot
+Disallow: /chat/
+Disallow: /report-issue
+Disallow: /auth/reset-password
+Disallow: /auth/logout
+
+Sitemap: https://project-buddy-pb.onrender.com/sitemap.xml
