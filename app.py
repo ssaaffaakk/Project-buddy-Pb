@@ -134,6 +134,14 @@ def _initialize_extensions(app: Flask) -> None:
             "media-src 'self' blob:; "
             "frame-ancestors 'none';"
         )
+        # Restrict browser API access (microphone allowed for WebRTC voice)
+        response.headers["Permissions-Policy"] = (
+            "camera=(), microphone=(self), geolocation=(), payment=(), usb=()"
+        )
+        # Isolate browsing context — prevents cross-origin window attacks
+        response.headers["Cross-Origin-Opener-Policy"] = "same-origin"
+        # Prevent other sites from embedding our resources (API, static files)
+        response.headers["Cross-Origin-Resource-Policy"] = "same-origin"
         # HSTS — only sent in production (where HTTPS is enforced)
         if not app.debug:
             response.headers["Strict-Transport-Security"] = (
