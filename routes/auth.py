@@ -5,6 +5,7 @@ import hashlib
 import time
 import secrets
 import requests as http_requests
+import eventlet.tpool
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session, current_app
 from flask_login import login_user, logout_user, login_required, current_user
 from extensions import db, limiter
@@ -335,7 +336,8 @@ def github_callback():
     client_secret = current_app.config.get('GITHUB_CLIENT_SECRET')
 
     # 3. Exchange the code for an access token
-    token_response = http_requests.post(
+    token_response = eventlet.tpool.execute(
+        http_requests.post,
         'https://github.com/login/oauth/access_token',
         data={
             'client_id':     client_id,
@@ -352,7 +354,8 @@ def github_callback():
         return redirect(url_for('auth.login'))
 
     # 4. Use the token to GET the user's GitHub profile
-    profile_response = http_requests.get(
+    profile_response = eventlet.tpool.execute(
+        http_requests.get,
         'https://api.github.com/user',
         headers={
             'Authorization': f'Bearer {access_token}',
@@ -368,7 +371,8 @@ def github_callback():
 
     # 5. If GitHub didn't give us an email (some accounts hide it), fetch separately
     if not email:
-        emails_response = http_requests.get(
+        emails_response = eventlet.tpool.execute(
+            http_requests.get,
             'https://api.github.com/user/emails',
             headers={'Authorization': f'Bearer {access_token}', 'Accept': 'application/vnd.github+json'}
         )

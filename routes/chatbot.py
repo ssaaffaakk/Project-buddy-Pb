@@ -8,6 +8,7 @@ Provider priority (first key found in .env wins):
 
 import random
 import requests
+import eventlet.tpool
 from flask import Blueprint, render_template, request, jsonify, current_app
 from flask_login import login_required, current_user
 from extensions import db, limiter
@@ -84,7 +85,8 @@ def _groq_reply(history: list, user_message: str) -> str:
     messages += history
     messages.append({"role": "user", "content": user_message})
 
-    resp = requests.post(
+    resp = eventlet.tpool.execute(
+        requests.post,
         "https://api.groq.com/openai/v1/chat/completions",
         headers={
             "Authorization": f"Bearer {current_app.config['GROQ_API_KEY']}",
@@ -106,7 +108,8 @@ def _groq_reply(history: list, user_message: str) -> str:
 def _anthropic_reply(history: list, user_message: str) -> str:
     messages = history + [{"role": "user", "content": user_message}]
 
-    resp = requests.post(
+    resp = eventlet.tpool.execute(
+        requests.post,
         "https://api.anthropic.com/v1/messages",
         headers={
             "x-api-key":         current_app.config["ANTHROPIC_API_KEY"],
