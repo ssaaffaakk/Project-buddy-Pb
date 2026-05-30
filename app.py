@@ -206,13 +206,18 @@ def _register_blueprints(app: Flask) -> None:
     # Register SocketIO voice-chat event handlers
     import routes.voice  # noqa: F401  — side-effect: registers @socketio.on handlers
 
-    # Schema + seed on startup
-    with app.app_context():
-        _apply_schema(app)
-        _seed_badges()
-        _sync_admin()
-        _seed_mock_if_empty()
-        _fix_broken_passwords()
+    # Schema + seed on startup — run in a native thread so blocking DB
+    # operations (psycopg2, Alembic) don't trigger eventlet's mainloop warning.
+    def _run_startup_tasks():
+        with app.app_context():
+            _apply_schema(app)
+            _seed_badges()
+            _sync_admin()
+            _seed_mock_if_empty()
+            _fix_broken_passwords()
+
+    import eventlet.tpool
+    eventlet.tpool.execute(_run_startup_tasks)
 
 
 def _apply_schema(app: Flask) -> None:
@@ -376,7 +381,7 @@ def _start_scheduler(app: Flask) -> None:
     if app.debug and not os.environ.get("WERKZEUG_RUN_MAIN"):
         return
 
-    import eventlet
+    from extensions import socketio
 
     def _run_deadline_check():
         with app.app_context():
@@ -389,10 +394,10 @@ def _start_scheduler(app: Flask) -> None:
 
     def _scheduler_loop():
         while True:
-            eventlet.sleep(3600)  # non-blocking 1-hour wait
+            socketio.sleep(3600)  # non-blocking sleep via Flask-SocketIO
             _run_deadline_check()
 
-    eventlet.spawn(_scheduler_loop)
+    socketio.start_background_task(_scheduler_loop)
     app.logger.info("Background scheduler started (deadline check every 1h).")
 
 
