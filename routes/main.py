@@ -57,11 +57,46 @@ def index():
 # ── ROBOTS.TXT ────────────────────────────────────────────────────────────────
 @main_bp.route("/robots.txt")
 def robots():
-    from flask import Response, current_app
-    import os
-    path = os.path.join(current_app.static_folder, "robots.txt")
-    with open(path, "r") as f:
-        content = f.read()
+    from flask import Response
+    content = (
+        "User-agent: *\n"
+        "Allow: /\n"
+        "Allow: /auth/login\n"
+        "Allow: /auth/register\n"
+        "Allow: /auth/forgot-password\n"
+        "Allow: /static/\n"
+        "\n"
+        "Disallow: /dashboard\n"
+        "Disallow: /admin\n"
+        "Disallow: /profile\n"
+        "Disallow: /edit-profile\n"
+        "Disallow: /projects-page\n"
+        "Disallow: /my-projects\n"
+        "Disallow: /post-project-page\n"
+        "Disallow: /project/\n"
+        "Disallow: /community\n"
+        "Disallow: /study-groups\n"
+        "Disallow: /chatbot\n"
+        "Disallow: /chat/\n"
+        "Disallow: /report-issue\n"
+        "Disallow: /auth/reset-password\n"
+        "Disallow: /auth/logout\n"
+        "\n"
+        "Sitemap: https://project-buddy-pb.onrender.com/sitemap.xml\n"
+    )
+    return Response(content, mimetype="text/plain")
+
+
+# ── SECURITY.TXT ──────────────────────────────────────────────────────────────
+@main_bp.route("/.well-known/security.txt")
+def security_txt():
+    from flask import Response
+    content = (
+        "Contact: mailto:surmeliisafak@gmail.com\n"
+        "Expires: 2027-01-01T00:00:00.000Z\n"
+        "Preferred-Languages: en, tr\n"
+        "Scope: https://project-buddy-pb.onrender.com/\n"
+    )
     return Response(content, mimetype="text/plain")
 
 
