@@ -132,6 +132,8 @@ def _initialize_extensions(app: Flask) -> None:
             "img-src 'self' data: https:; "
             "connect-src 'self' ws: wss: https://cdn.jsdelivr.net; "
             "media-src 'self' blob:; "
+            "object-src 'none'; "
+            "base-uri 'self'; "
             "frame-ancestors 'none';"
         )
         # Restrict browser API access (microphone allowed for WebRTC voice)
@@ -363,11 +365,10 @@ def _configure_logging(app: Flask) -> None:
 
 
 def _start_scheduler(app: Flask) -> None:
-    """Start APScheduler to run background tasks periodically.
+    """Start a background greenlet that runs the deadline checker every hour.
 
-    Uses BackgroundScheduler (thread-based).  Guards against double-start:
-    Flask debug mode spawns a reloader child process — we only want the
-    scheduler running in the actual worker, not the reloader parent.
+    Uses eventlet.spawn + eventlet.sleep instead of APScheduler so it
+    never blocks the eventlet mainloop.
     """
     # In Flask debug mode the reloader forks a child. WERKZEUG_RUN_MAIN is
     # set only in the child (the real server). Skip the parent to avoid two
@@ -375,7 +376,7 @@ def _start_scheduler(app: Flask) -> None:
     if app.debug and not os.environ.get("WERKZEUG_RUN_MAIN"):
         return
 
-    from apscheduler.schedulers.background import BackgroundScheduler
+    import eventlet
 
     def _run_deadline_check():
         with app.app_context():
@@ -386,15 +387,12 @@ def _start_scheduler(app: Flask) -> None:
             except Exception as e:
                 app.logger.exception("Deadline checker failed: %s", e)
 
-    scheduler = BackgroundScheduler(daemon=True)
-    scheduler.add_job(
-        _run_deadline_check,
-        trigger="interval",
-        hours=1,
-        id="deadline_checker",
-        replace_existing=True,
-    )
-    scheduler.start()
+    def _scheduler_loop():
+        while True:
+            eventlet.sleep(3600)  # non-blocking 1-hour wait
+            _run_deadline_check()
+
+    eventlet.spawn(_scheduler_loop)
     app.logger.info("Background scheduler started (deadline check every 1h).")
 
 

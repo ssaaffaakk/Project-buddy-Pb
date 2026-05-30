@@ -12,6 +12,5 @@ psycopg2-binary==2.9.12
 requests==2.32.5
 eventlet==0.40.4
 gunicorn==23.0.0
-APScheduler==3.10.4
 redis==5.2.1
 boto3==1.35.99
