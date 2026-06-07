@@ -14,37 +14,63 @@ Never import DevelopmentConfig here; use `python app.py` for local dev.
 import eventlet
 eventlet.monkey_patch()
 
-# ── Full-traceback capture for "do not call blocking functions from the mainloop"
-# ─────────────────────────────────────────────────────────────────────────────────
-# Eventlet normally prints this error without a stack trace, making it impossible
-# to identify the source. This patch wraps hub.switch() so that whenever it is
-# called from the hub's own greenlet we log the COMPLETE Python call stack at
-# CRITICAL level. Check Render logs for "BLOCKING CALL FROM MAINLOOP" to see
-# exactly which file/line is responsible.
-# Remove this block once the root cause has been identified and fixed.
+# ── Diagnostic: capture full stack for "do not call blocking functions" errors ──
+# Writes directly to stderr so output appears regardless of logging config.
+# The error is raised by an `assert` in eventlet.sleep() / Event.wait() BEFORE
+# hub.switch() is called, so we patch all three entry points.
+# Remove once the root cause is confirmed fixed.
+import sys as _sys, traceback as _tb
+
+def _dump_blocking_stack(label):
+    print(
+        f"\n[WSGI DIAGNOSTIC] BLOCKING CALL FROM MAINLOOP ({label}):\n",
+        file=_sys.stderr,
+    )
+    _tb.print_stack(file=_sys.stderr)
+    _sys.stderr.flush()
+
+def _is_mainloop():
+    import eventlet.hubs as _h
+    from greenlet import getcurrent as _gc
+    try:
+        return _gc() is _h.get_hub().greenlet
+    except Exception:
+        return False
+
 try:
-    import traceback as _tb
-    import logging as _log
+    # 1) eventlet.sleep ──────────────────────────────────────────────────────────
+    _orig_sleep = eventlet.sleep
+    def _traced_sleep(seconds=0):
+        if _is_mainloop():
+            _dump_blocking_stack("eventlet.sleep")
+        return _orig_sleep(seconds)
+    eventlet.sleep = _traced_sleep
+
+    # 2) eventlet.event.Event.wait ───────────────────────────────────────────────
+    import eventlet.event as _ev_mod
+    _orig_event_wait = _ev_mod.Event.wait
+    def _traced_event_wait(self):
+        if _is_mainloop():
+            _dump_blocking_stack("Event.wait")
+        return _orig_event_wait(self)
+    _ev_mod.Event.wait = _traced_event_wait
+
+    # 3) hub.switch ──────────────────────────────────────────────────────────────
     import eventlet.hubs as _hubs
     from greenlet import getcurrent as _getcurrent
-
     _hub = _hubs.get_hub()
     _hub_cls = type(_hub)
-    _orig_hub_switch = _hub_cls.switch  # unbound function in Python 3
-
+    _orig_hub_switch = _hub_cls.switch
     def _traced_hub_switch(self):
         if _getcurrent() is self.greenlet:
-            _log.getLogger("eventlet.hub").critical(
-                "BLOCKING CALL FROM MAINLOOP — full stack:\n%s",
-                "".join(_tb.format_stack()),
-            )
+            _dump_blocking_stack("hub.switch")
         return _orig_hub_switch(self)
-
     _hub_cls.switch = _traced_hub_switch
-    _log.getLogger("eventlet.hub").info("hub.switch() tracing enabled")
-except Exception as _patch_err:
-    import logging as _log
-    _log.getLogger("wsgi").warning("Could not patch hub.switch for tracing: %s", _patch_err)
+
+    print("[WSGI DIAGNOSTIC] blocking-call tracers installed (sleep / Event.wait / hub.switch)",
+          file=_sys.stderr, flush=True)
+except Exception as _e:
+    print(f"[WSGI DIAGNOSTIC] tracer install failed: {_e}", file=_sys.stderr, flush=True)
 
 from app import create_app
 from config import ProductionConfig

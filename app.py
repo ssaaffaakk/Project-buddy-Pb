@@ -397,10 +397,20 @@ def _configure_logging(app: Flask) -> None:
 
 
 def _start_scheduler(app: Flask) -> None:
-    """Start a background greenlet that runs the deadline checker every hour.
+    """Start a background OS thread that runs the deadline checker every hour.
 
-    Uses eventlet.spawn + eventlet.sleep instead of APScheduler so it
-    never blocks the eventlet mainloop.
+    Uses a genuine OS thread (not an eventlet greenlet) so the scheduler
+    never touches the eventlet hub / mainloop.  The thread sleeps via the
+    *real* time.sleep() — completely outside eventlet — and psycopg2 uses
+    C-level blocking sockets, which are also unaffected by the hub.
+
+    Why NOT socketio.start_background_task / eventlet.spawn:
+      socketio.sleep() (and any sleep rooted in eventlet.sleep) internally
+      calls hub.switch().  When that switch is attempted before or from the
+      hub's own greenlet the runtime raises
+      "do not call blocking functions from the mainloop".
+      A real OS thread has no greenlet context and bypasses this check
+      entirely.
     """
     # In Flask debug mode the reloader forks a child. WERKZEUG_RUN_MAIN is
     # set only in the child (the real server). Skip the parent to avoid two
@@ -408,23 +418,23 @@ def _start_scheduler(app: Flask) -> None:
     if app.debug and not os.environ.get("WERKZEUG_RUN_MAIN"):
         return
 
-    from extensions import socketio
-
-    def _run_deadline_check():
-        with app.app_context():
-            try:
-                from services.deadline_checker import flag_overdue_projects
-                flag_overdue_projects()
-                app.logger.info("Deadline check completed.")
-            except Exception as e:
-                app.logger.exception("Deadline checker failed: %s", e)
+    import eventlet.patcher as _ep
+    _real_Thread = _ep.original('threading').Thread
+    _real_sleep  = _ep.original('time').sleep
 
     def _scheduler_loop():
         while True:
-            socketio.sleep(3600)  # non-blocking sleep via Flask-SocketIO
-            _run_deadline_check()
+            _real_sleep(3600)       # real OS sleep — hub not involved
+            with app.app_context():
+                try:
+                    from services.deadline_checker import flag_overdue_projects
+                    flag_overdue_projects()
+                    app.logger.info("Deadline check completed.")
+                except Exception as e:
+                    app.logger.exception("Deadline checker failed: %s", e)
 
-    socketio.start_background_task(_scheduler_loop)
+    t = _real_Thread(target=_scheduler_loop, daemon=True, name="deadline-scheduler")
+    t.start()
     app.logger.info("Background scheduler started (deadline check every 1h).")
 
 
