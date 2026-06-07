@@ -149,6 +149,24 @@ def _initialize_extensions(app: Flask) -> None:
             response.headers["Strict-Transport-Security"] = (
                 "max-age=63072000; includeSubDomains; preload"
             )
+        # ── Cache-Control per path ─────────────────────────────────────────────
+        from flask import request as _req
+        path = _req.path
+        if path.startswith("/static/images/") or path.startswith("/static/images"):
+            # Logos, icons — almost never change
+            response.headers["Cache-Control"] = "public, max-age=31536000, immutable"
+        elif path.startswith("/static/css/") or path.startswith("/static/js/"):
+            # CSS/JS — versioned via ?v= param in templates, 1 week fallback
+            response.headers["Cache-Control"] = "public, max-age=604800"
+        elif path.startswith("/static/uploads/"):
+            # User-uploaded files — short cache, content can change
+            response.headers["Cache-Control"] = "private, max-age=3600"
+        elif path.startswith("/static/"):
+            # Other static assets (fonts, etc.)
+            response.headers["Cache-Control"] = "public, max-age=86400"
+        else:
+            # HTML pages — always fresh (login state, notifications, etc.)
+            response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
         return response
 
     # ── Rate-limit exceeded: return flash+redirect instead of raw JSON ─────────
