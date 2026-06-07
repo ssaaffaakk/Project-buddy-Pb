@@ -64,6 +64,7 @@ def robots():
         "Allow: /auth/login\n"
         "Allow: /auth/register\n"
         "Allow: /auth/forgot-password\n"
+        "Allow: /privacy\n"
         "Allow: /static/\n"
         "\n"
         "Disallow: /dashboard\n"
@@ -100,6 +101,12 @@ def security_txt():
     return Response(content, mimetype="text/plain")
 
 
+# ── PRIVACY POLICY ───────────────────────────────────────────────────────────
+@main_bp.route("/privacy")
+def privacy():
+    return render_template("privacy.html")
+
+
 # ── SITEMAP ───────────────────────────────────────────────────────────────────
 @main_bp.route("/sitemap.xml")
 def sitemap():
@@ -120,6 +127,11 @@ def sitemap():
     <loc>https://project-buddy-pb.onrender.com/auth/forgot-password</loc>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
+  </url>
+  <url>
+    <loc>https://project-buddy-pb.onrender.com/privacy</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.2</priority>
   </url>
 </urlset>"""
     return Response(xml, mimetype="application/xml")

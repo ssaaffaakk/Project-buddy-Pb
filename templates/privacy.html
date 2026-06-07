@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="/static/images/logo.svg" type="image/svg+xml">
+<title>Privacy Policy — ProjectBuddy</title>
+<meta name="description" content="ProjectBuddy privacy policy — how we collect, use, and protect your data.">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://project-buddy-pb.onrender.com/privacy">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/css/mobile.css">
+<style>
+  :root {
+    --bg: #0d0c0b;
+    --surface: #141312;
+    --border: rgba(255,255,255,0.07);
+    --text: #f0ede8;
+    --muted: rgba(240,237,232,0.45);
+    --soft: rgba(240,237,232,0.75);
+    --accent: #FFD700;
+  }
+  html.light-mode {
+    --bg: #f5f3ef;
+    --surface: #ffffff;
+    --border: rgba(0,0,0,0.08);
+    --text: #1a1917;
+    --muted: rgba(26,25,23,0.45);
+    --soft: rgba(26,25,23,0.7);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 1rem;
+    line-height: 1.7;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* NAV */
+  nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 48px;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    background: var(--bg);
+    z-index: 10;
+  }
+  .nav-logo {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.25rem;
+    text-decoration: none;
+    color: var(--text);
+  }
+  .nav-logo em { font-style: italic; color: var(--accent); }
+  .nav-right { display: flex; align-items: center; gap: 16px; }
+  .nav-link {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--soft);
+    text-decoration: none;
+    transition: color 0.18s;
+  }
+  .nav-link:hover { color: var(--text); }
+  .nav-btn {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #0d0c0b;
+    background: var(--accent);
+    padding: 8px 18px;
+    border-radius: 99rem;
+    text-decoration: none;
+    font-weight: 700;
+    transition: opacity 0.18s;
+  }
+  .nav-btn:hover { opacity: 0.85; }
+
+  /* MAIN CONTENT */
+  main {
+    flex: 1;
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 64px 24px 80px;
+    width: 100%;
+  }
+
+  .page-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 16px;
+  }
+
+  h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 2.4rem;
+    line-height: 1.2;
+    margin-bottom: 8px;
+  }
+
+  .last-updated {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.68rem;
+    color: var(--muted);
+    margin-bottom: 48px;
+  }
+
+  .section { margin-bottom: 40px; }
+
+  h2 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.3rem;
+    margin-bottom: 12px;
+    color: var(--text);
+  }
+
+  p { color: var(--soft); margin-bottom: 12px; }
+
+  ul {
+    color: var(--soft);
+    padding-left: 20px;
+    margin-bottom: 12px;
+  }
+  ul li { margin-bottom: 6px; }
+
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  .highlight-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin-bottom: 12px;
+    color: var(--soft);
+    font-size: 0.9rem;
+  }
+
+  /* FOOTER */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 24px 48px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  footer p {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.64rem;
+    letter-spacing: 0.04em;
+    color: var(--muted);
+    margin: 0;
+  }
+  .footer-links { display: flex; gap: 20px; }
+  .footer-links a {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.64rem;
+    letter-spacing: 0.04em;
+    color: var(--muted);
+    text-decoration: none;
+    transition: color 0.18s;
+  }
+  .footer-links a:hover { color: var(--soft); }
+
+  @media (max-width: 600px) {
+    nav { padding: 16px 20px; }
+    h1 { font-size: 1.8rem; }
+    footer { padding: 20px; flex-direction: column; align-items: flex-start; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="/" class="nav-logo">Project<em>Buddy</em></a>
+  <div class="nav-right">
+    <a href="/auth/login" class="nav-link">Sign In</a>
+    <a href="/auth/register" class="nav-btn">Get Started</a>
+  </div>
+</nav>
+
+<main>
+  <p class="page-label">Legal</p>
+  <h1>Privacy Policy</h1>
+  <p class="last-updated">Last updated: June 2025</p>
+
+  <div class="highlight-box">
+    ProjectBuddy is an academic project built for university students. We collect only what is necessary to run the platform. We do not sell your data to anyone.
+  </div>
+
+  <div class="section">
+    <h2>1. Who We Are</h2>
+    <p>ProjectBuddy is a university project collaboration platform developed by Safak Surmeli. It is hosted at <a href="https://project-buddy-pb.onrender.com">project-buddy-pb.onrender.com</a>. For any privacy-related questions, contact: <a href="mailto:surmeliisafak@gmail.com">surmeliisafak@gmail.com</a></p>
+  </div>
+
+  <div class="section">
+    <h2>2. What Data We Collect</h2>
+    <p>When you create an account, we collect:</p>
+    <ul>
+      <li>Your name and email address</li>
+      <li>Your department and bio (optional, set by you)</li>
+      <li>Your skills and interest tags (set by you)</li>
+      <li>Your profile photo (optional, uploaded by you)</li>
+    </ul>
+    <p>When you use the platform, we also store:</p>
+    <ul>
+      <li>Projects you create or apply to</li>
+      <li>Community posts and comments you write</li>
+      <li>Chat messages within study groups</li>
+      <li>AI chatbot conversations (stored per session, clearable by you)</li>
+      <li>Notifications generated by your activity</li>
+    </ul>
+    <p>If you sign in with GitHub, we receive your GitHub username, public email, and profile photo. We do not store your GitHub access token after login.</p>
+  </div>
+
+  <div class="section">
+    <h2>3. How We Use Your Data</h2>
+    <ul>
+      <li>To display your profile to other students on the platform</li>
+      <li>To match you with relevant projects based on your skills</li>
+      <li>To send you email notifications for key events (application accepted/rejected)</li>
+      <li>To let you communicate with teammates via study group chat</li>
+      <li>To provide the AI chatbot assistant with context for better responses</li>
+    </ul>
+    <p>We do not use your data for advertising, profiling, or selling to third parties.</p>
+  </div>
+
+  <div class="section">
+    <h2>4. Email Communications</h2>
+    <p>We may send you transactional emails for:</p>
+    <ul>
+      <li>Password reset requests</li>
+      <li>Notifications when your project application is accepted or rejected</li>
+    </ul>
+    <p>Emails are sent via <a href="https://www.brevo.com" target="_blank" rel="noopener">Brevo</a> (formerly Sendinblue). We do not send marketing emails. You can contact us to stop receiving notifications.</p>
+  </div>
+
+  <div class="section">
+    <h2>5. Data Storage and Security</h2>
+    <p>Your data is stored in a PostgreSQL database hosted on <a href="https://render.com" target="_blank" rel="noopener">Render</a>. Profile photos and files are stored on <a href="https://aws.amazon.com/s3/" target="_blank" rel="noopener">AWS S3</a>.</p>
+    <p>We apply the following security measures:</p>
+    <ul>
+      <li>Passwords are hashed using bcrypt — we never store plaintext passwords</li>
+      <li>All connections use HTTPS with HSTS enabled</li>
+      <li>Session cookies are HttpOnly and Secure</li>
+      <li>CSRF protection on all forms</li>
+      <li>Rate limiting on login and registration to prevent brute-force attacks</li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <h2>6. Cookies and Local Storage</h2>
+    <p>We use:</p>
+    <ul>
+      <li><strong>Session cookie</strong> — keeps you logged in. It is HttpOnly (not accessible to JavaScript) and deleted when you log out.</li>
+      <li><strong>localStorage</strong> — stores your light/dark theme preference. No personal data is stored here.</li>
+    </ul>
+    <p>We do not use tracking cookies, analytics cookies, or third-party advertising cookies.</p>
+  </div>
+
+  <div class="section">
+    <h2>7. Your Rights</h2>
+    <p>You have the right to:</p>
+    <ul>
+      <li>Access the data we hold about you</li>
+      <li>Correct inaccurate data (via your profile settings)</li>
+      <li>Delete your account and all associated data</li>
+      <li>Export your data</li>
+    </ul>
+    <p>To exercise any of these rights, email us at <a href="mailto:surmeliisafak@gmail.com">surmeliisafak@gmail.com</a>. We will respond within 30 days.</p>
+  </div>
+
+  <div class="section">
+    <h2>8. Third-Party Services</h2>
+    <p>We integrate with the following third-party services:</p>
+    <ul>
+      <li><strong>GitHub OAuth</strong> — for optional social login. Governed by <a href="https://docs.github.com/en/site-policy/privacy-policies/github-privacy-statement" target="_blank" rel="noopener">GitHub's Privacy Statement</a>.</li>
+      <li><strong>Groq / Anthropic</strong> — AI providers for the chatbot assistant. Your messages are sent to their API. Governed by their respective privacy policies.</li>
+      <li><strong>Google Fonts</strong> — fonts loaded from Google's CDN. Governed by <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">Google's Privacy Policy</a>.</li>
+      <li><strong>Brevo</strong> — transactional email delivery.</li>
+      <li><strong>AWS S3</strong> — file storage for profile photos.</li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <h2>9. Children's Privacy</h2>
+    <p>ProjectBuddy is intended for university students (18 years and older). We do not knowingly collect data from anyone under 16. If you believe a minor has created an account, please contact us.</p>
+  </div>
+
+  <div class="section">
+    <h2>10. Changes to This Policy</h2>
+    <p>If we make significant changes to this policy, we will update the "Last updated" date at the top of this page. Continued use of the platform after changes constitutes acceptance of the updated policy.</p>
+  </div>
+
+  <div class="section">
+    <h2>11. Contact</h2>
+    <p>For any privacy-related questions or data requests:</p>
+    <p><a href="mailto:surmeliisafak@gmail.com">surmeliisafak@gmail.com</a></p>
+  </div>
+</main>
+
+<footer>
+  <p>© 2025 ProjectBuddy · Safak Surmeli</p>
+  <div class="footer-links">
+    <a href="/privacy">Privacy</a>
+    <a href="/">Home</a>
+    <a href="/auth/login">Sign In</a>
+  </div>
+</footer>
+
+<script nonce="{{ csp_nonce }}">
+const savedTheme = localStorage.getItem('theme') || 'dark';
+if (savedTheme === 'light') {
+  document.documentElement.classList.add('light-mode');
+}
+</script>
+</body>
+</html>
