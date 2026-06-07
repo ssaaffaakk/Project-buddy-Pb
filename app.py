@@ -206,8 +206,14 @@ def _register_blueprints(app: Flask) -> None:
     # Register SocketIO voice-chat event handlers
     import routes.voice  # noqa: F401  — side-effect: registers @socketio.on handlers
 
-    # Schema + seed on startup — run in a native thread so blocking DB
-    # operations (psycopg2, Alembic) don't trigger eventlet's mainloop warning.
+    # Schema + seed on startup.
+    # Must run in a REAL OS thread (not a greenlet / tpool) because:
+    #   - tpool.execute() internally calls hub.switch()
+    #   - At module-import time the eventlet hub loop hasn't started yet
+    #   - hub.switch() from the hub's own greenlet raises
+    #     "do not call blocking functions from the mainloop"
+    # eventlet.patcher.original() gives us the unpatched threading module
+    # so we get a genuine OS thread, completely outside eventlet's hub.
     def _run_startup_tasks():
         with app.app_context():
             _apply_schema(app)
@@ -216,8 +222,11 @@ def _register_blueprints(app: Flask) -> None:
             _seed_mock_if_empty()
             _fix_broken_passwords()
 
-    import eventlet.tpool
-    eventlet.tpool.execute(_run_startup_tasks)
+    import eventlet.patcher as _ep
+    _real_Thread = _ep.original('threading').Thread
+    _t = _real_Thread(target=_run_startup_tasks, daemon=True)
+    _t.start()
+    _t.join()  # OS-level block — fine here because hub isn't serving yet
 
 
 def _apply_schema(app: Flask) -> None:
