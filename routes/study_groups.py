@@ -40,8 +40,10 @@ def _ice_servers():
         try:
             import requests as _req
             import base64
+            import eventlet.tpool
             token = base64.b64encode(f"{ident}:{secret}".encode()).decode()
-            resp = _req.put(
+            resp = eventlet.tpool.execute(
+                _req.put,
                 f"https://global.xirsys.net/_turn/{channel}",
                 headers={"Authorization": f"Basic {token}"},
                 timeout=5,

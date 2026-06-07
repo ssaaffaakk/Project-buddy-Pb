@@ -7,10 +7,12 @@ logger = logging.getLogger(__name__)
 
 
 def _do_send(api_key, sender, recipient_email, subject, payload):
-    """Run the actual HTTP request in a background thread — never blocks eventlet."""
+    """Run the actual HTTP request via tpool — never blocks eventlet mainloop."""
     try:
         import requests as _req
-        resp = _req.post(
+        import eventlet.tpool
+        resp = eventlet.tpool.execute(
+            _req.post,
             "https://api.brevo.com/v3/smtp/email",
             json=payload,
             headers={"api-key": api_key, "Content-Type": "application/json"},
