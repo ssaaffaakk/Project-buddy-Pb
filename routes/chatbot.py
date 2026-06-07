@@ -7,12 +7,15 @@ Provider priority (first key found in .env wins):
 """
 
 import random
+import logging
 import requests
 import eventlet.tpool
 from flask import Blueprint, render_template, request, jsonify, current_app
 from flask_login import login_required, current_user
 from extensions import db, limiter
 from models import ChatbotSession
+
+logger = logging.getLogger(__name__)
 
 chatbot_bp = Blueprint("chatbot", __name__, url_prefix="/chatbot")
 
@@ -131,9 +134,12 @@ def _anthropic_reply(history: list, user_message: str) -> str:
 # ── PROVIDER SELECTOR ─────────────────────────────────────────────────────────
 def _get_reply(history: list, user_message: str) -> str:
     if current_app.config.get("GROQ_API_KEY"):
+        logger.info("chatbot: using Groq provider")
         return _groq_reply(history, user_message)
     if current_app.config.get("ANTHROPIC_API_KEY"):
+        logger.info("chatbot: using Anthropic provider")
         return _anthropic_reply(history, user_message)
+    logger.warning("chatbot: no API key found (GROQ_API_KEY / ANTHROPIC_API_KEY) — using mock responses")
     return _mock_reply(user_message)
 
 
@@ -174,8 +180,9 @@ def ask():
 
     try:
         reply = _get_reply(history, user_message)
-    except Exception:
-        reply = "Sorry, I'm having trouble connecting right now. Please try again in a moment."
+    except Exception as e:
+        logger.exception("chatbot: provider call failed — %s", e)
+        reply = "Sorry, I'm having trouble connecting to the AI right now. Please try again in a moment."
 
     # Persist both turns
     db.session.add(ChatbotSession(user_id=current_user.id, role="user",      content=user_message))
