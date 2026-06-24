@@ -453,27 +453,28 @@ var isMuted      = false;
 var inVoice      = false;
 var mySid        = null;
 var peers        = {};   // {sid: RTCPeerConnection}
-var iceQueues    = {};   // {sid: RTCIceCandidateInit[]}
 
 var ICE_CFG = { iceServers: {{ ice_servers | safe }} };
 
 function ensureSocket(){
   if(socket)return;
-  socket=io({withCredentials:true,transports:['websocket','polling']});
+  socket=io();
 
-  socket.on('connect',function(){
-    if(!mySid)mySid=socket.id;
+  socket.on('connect',function(){console.log('SocketIO connected',socket.id);});
+
+  socket.on('voice_error',function(data){
+    toast((data&&data.message)||'Voice connection failed.','error');
   });
 
-  /* Someone new joined — existing peers also send an offer (legacy flow). */
+  /* Someone new joined — existing peers send them an offer */
   socket.on('voice_user_joined',function(user){
     addVpCard(user);
-    if(inVoice&&localStream)createOffer(user.sid);
+    createOffer(user.sid);
   });
 
-  /* I just joined — connect to everyone already in the room. */
+  /* I just joined — connect to existing participants */
   socket.on('voice_existing_participants',function(data){
-    mySid=data.my_sid||socket.id;
+    mySid=data.my_sid;
     data.participants.forEach(function(user){
       addVpCard(user);
       createOffer(user.sid);
@@ -483,7 +484,6 @@ function ensureSocket(){
   socket.on('voice_user_left',function(data){
     removeVpCard(data.sid);
     if(peers[data.sid]){peers[data.sid].close();delete peers[data.sid];}
-    delete iceQueues[data.sid];
     var audio=document.getElementById('audio-'+data.sid);
     if(audio){audio.srcObject=null;audio.remove();}
   });
@@ -492,18 +492,10 @@ function ensureSocket(){
   socket.on('webrtc_offer',async function(data){
     try{
       var pc=getOrCreatePC(data.from_sid);
-      var offer=new RTCSessionDescription(data.offer);
-      if(pc.signalingState==='have-local-offer'){
-        /* Polite peer rolls back when both sides sent offers at once. */
-        var polite=!mySid||mySid<data.from_sid;
-        if(!polite)return;
-        await pc.setLocalDescription({type:'rollback'});
-      }
-      await pc.setRemoteDescription(offer);
+      await pc.setRemoteDescription(new RTCSessionDescription(data.offer));
       var answer=await pc.createAnswer();
       await pc.setLocalDescription(answer);
       socket.emit('webrtc_answer',{answer:answer,to_sid:data.from_sid});
-      await flushIceQueue(data.from_sid);
     }catch(err){console.warn('webrtc_offer failed:',err);}
   });
 
@@ -512,40 +504,13 @@ function ensureSocket(){
     if(!pc)return;
     try{
       await pc.setRemoteDescription(new RTCSessionDescription(data.answer));
-      await flushIceQueue(data.from_sid);
     }catch(err){console.warn('webrtc_answer failed:',err);}
   });
 
   socket.on('webrtc_ice',function(data){
-    if(!data.candidate)return;
     var pc=peers[data.from_sid];
-    if(pc&&pc.remoteDescription){
-      pc.addIceCandidate(new RTCIceCandidate(data.candidate)).catch(function(){});
-    }else{
-      if(!iceQueues[data.from_sid])iceQueues[data.from_sid]=[];
-      iceQueues[data.from_sid].push(data.candidate);
-    }
+    if(pc&&data.candidate){pc.addIceCandidate(new RTCIceCandidate(data.candidate)).catch(function(){});}
   });
-}
-
-function connectSocket(){
-  ensureSocket();
-  if(socket.connected)return Promise.resolve();
-  return new Promise(function(resolve,reject){
-    var timer=setTimeout(function(){reject(new Error('Socket connection timeout'));},12000);
-    socket.once('connect',function(){clearTimeout(timer);mySid=socket.id;resolve();});
-    socket.once('connect_error',function(err){clearTimeout(timer);reject(err);});
-  });
-}
-
-async function flushIceQueue(remoteSid){
-  var pc=peers[remoteSid];
-  var queued=iceQueues[remoteSid]||[];
-  if(!pc||!queued.length)return;
-  iceQueues[remoteSid]=[];
-  for(var i=0;i<queued.length;i++){
-    await pc.addIceCandidate(new RTCIceCandidate(queued[i])).catch(function(){});
-  }
 }
 
 async function toggleVoice(){
@@ -572,7 +537,7 @@ async function joinVoice(){
 
   /* Connect SocketIO and join the voice room */
   try{
-    await connectSocket();
+    ensureSocket();
     socket.emit('join_voice',{group_id:GROUP_ID});
   }catch(e){
     toast('Connection error. Please refresh and try again.','error');
@@ -642,7 +607,6 @@ function leaveVoice(){
     if(audio){audio.srcObject=null;audio.remove();}
   });
   peers={};
-  iceQueues={};
 
   /* stop mic */
   if(localStream){localStream.getTracks().forEach(function(t){t.stop();});localStream=null;}
@@ -686,13 +650,10 @@ function getOrCreatePC(remoteSid){
       audio.id='audio-'+remoteSid;
       audio.autoplay=true;
       audio.playsInline=true;
-      audio.setAttribute('playsinline','');
       document.body.appendChild(audio);
     }
-    var stream=(e.streams&&e.streams[0])?e.streams[0]:new MediaStream([e.track]);
-    if(audio.srcObject!==stream)audio.srcObject=stream;
-    audio.muted=false;
-    audio.volume=1;
+    /* Use stream if available, otherwise wrap track in a new MediaStream */
+    audio.srcObject=(e.streams&&e.streams[0])?e.streams[0]:new MediaStream([e.track]);
     audio.play().catch(function(err){console.warn('Audio play blocked:',err);});
   };
 
@@ -705,13 +666,10 @@ function getOrCreatePC(remoteSid){
 }
 
 async function createOffer(remoteSid){
-  if(!localStream)return;
   var pc=getOrCreatePC(remoteSid);
-  try{
-    var offer=await pc.createOffer({offerToReceiveAudio:true});
-    await pc.setLocalDescription(offer);
-    if(socket)socket.emit('webrtc_offer',{offer:offer,to_sid:remoteSid});
-  }catch(err){console.warn('createOffer failed:',err);}
+  var offer=await pc.createOffer();
+  await pc.setLocalDescription(offer);
+  if(socket)socket.emit('webrtc_offer',{offer:offer,to_sid:remoteSid});
 }
 
 function addVpCard(user){

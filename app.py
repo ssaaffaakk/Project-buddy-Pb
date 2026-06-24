@@ -98,7 +98,12 @@ def _initialize_extensions(app: Flask) -> None:
     # SocketIO events (including voice signaling) are broadcast across all
     # processes. Falls back to None (in-process only) when REDIS_URL is unset.
     redis_url = os.environ.get("REDIS_URL") or None
-    socketio.init_app(app, cors_allowed_origins=cors_origins, message_queue=redis_url)
+    socketio.init_app(
+        app,
+        cors_allowed_origins=cors_origins,
+        message_queue=redis_url,
+        manage_session=False,
+    )
 
     # Disable Secure cookie flag outside of production
     # (allows login over plain http://localhost in dev)

@@ -144,6 +144,7 @@ def _remove_sid(sid: str) -> None:
 @socketio.on('join_voice')
 def on_join_voice(data):
     if not current_user.is_authenticated:
+        emit('voice_error', {'message': 'Please sign in again to use voice chat.'})
         return
     try:
         group_id = int(data.get('group_id', 0))
@@ -197,22 +198,37 @@ def on_disconnect():
 @socketio.on('webrtc_offer')
 def on_offer(data):
     """Relay SDP offer from one peer to another."""
+    if not current_user.is_authenticated:
+        return
+    to_sid = data.get('to_sid')
+    if not to_sid or 'offer' not in data:
+        return
     emit('webrtc_offer',
          {'offer': data['offer'], 'from_sid': request.sid},
-         to=data['to_sid'])
+         to=to_sid)
 
 
 @socketio.on('webrtc_answer')
 def on_answer(data):
     """Relay SDP answer."""
+    if not current_user.is_authenticated:
+        return
+    to_sid = data.get('to_sid')
+    if not to_sid or 'answer' not in data:
+        return
     emit('webrtc_answer',
          {'answer': data['answer'], 'from_sid': request.sid},
-         to=data['to_sid'])
+         to=to_sid)
 
 
 @socketio.on('webrtc_ice')
 def on_ice(data):
     """Relay ICE candidate."""
+    if not current_user.is_authenticated:
+        return
+    to_sid = data.get('to_sid')
+    if not to_sid or 'candidate' not in data:
+        return
     emit('webrtc_ice',
          {'candidate': data['candidate'], 'from_sid': request.sid},
-         to=data['to_sid'])
+         to=to_sid)
