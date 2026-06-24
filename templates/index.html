@@ -297,7 +297,7 @@ html.lm .mfst-txt w.g.lit{color:var(--gold);text-shadow:none;}
 .fi-prog .t{flex:1;height:1px;background:var(--border-m);position:relative;overflow:hidden;max-width:150px;}
 .fi-prog .t i{position:absolute;left:0;top:0;height:100%;width:0%;background:var(--gold);}
 .fi-prog .c{font-family:'DM Mono',monospace;font-size:.6rem;color:var(--muted);letter-spacing:.1em;}
-#ft{display:flex;align-items:center;will-change:transform;transition:transform .06s linear;padding:0 var(--pad) 0 36px;gap:18px;}
+#ft{display:flex;align-items:center;will-change:transform;transform:translate3d(0,0,0);backface-visibility:hidden;padding:0 var(--pad) 0 36px;gap:18px;}
 .fc{flex-shrink:0;width:340px;height:60vh;border:1px solid var(--border);border-radius:15px;padding:38px 34px;display:flex;flex-direction:column;position:relative;overflow:hidden;transition:border-color .3s,background .3s;background:rgba(255,255,255,.02);}
 .fc::before{content:'';position:absolute;inset:0;border-radius:15px;background:radial-gradient(circle at var(--mx,50%) var(--my,50%),rgba(110,139,255,.09) 0%,transparent 55%);opacity:0;transition:opacity .35s;}
 .fc:hover{border-color:rgba(110,139,255,.25);background:rgba(110,139,255,.025);}
@@ -988,8 +988,9 @@ function updCounter(){
 }
 
 let lastY=0;
+let getScrollY=()=>window.scrollY;
 function onScroll(){
-  const y=window.scrollY,sh=document.body.scrollHeight-window.innerHeight;
+  const y=getScrollY(),sh=document.body.scrollHeight-window.innerHeight;
   $sp.style.width=(y/sh*100)+'%';
   $mn.classList.toggle('sc',y>80);
   lastY=y;
@@ -1000,6 +1001,7 @@ function onScroll(){
 if(!RM && typeof Lenis !== 'undefined'){
   const lenis=new Lenis({lerp:0.08,duration:1.2,smoothWheel:true,
     easing:t=>Math.min(1,1.001-Math.pow(2,-10*t))});
+  getScrollY=()=>lenis.scroll;
   lenis.on('scroll',onScroll);
   (function lenisRaf(t){lenis.raf(t);requestAnimationFrame(lenisRaf);})(0);
   /* anchor links — let Lenis animate them smoothly */
@@ -1215,11 +1217,20 @@ const df=document.getElementById('demo-frame');if(df)demoObs.observe(df);
 /* ── HORIZONTAL SCROLL ── */
 const pin=document.getElementById('fp'),sticky=document.getElementById('fs'),track=document.getElementById('ft');
 const $fiBar=document.getElementById('fi-bar'),$fiC=document.getElementById('fi-c');
+let horizMaxX=0;
+function measureHoriz(){
+  if(window.innerWidth<=768||!pin||!track)return;
+  const fi=pin.querySelector('.fi');
+  const viewW=window.innerWidth-(fi?fi.offsetWidth:0)-36;
+  horizMaxX=Math.max(0,track.scrollWidth-viewW);
+}
 function horizScroll(){
   if(window.innerWidth<=768||!pin||!track)return;
-  const prog=Math.max(0,Math.min(1,(window.scrollY-pin.offsetTop)/(pin.offsetHeight-sticky.offsetHeight)));
-  const maxX=-(track.scrollWidth-window.innerWidth+120);
-  track.style.transform=`translateX(${maxX*prog}px)`;
+  const travel=pin.offsetHeight-window.innerHeight;
+  if(travel<=0)return;
+  const prog=Math.max(0,Math.min(1,-pin.getBoundingClientRect().top/travel));
+  const x=Math.round(-horizMaxX*prog);
+  track.style.transform=`translate3d(${x}px,0,0)`;
   if($fiBar)$fiBar.style.width=(prog*100)+'%';
   if($fiC)$fiC.textContent=String(Math.min(6,Math.floor(prog*6)+1)).padStart(2,'0');
 }
@@ -1329,8 +1340,9 @@ document.querySelectorAll('a[href^="#"]').forEach(a=>{
 });
 
 buildParallax();
-window.addEventListener('load',buildParallax);
-let rt;window.addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(buildParallax,200);},{passive:true});
+measureHoriz();
+window.addEventListener('load',()=>{buildParallax();measureHoriz();});
+let rt;window.addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(()=>{buildParallax();measureHoriz();horizScroll();},200);},{passive:true});
 onScroll();
 </script>
 </body>
