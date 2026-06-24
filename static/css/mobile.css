@@ -381,3 +381,109 @@
 body.sidebar-open {
   overflow: hidden;
 }
+
+/* ── APP PAGES — extended responsive (pb-theme companion) ───────────────── */
+
+.admin-main-offset {
+  margin-left: 220px;
+}
+
+@media (max-width: 768px) {
+  .admin-main-offset {
+    margin-left: 0 !important;
+    padding: 72px 16px 24px !important;
+  }
+
+  .chat-wrap {
+    margin-left: 0 !important;
+    padding-top: 56px !important;
+    height: 100dvh !important;
+    max-height: 100dvh !important;
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr !important;
+    gap: 24px !important;
+  }
+
+  .content-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .page-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+  }
+
+  .search-row {
+    flex-direction: column !important;
+  }
+
+  .search-btn {
+    width: 100% !important;
+  }
+
+  .create-row {
+    grid-template-columns: 1fr !important;
+  }
+
+  .groups-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .stat-card:nth-child(1) {
+    grid-column: span 2 !important;
+  }
+
+  /* Privacy page */
+  nav {
+    padding: 14px 18px !important;
+  }
+
+  .privacy-body,
+  .page-content {
+    padding: 32px 18px 48px !important;
+  }
+
+  .privacy-body h1,
+  .page-content h1 {
+    font-size: clamp(1.6rem, 6vw, 2.2rem) !important;
+  }
+
+  /* Auth split layout */
+  .auth-wrap {
+    flex-direction: column !important;
+  }
+
+  .auth-left,
+  .auth-right {
+    width: 100% !important;
+    min-height: auto !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .stat-card:nth-child(1) {
+    grid-column: span 1 !important;
+  }
+
+  .stats-row {
+    grid-template-columns: 1fr !important;
+  }
+
+  .project-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .card {
+    padding: 22px 16px !important;
+  }
+
+  .actions {
+    flex-direction: column !important;
+  }
+
+  .actions .btn {
+    width: 100% !important;
+  }
+}
