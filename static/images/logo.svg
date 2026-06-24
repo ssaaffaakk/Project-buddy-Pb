@@ -1,4 +1,3 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
-  <rect width="32" height="32" rx="6" fill="#FFD700"/>
-  <text x="16" y="22" font-family="serif" font-size="16" font-weight="bold" fill="#0d0c0b" text-anchor="middle">P</text>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 32 32">
+  <image width="32" height="32" xlink:href="/static/images/favicon-32x32.png?v=3"/>
 </svg>

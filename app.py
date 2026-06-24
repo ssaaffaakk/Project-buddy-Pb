@@ -49,6 +49,15 @@ def create_app(config_class=None):
     # Register blueprints
     _register_blueprints(app)
 
+    @app.route("/favicon.ico")
+    def favicon():
+        from flask import send_from_directory
+        return send_from_directory(
+            os.path.join(app.root_path, "static", "images"),
+            "favicon-32x32.png",
+            mimetype="image/png",
+        )
+
     _register_context_processors(app)
 
     # Set up shell context
@@ -152,7 +161,13 @@ def _initialize_extensions(app: Flask) -> None:
         # ── Cache-Control per path ─────────────────────────────────────────────
         from flask import request as _req
         path = _req.path
-        if path.startswith("/static/images/") or path.startswith("/static/images"):
+        if path == "/favicon.ico" or (
+            path.startswith("/static/images/")
+            and ("favicon" in path or "apple-touch-icon" in path)
+        ):
+            # Tab icons — short cache so logo updates propagate
+            response.headers["Cache-Control"] = "public, max-age=86400"
+        elif path.startswith("/static/images/") or path.startswith("/static/images"):
             # Logos, icons — almost never change
             response.headers["Cache-Control"] = "public, max-age=31536000, immutable"
         elif path.startswith("/static/css/") or path.startswith("/static/js/"):

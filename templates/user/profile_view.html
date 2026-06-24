@@ -3,9 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="csrf-token" content="{{ csrf_token() }}">
-<link rel="icon" href="/static/images/logo.png" type="image/png">
-<title>{{ profile_user.first_name }} {{ profile_user.last_name }} — ProjectBuddy</title>
+{% include '_favicon.html' %}
+<meta name="csrf-token" content="{{ csrf_token() }}"><title>{{ profile_user.first_name }} {{ profile_user.last_name }} — ProjectBuddy</title>
 <meta name="robots" content="noindex, nofollow">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">

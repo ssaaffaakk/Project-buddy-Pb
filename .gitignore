@@ -51,6 +51,9 @@ static/images/*.jpeg
 static/images/*.jpg
 static/images/*.png
 !static/images/logo.png
+!static/images/favicon-32x32.png
+!static/images/favicon-192x192.png
+!static/images/apple-touch-icon.png
 !static/images/*.svg
 
 # ── macOS ─────────────────────────────────────────────────────────────────────
