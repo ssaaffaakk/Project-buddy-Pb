@@ -411,6 +411,39 @@ def _register_context_processors(app: Flask) -> None:
             "admin_open_chat_count": Chat.query.filter_by(status="open").count(),
         }
 
+    @app.context_processor
+    def inject_nav_active():
+        """Highlight the current page in the shared user sidebar."""
+        from flask import request
+
+        path = request.path.rstrip("/") or "/"
+        active = ""
+
+        if path.startswith("/admin"):
+            active = "admin"
+        elif path == "/dashboard":
+            active = "dashboard"
+        elif path == "/projects-page" or path.startswith("/projects/"):
+            active = "projects"
+        elif path.startswith("/community"):
+            active = "community"
+        elif path.startswith("/study-groups"):
+            active = "study_groups"
+        elif path.startswith("/chatbot"):
+            active = "chatbot"
+        elif path == "/post-project-page":
+            active = "post_project"
+        elif path == "/my-projects":
+            active = "my_projects"
+        elif path in ("/profile", "/edit-profile") or path.startswith("/user/"):
+            active = "profile"
+        elif path.startswith("/chat"):
+            active = "support_chat"
+        elif path.startswith("/report-issue"):
+            active = "report_issue"
+
+        return {"nav_active": active}
+
 
 def _setup_shell_context(app: Flask) -> None:
     """Set up Flask shell context."""
