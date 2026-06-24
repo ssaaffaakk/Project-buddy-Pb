@@ -14,15 +14,24 @@ from models import StudyGroup, StudyGroupMember, StudyGroupMessage, Notification
 from services.file_storage import storage
 
 
+def _servers_include_turn(servers: list) -> bool:
+    """Return True if any entry is a TURN/TURNS relay (not STUN-only)."""
+    for entry in servers:
+        urls = entry.get("urls", "")
+        for url in (urls if isinstance(urls, list) else [urls]):
+            if isinstance(url, str) and url.startswith(("turn:", "turns:")):
+                return True
+    return False
+
+
 def _ice_servers():
-    """Build ICE server list.
+    """Build ICE server list for WebRTC.
 
-    If XIRSYS_IDENT + XIRSYS_SECRET + XIRSYS_CHANNEL are set, calls the
-    Xirsys API to get fresh time-limited credentials on every room load
-    (Xirsys tokens expire in ~24 h, so static env vars don't work long-term).
-
-    Falls back to static TURN_URLS / TURN_USERNAME / TURN_CREDENTIAL env vars
-    for non-Xirsys providers, then to Google STUN only if nothing is configured.
+    Production voice chat requires TURN — STUN alone fails behind NAT/firewalls.
+    Priority:
+      1. Xirsys API (fresh time-limited credentials on each room load)
+      2. Static TURN_URLS + TURN_USERNAME + TURN_CREDENTIAL (Metered, Twilio, Coturn…)
+      3. Google STUN only (dev / same-LAN; not sufficient for real users)
     """
     import logging
     logger = logging.getLogger(__name__)
@@ -50,21 +59,29 @@ def _ice_servers():
             )
             data = resp.json()
             if data.get("s") == "ok":
-                # data["v"] = {"iceServers": [...]} — pass iceServers list directly
                 ice = data["v"].get("iceServers", [])
                 if isinstance(ice, list) and ice:
-                    return ice
-            logger.warning("Xirsys API error: %s", data)
+                    if _servers_include_turn(ice):
+                        return ice
+                    logger.warning("Xirsys returned ICE servers but no TURN URLs: %s", ice)
+            else:
+                logger.warning("Xirsys API error: %s", data)
         except Exception as e:
             logger.warning("Xirsys API call failed: %s", e)
 
-    # ── Static fallback (non-Xirsys providers) ────────────────────────────────
+    # ── Static fallback (Metered, Twilio, self-hosted Coturn, etc.) ─────────
     urls_raw   = os.environ.get("TURN_URLS", "")
     username   = os.environ.get("TURN_USERNAME", "")
     credential = os.environ.get("TURN_CREDENTIAL", "")
     if urls_raw and username and credential:
         for url in [u.strip() for u in urls_raw.split(",") if u.strip()]:
             servers.append({"urls": url, "username": username, "credential": credential})
+
+    if not _servers_include_turn(servers):
+        logger.warning(
+            "WebRTC TURN not configured — voice chat will fail for most production users "
+            "(NAT/firewall). Set XIRSYS_* or TURN_URLS/TURN_USERNAME/TURN_CREDENTIAL."
+        )
 
     return servers
 
@@ -155,11 +172,13 @@ def room(group_id):
                 .order_by(StudyGroupMessage.created_at.desc())
                 .limit(60).all())
     messages = list(reversed(messages))
+    ice = _ice_servers()
     return render_template(
         "study_groups/room.html",
         group=group, messages=messages,
         is_member=is_member, user=current_user,
-        ice_servers=json.dumps(_ice_servers()),
+        ice_servers=json.dumps(ice),
+        voice_has_turn=_servers_include_turn(ice),
     )
 
 

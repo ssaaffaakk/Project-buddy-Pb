@@ -455,7 +455,11 @@ var mySid        = null;
 var peers        = {};   // {sid: RTCPeerConnection}
 var iceQueues    = {};   // {sid: RTCIceCandidateInit[]}
 
-var ICE_CFG = { iceServers: {{ ice_servers | safe }} };
+var ICE_CFG = {
+  iceServers: {{ ice_servers | safe }},
+  iceTransportPolicy: 'all'
+};
+var VOICE_HAS_TURN = {{ 'true' if voice_has_turn else 'false' }};
 
 function waitForSocketConnect(sock, timeoutMs){
   return new Promise(function(resolve, reject){
@@ -565,6 +569,10 @@ async function joinVoice(){
     toast('Microphone access denied. Allow microphone in browser settings.','error');
     _removeMyCard();
     return;
+  }
+
+  if(!VOICE_HAS_TURN){
+    toast('Voice relay (TURN) is not configured on the server — audio may not work across different networks.','error');
   }
 
   /* Connect SocketIO and join the voice room */
@@ -693,6 +701,20 @@ function getOrCreatePC(remoteSid){
   /* relay ICE */
   pc.onicecandidate=function(e){
     if(e.candidate&&socket){socket.emit('webrtc_ice',{candidate:e.candidate,to_sid:remoteSid});}
+  };
+
+  pc.oniceconnectionstatechange=function(){
+    console.log('ICE state',remoteSid,pc.iceConnectionState);
+    if(pc.iceConnectionState==='failed'){
+      toast('Voice blocked by network (ICE failed). A TURN server is required in production.','error');
+    }
+  };
+
+  pc.onconnectionstatechange=function(){
+    console.log('PeerConnection state',remoteSid,pc.connectionState);
+    if(pc.connectionState==='failed'){
+      toast('Voice peer connection failed. Check TURN configuration or try another network.','error');
+    }
   };
 
   return pc;
