@@ -237,6 +237,7 @@ def _register_blueprints(app: Flask) -> None:
             _apply_schema(app)
             _seed_badges()
             _sync_admin()
+            _sync_avatar_urls()
             _seed_mock_if_empty()
             _fix_broken_passwords()
 
@@ -284,6 +285,35 @@ def _seed_badges() -> None:
         if not Badge.query.filter_by(name=name).first():
             db.session.add(Badge(name=name, description=desc, icon=icon))
     db.session.commit()
+
+
+def _sync_avatar_urls() -> None:
+    """Backfill avatar_url when a file exists on disk but the DB row is empty."""
+    import os
+    import re
+    from flask import current_app
+    from models import User
+
+    project_root = os.path.dirname(os.path.abspath(__file__))
+    avatars_dir = os.path.join(project_root, "static", "uploads", "avatars")
+    if not os.path.isdir(avatars_dir):
+        return
+
+    pattern = re.compile(r"^user_(\d+)\.(jpg|jpeg|png|webp)$", re.IGNORECASE)
+    updated = 0
+    for name in os.listdir(avatars_dir):
+        match = pattern.match(name)
+        if not match:
+            continue
+        user = db.session.get(User, int(match.group(1)))
+        if not user or user.avatar_url:
+            continue
+        user.avatar_url = f"/static/uploads/avatars/{name}"
+        updated += 1
+
+    if updated:
+        db.session.commit()
+        current_app.logger.info("Backfilled avatar_url for %d user(s).", updated)
 
 
 def _sync_admin() -> None:

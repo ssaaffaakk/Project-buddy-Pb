@@ -6,22 +6,22 @@
 <title>ProjectBuddy — Apply to Project</title>
 <meta name="robots" content="noindex, nofollow">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style nonce="{{ csp_nonce }}">
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
 html{scrollbar-gutter:stable;overflow-y:scroll;}
 :root{
   color-scheme:dark;
-  --bg:#080808;--bg2:#0f0e0d;--bg3:#181614;
-  --card:rgba(255,255,255,0.025);--card-h:rgba(255,255,255,0.045);
-  --accent:#FFD700;--accent-dim:rgba(255,215,0,0.1);--accent-glow:rgba(255,215,0,0.18);
-  --red:#c0392b;--text:#ede8df;--muted:#6e6a64;--soft:#c8c2ba;
-  --border:rgba(255,255,255,0.055);--border-gold:rgba(255,215,0,0.12);--r:10px;
+  --bg:#060B1A;--bg2:#0B1430;--bg3:#13204A;--coral:#FF6B6B;--coral-hi:#FF8E8E;--coral-lo:rgba(255,107,107,0.14);
+  --card:rgba(255,255,255,0.045);--card-h:rgba(255,255,255,0.075);
+  --accent:#7C9BFF;--accent-dim:rgba(124,155,255,0.1);--accent-glow:rgba(124,155,255,0.18);
+  --red:#c0392b;--text:#EEF1FF;--muted:#9AA3CC;--soft:#CAD0EF;
+  --border:rgba(255,255,255,0.085);--border-gold:rgba(124,155,255,0.12);--r:10px;
 }
-html.light-mode{color-scheme:light;--bg:#ffffff;--bg2:#f5f5f5;--bg3:#eeeeee;--card:rgba(0,0,0,0.03);--card-h:rgba(0,0,0,0.06);--accent:#d4a817;--accent-dim:rgba(212,168,23,0.12);--accent-glow:rgba(212,168,23,0.18);--red:#c0392b;--text:#1a1a1a;--muted:#6b6b6b;--soft:#505050;--border:rgba(0,0,0,0.1);--border-gold:rgba(212,168,23,0.12);}
-body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px;position:relative;}
+html.light-mode{color-scheme:light;--bg:#ffffff;--bg2:#EAEEFB;--bg3:#E0E6F8;--card:rgba(0,0,0,0.03);--card-h:rgba(0,0,0,0.06);--accent:#4658C8;--accent-dim:rgba(70,88,200,0.12);--accent-glow:rgba(70,88,200,0.18);--red:#c0392b;--text:#13162A;--muted:#7E839C;--soft:#474C66;--border:rgba(0,0,0,0.1);--border-gold:rgba(70,88,200,0.12);}
+body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px;position:relative;}
 body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");pointer-events:none;z-index:0;opacity:0.6;}
-#cursor-glow{position:fixed;width:700px;height:700px;border-radius:50%;background:radial-gradient(circle,rgba(255,215,0,0.035) 0%,transparent 70%);pointer-events:none;transform:translate(-50%,-50%);z-index:1;}
+#cursor-glow{position:fixed;width:700px;height:700px;border-radius:50%;background:radial-gradient(circle,rgba(124,155,255,0.035) 0%,transparent 70%);pointer-events:none;transform:translate(-50%,-50%);z-index:1;}
 .container{position:relative;z-index:2;}
 
 .container{width:100%;max-width:500px;}
@@ -49,8 +49,8 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 
 .btn{flex:1;padding:13px;border-radius:var(--r);font-family:'DM Mono',monospace;font-size:0.76rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;border:none;cursor:pointer;transition:all 0.2s;text-decoration:none;text-align:center;display:inline-block;}
 
-.btn-primary{background:linear-gradient(135deg,#FFD700 0%,#C8960C 100%);color:#080808;box-shadow:0 0 20px rgba(255,215,0,0.15);}
-.btn-primary:hover{box-shadow:0 0 0 1px rgba(255,215,0,0.5),0 4px 24px rgba(255,215,0,0.25);transform:translateY(-1px);}
+.btn-primary{background:linear-gradient(110deg,var(--accent) 0%,var(--violet,#A78BFF) 45%,var(--coral,#FF6B6B) 100%);color:#fff;box-shadow:0 0 20px rgba(124,155,255,0.15);}
+.btn-primary:hover{box-shadow:0 0 0 1px rgba(124,155,255,0.5),0 4px 24px rgba(124,155,255,0.25);transform:translateY(-1px);}
 
 .btn-secondary{background:var(--card);color:var(--soft);border:1px solid var(--border);}
 .btn-secondary:hover{border-color:rgba(255,255,255,0.12);color:var(--text);}
@@ -59,6 +59,8 @@ form{display:contents;}
 </style>
 <script nonce="{{ csp_nonce }}">if(localStorage.getItem('theme')==='light')document.documentElement.classList.add('light-mode');document.addEventListener('DOMContentLoaded',function(){var t=document.getElementById('themeToggle');if(t)t.textContent=document.documentElement.classList.contains('light-mode')?'Dark':'Light';});</script>
 <link rel="stylesheet" href="/static/css/mobile.css?v=1">
+<link rel="stylesheet" href="/static/css/pb-theme.css?v=1">
+<script src="/static/js/pb-theme.js?v=1" defer></script>
 </head>
 <body>
 <a href="#" id="themeToggle" onclick="var h=document.documentElement;h.classList.toggle('light-mode');var l=h.classList.contains('light-mode');localStorage.setItem('theme',l?'light':'dark');this.textContent=l?'Dark':'Light';return false;" style="position:fixed;top:20px;right:20px;z-index:9999;font-family:'DM Mono',monospace;font-size:0.72rem;letter-spacing:0.05em;color:var(--muted);text-decoration:none;border:1px solid var(--border);padding:7px 14px;border-radius:8px;background:var(--card);transition:all 0.18s;">Light</a>

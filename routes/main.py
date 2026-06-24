@@ -26,6 +26,30 @@ def _allowed_avatar(filename):
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_AVATAR_EXTENSIONS
 
 
+def _save_user_avatar(user, avatar_file):
+    """Persist avatar file and set user.avatar_url. Raises ValueError on validation failure."""
+    if not avatar_file or not avatar_file.filename:
+        return None
+
+    if not _allowed_avatar(avatar_file.filename):
+        raise ValueError("Invalid file type. Please upload a JPG, PNG, or WebP image.")
+
+    avatar_file.seek(0, 2)
+    file_size = avatar_file.tell()
+    avatar_file.seek(0)
+
+    if file_size > MAX_AVATAR_BYTES:
+        raise ValueError("Image must be under 2 MB.")
+
+    ext = avatar_file.filename.rsplit(".", 1)[1].lower()
+    filename = secure_filename(f"user_{user.id}.{ext}")
+    data = avatar_file.read()
+    url = storage.save(data, filename, category="avatars")
+    cache_bust = int(datetime.now(timezone.utc).timestamp())
+    user.avatar_url = f"{url}?v={cache_bust}"
+    return user.avatar_url
+
+
 def create_notification(user_id, message, link=None, type=None):
     """Create a notification for a user. Call db.session.commit() after."""
     if not user_id or not message:
@@ -51,7 +75,9 @@ def index():
         if current_user.role == "admin":
             return redirect(url_for("main.admin_dashboard"))
         return redirect(url_for("main.dashboard"))
-    return render_template("index.html")
+    total_users = User.query.count()
+    active_projects = Project.query.filter_by(status="open").count()
+    return render_template("index.html", total_users=total_users, active_projects=active_projects)
 
 
 # ── ROBOTS.TXT ────────────────────────────────────────────────────────────────
@@ -762,30 +788,27 @@ def _render_profile(user):
 @main_bp.route("/profile/avatar", methods=["POST"])
 @login_required
 def upload_avatar():
-    user = User.query.get(current_user.id)
-    avatar_file = request.files.get("avatar")
+    user = db.session.get(User, current_user.id)
+    if not user:
+        flash("User not found.", "error")
+        return redirect(url_for("main.edit_profile"))
 
+    avatar_file = request.files.get("avatar")
     if not avatar_file or not avatar_file.filename:
         flash("No file selected.", "error")
         return redirect(url_for("main.edit_profile"))
 
-    if not _allowed_avatar(avatar_file.filename):
-        flash("Invalid file type. Please upload a JPG, PNG, or WebP image.", "error")
+    try:
+        _save_user_avatar(user, avatar_file)
+        db.session.commit()
+    except ValueError as exc:
+        flash(str(exc), "error")
         return redirect(url_for("main.edit_profile"))
-
-    avatar_file.seek(0, 2)
-    file_size = avatar_file.tell()
-    avatar_file.seek(0)
-
-    if file_size > MAX_AVATAR_BYTES:
-        flash("Image must be under 2 MB.", "error")
+    except Exception:
+        db.session.rollback()
+        current_app.logger.exception("Avatar upload failed for user %s", current_user.id)
+        flash("Could not save profile photo. Please try again.", "error")
         return redirect(url_for("main.edit_profile"))
-
-    ext      = avatar_file.filename.rsplit(".", 1)[1].lower()
-    filename = secure_filename(f"user_{user.id}.{ext}")
-    data     = avatar_file.read()
-    user.avatar_url = storage.save(data, filename, category="avatars")
-    db.session.commit()
 
     flash("Profile photo updated!", "success")
     return redirect(url_for("main.edit_profile"))

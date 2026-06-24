@@ -8,26 +8,26 @@
 <meta name="robots" content="noindex, nofollow">
 <link rel="icon" href="/static/images/logo.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style nonce="{{ csp_nonce }}">
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
 html{scrollbar-gutter:stable;overflow-y:scroll;}
 :root{
   color-scheme:dark;
-  --bg:#0d0c0b;--bg2:#141210;--bg3:#1c1915;
-  --card:rgba(255,255,255,0.03);--card-h:rgba(255,255,255,0.055);
-  --accent:#FFD700;--accent-dim:rgba(255,215,0,0.12);
+  --bg:#060B1A;--bg2:#0B1430;--bg3:#13204A;--coral:#FF6B6B;--coral-hi:#FF8E8E;--coral-lo:rgba(255,107,107,0.14);--violet:#A78BFF;
+  --card:rgba(255,255,255,0.03);--card-h:rgba(255,255,255,0.085);
+  --accent:#7C9BFF;--accent-dim:rgba(124,155,255,0.12);
   --red:#c0392b;--red-dim:rgba(192,57,43,0.15);
   --green:#5a8a6a;--green-dim:rgba(90,138,106,0.15);
   --blue:#4a7fa5;--blue-dim:rgba(74,127,165,0.15);
-  --text:#ede8df;--muted:#9a9490;--soft:#d4cec8;
+  --text:#EEF1FF;--muted:#8A93C0;--soft:#C7CEEC;
   --border:rgba(255,255,255,0.06);--r:8px;
 }
-html.light-mode{color-scheme:light;--bg:#ffffff;--bg2:#f5f5f5;--bg3:#eeeeee;--card:rgba(0,0,0,0.03);--card-h:rgba(0,0,0,0.06);--accent:#d4a817;--accent-dim:rgba(212,168,23,0.12);--red:#c0392b;--red-dim:rgba(192,57,43,0.1);--green:#5a8a6a;--green-dim:rgba(90,138,106,0.1);--blue:#4a7fa5;--blue-dim:rgba(74,127,165,0.1);--text:#1a1a1a;--muted:#6b6b6b;--soft:#505050;--border:rgba(0,0,0,0.1);}
+html.light-mode{color-scheme:light;--bg:#ffffff;--bg2:#EAEEFB;--bg3:#E0E6F8;--card:rgba(0,0,0,0.03);--card-h:rgba(0,0,0,0.06);--accent:#4658C8;--accent-dim:rgba(70,88,200,0.12);--red:#c0392b;--red-dim:rgba(192,57,43,0.1);--green:#5a8a6a;--green-dim:rgba(90,138,106,0.1);--blue:#4a7fa5;--blue-dim:rgba(74,127,165,0.1);--text:#13162A;--muted:#7E839C;--soft:#474C66;--border:rgba(0,0,0,0.1);}
 html.light-mode .nav-item:hover{background:rgba(0,0,0,0.04);}
 ::-webkit-scrollbar{width:4px;}
-::-webkit-scrollbar-thumb{background:rgba(255,215,0,0.2);border-radius:99px;}
-body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;display:flex;min-height:100vh;margin:0;}
+::-webkit-scrollbar-thumb{background:rgba(124,155,255,0.2);border-radius:99px;}
+body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;display:flex;min-height:100vh;margin:0;}
 
 {% include 'admin/_sidebar_styles.html' %}
 
@@ -39,7 +39,7 @@ body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;disp
 .toast{display:flex;align-items:flex-start;gap:12px;padding:13px 16px;border-radius:var(--r);min-width:300px;max-width:400px;
   pointer-events:all;backdrop-filter:blur(20px);border:1px solid transparent;box-shadow:0 8px 32px rgba(0,0,0,0.5);
   animation:toastIn 0.35s cubic-bezier(0.34,1.56,0.64,1) both;position:relative;overflow:hidden;}
-.toast.success{background:rgba(15,12,8,0.95);border-color:rgba(255,215,0,0.3);}
+.toast.success{background:rgba(15,12,8,0.95);border-color:rgba(124,155,255,0.3);}
 .toast.error{background:rgba(20,5,5,0.95);border-color:rgba(192,57,43,0.3);}
 .toast-icon{font-size:1rem;flex-shrink:0;margin-top:1px;}
 .toast.success .toast-icon{color:var(--accent);}.toast.error .toast-icon{color:#e07060;}
@@ -81,7 +81,7 @@ body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;disp
 
 /* REPORT CARDS */
 .report-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:20px;margin-bottom:12px;display:grid;grid-template-columns:1fr auto;gap:20px;align-items:start;}
-.report-card:hover{border-color:rgba(255,215,0,0.1);}
+.report-card:hover{border-color:rgba(124,155,255,0.1);}
 
 .report-type{display:inline-flex;align-items:center;gap:6px;font-family:'DM Mono',monospace;font-size:0.62rem;
   letter-spacing:0.08em;text-transform:uppercase;padding:3px 8px;border-radius:3px;margin-bottom:10px;}
@@ -100,7 +100,7 @@ body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;disp
 .btn-warn{padding:8px 14px;border:none;border-radius:var(--r);font-family:'DM Mono',monospace;font-size:0.66rem;
   font-weight:500;text-transform:uppercase;cursor:pointer;transition:all 0.2s;
   background:var(--accent-dim);color:var(--accent);}
-.btn-warn:hover{background:rgba(255,215,0,0.2);}
+.btn-warn:hover{background:rgba(124,155,255,0.2);}
 .btn-ban{padding:8px 14px;border:none;border-radius:var(--r);font-family:'DM Mono',monospace;font-size:0.66rem;
   font-weight:500;text-transform:uppercase;cursor:pointer;transition:all 0.2s;
   background:var(--red-dim);color:#e07060;}
@@ -163,8 +163,8 @@ body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;disp
 /* SEARCH */
 .search-bar{display:flex;gap:10px;margin-bottom:16px;}
 .search-input{flex:1;padding:9px 14px;background:var(--card);border:1px solid var(--border);border-radius:var(--r);
-  color:var(--text);font-family:'Outfit',sans-serif;font-size:0.84rem;outline:none;transition:border-color 0.18s;}
-.search-input:focus{border-color:rgba(255,215,0,0.3);}
+  color:var(--text);font-family:'Inter',sans-serif;font-size:0.84rem;outline:none;transition:border-color 0.18s;}
+.search-input:focus{border-color:rgba(124,155,255,0.3);}
 .search-input::placeholder{color:var(--muted);}
 
 .empty{text-align:center;padding:40px;color:var(--muted);font-family:'DM Serif Display',serif;font-size:1rem;}
@@ -175,6 +175,8 @@ body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;disp
 </style>
 <script nonce="{{ csp_nonce }}">if(localStorage.getItem('theme')==='light')document.documentElement.classList.add('light-mode');document.addEventListener('DOMContentLoaded',function(){var t=document.getElementById('themeToggle');if(t)t.textContent=document.documentElement.classList.contains('light-mode')?'Dark':'Light';});</script>
 <link rel="stylesheet" href="/static/css/mobile.css?v=1">
+<link rel="stylesheet" href="/static/css/pb-theme.css?v=1">
+<script src="/static/js/pb-theme.js?v=1" defer></script>
 </head>
 <body>
 
