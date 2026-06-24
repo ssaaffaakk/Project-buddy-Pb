@@ -1,46 +1,8 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-{% include '_favicon.html' %}
-<meta name="csrf-token" content="{{ csrf_token() }}"><title>ProjectBuddy — Chat Rules</title>
-<meta name="robots" content="noindex, nofollow">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+{% extends 'base_app.html' %}
+{% block title %}ProjectBuddy — Chat Rules{% endblock %}
+
+{% block extra_style %}
 <style nonce="{{ csp_nonce }}">
-*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
-html{scrollbar-gutter:stable;overflow-y:scroll;}
-:root{
-  color-scheme:dark;
-  --bg:#060B1A;--bg2:#0B1430;--bg3:#13204A;--coral:#FF6B6B;--coral-hi:#FF8E8E;--coral-lo:rgba(255,107,107,0.14);--violet:#A78BFF;
-  --card:rgba(255,255,255,0.045);--card-h:rgba(255,255,255,0.075);
-  --accent:#7C9BFF;--accent-dim:rgba(124,155,255,0.1);--accent-glow:rgba(124,155,255,0.18);
-  --red:#c0392b;--text:#EEF1FF;--muted:#9AA3CC;--soft:#CAD0EF;
-  --border:rgba(255,255,255,0.085);--border-gold:rgba(124,155,255,0.12);--r:10px;
-}
-html.light-mode{color-scheme:light;--bg:#ffffff;--bg2:#EAEEFB;--bg3:#E0E6F8;--card:rgba(0,0,0,0.03);--card-h:rgba(0,0,0,0.06);--accent:#4658C8;--accent-dim:rgba(70,88,200,0.12);--accent-glow:rgba(70,88,200,0.18);--red:#c0392b;--text:#13162A;--muted:#7E839C;--soft:#474C66;--border:rgba(0,0,0,0.1);--border-gold:rgba(70,88,200,0.12);}
-body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;display:flex;min-height:100vh;margin:0;position:relative;}
-body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");pointer-events:none;z-index:0;opacity:0.6;}
-#cursor-glow{position:fixed;width:700px;height:700px;border-radius:50%;background:radial-gradient(circle,rgba(124,155,255,0.035) 0%,transparent 70%);pointer-events:none;transform:translate(-50%,-50%);z-index:1;}
-
-/* SIDEBAR */
-.sidebar{width:220px;flex-shrink:0;background:linear-gradient(180deg,rgba(255,255,255,0.045),rgba(255,255,255,0.012));-webkit-backdrop-filter:blur(22px);backdrop-filter:blur(22px);border-right:1px solid rgba(255,255,255,0.08);display:flex;flex-direction:column;padding:28px 14px;position:fixed;top:0;left:0;bottom:0;z-index:50;overflow:hidden;}
-.sidebar::before{content:'';position:absolute;top:0;left:0;right:0;height:200px;background:radial-gradient(ellipse at 50% 0%,rgba(124,155,255,0.06) 0%,transparent 70%);pointer-events:none;}
-.sidebar::after{content:'';position:absolute;bottom:0;left:0;right:0;height:120px;background:radial-gradient(ellipse at 30% 100%,rgba(124,155,255,0.04) 0%,transparent 70%);pointer-events:none;}
-.logo{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--text);font-family:'DM Serif Display',serif;font-size:1.08rem;font-weight:400;margin-bottom:36px;padding:0 8px;position:relative;z-index:1;}
-.logo-icon{width:28px;height:28px;border-radius:6px;object-fit:contain;flex-shrink:0;}
-.logo span{color:var(--accent);font-style:italic;}
-.nav-mark{display:none;}
-.nav-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:var(--r);text-decoration:none;color:var(--muted);font-size:0.83rem;font-weight:500;transition:all 0.2s ease-out;margin-bottom:1px;border-left:2px solid transparent;position:relative;z-index:1;letter-spacing:0.01em;}
-.nav-item:hover{background:rgba(255,255,255,0.03);color:var(--soft);border-left-color:rgba(124,155,255,0.3);}
-.nav-item.active{background:rgba(124,155,255,0.06);color:var(--accent);border-left-color:var(--accent);}
-.sidebar-footer{margin-top:auto;padding:0 4px;position:relative;z-index:1;}
-.user-card{display:flex;align-items:center;gap:10px;padding:12px;background:rgba(255,255,255,0.045);border:1px solid var(--border);border-top-color:rgba(255,255,255,0.09);border-radius:var(--r);}
-.user-av{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#4A5BA8);color:var(--bg);display:flex;align-items:center;justify-content:center;font-size:0.72rem;font-weight:500;flex-shrink:0;}
-.user-name{font-size:0.83rem;font-weight:500;color:var(--text);}
-.user-role{font-size:0.68rem;color:var(--muted);font-family:'DM Mono',monospace;}
-
 .main{margin-left:220px;flex:1;padding:40px 48px;display:flex;align-items:center;justify-content:center;position:relative;z-index:2;}
 
 .rules-container{max-width:700px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:40px;}
@@ -62,105 +24,62 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 .btn-back{background:var(--card);color:var(--text);border:1px solid var(--border);}
 .btn-back:hover{background:var(--card-h);}
 </style>
-<script nonce="{{ csp_nonce }}">if(localStorage.getItem('theme')==='light')document.documentElement.classList.add('light-mode');document.addEventListener('DOMContentLoaded',function(){var t=document.getElementById('themeToggle');if(t)t.textContent=document.documentElement.classList.contains('light-mode')?'Dark':'Light';});</script>
-<link rel="stylesheet" href="/static/css/mobile.css?v=2">
-<link rel="stylesheet" href="/static/css/pb-theme.css?v=3">
-<script src="/static/js/pb-theme.js?v=2" defer></script>
-</head>
-<body>
-{% include '_user_sidebar_shell.html' %}
-<main class="main">
+{% endblock %}
+
+{% block content %}
   <div class="rules-container">
     <h1 class="rules-title">Chat Community Guidelines</h1>
     <p class="rules-subtitle">Please read and accept our rules before starting</p>
-    
+
     <div class="rules-list">
       <div class="rule-item">
         <div class="rule-number">Rule 1: Be Respectful</div>
         <div class="rule-text">Treat all team members and admins with respect. Avoid any form of harassment, discrimination, or offensive language.</div>
       </div>
-      
+
       <div class="rule-item">
         <div class="rule-number">Rule 2: Stay Professional</div>
         <div class="rule-text">Keep conversations focused and professional. Avoid spam, irrelevant content, or excessive self-promotion.</div>
       </div>
-      
+
       <div class="rule-item">
         <div class="rule-number">Rule 3: No Hate Speech</div>
         <div class="rule-text">Any form of hate speech, racism, or bigotry is strictly prohibited and will result in immediate action.</div>
       </div>
-      
+
       <div class="rule-item">
         <div class="rule-number">Rule 4: Constructive Discussion</div>
         <div class="rule-text">Provide constructive feedback and solutions. Avoid blame, criticism without alternatives, or disruptive behavior.</div>
       </div>
-      
+
       <div class="rule-item">
-        <div class="rule-number">Rule 5: Privacy & Confidentiality</div>
+        <div class="rule-number">Rule 5: Privacy &amp; Confidentiality</div>
         <div class="rule-text">Do not share personal information of others without consent. Respect confidential project details.</div>
       </div>
-      
+
       <div class="rule-item">
         <div class="rule-number">Rule 6: No Inappropriate Content</div>
         <div class="rule-text">Do not share NSFW, illegal content, or anything that violates platform policies.</div>
       </div>
-      
+
       <div class="rule-item">
         <div class="rule-number">Rule 7: Follow Admin Guidance</div>
         <div class="rule-text">Admins maintain order and enforce rules. Cooperate with admin requests and decisions.</div>
       </div>
     </div>
-    
+
     <div class="rules-footer">
       <div class="rules-footer-text">
-        <strong>By clicking "I Accept & Continue"</strong>, you agree to follow these guidelines. Violations may result in chat suspension or account restrictions. We're here to help – let's keep it positive!
+        <strong>By clicking "I Accept &amp; Continue"</strong>, you agree to follow these guidelines. Violations may result in chat suspension or account restrictions. We're here to help – let's keep it positive!
       </div>
     </div>
-    
+
     <div class="action-buttons">
       <form method="POST" style="display:inline;">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <button type="submit" class="btn btn-accept">I Accept & Continue</button>
+        <button type="submit" class="btn btn-accept">I Accept &amp; Continue</button>
       </form>
       <a href="{{ url_for('main.dashboard') }}" class="btn btn-back">Go Back</a>
     </div>
   </div>
-</main>
-<script nonce="{{ csp_nonce }}">
-function _getCsrf(){var m=document.querySelector('meta[name="csrf-token"]');return m?m.getAttribute('content'):'';}
-(function(){var o=window.fetch;window.fetch=function(url,opts){opts=opts||{};if(opts.method&&opts.method.toUpperCase()==='POST'){opts.headers=Object.assign({'X-CSRFToken':_getCsrf()},opts.headers||{});}return o.call(this,url,opts);};})();
-</script>
-<div id="notif-panel" style="display:none;position:fixed;left:228px;bottom:80px;width:320px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);box-shadow:0 8px 32px rgba(0,0,0,0.6);z-index:200;overflow:hidden;">
-  <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:1px solid var(--border);">
-    <span style="font-family:'DM Serif Display',serif;font-size:0.9rem;">Notifications</span>
-    <button onclick="markAllRead()" style="background:none;border:none;color:var(--muted);font-size:0.72rem;cursor:pointer;font-family:'DM Mono',monospace;">mark all read</button>
-  </div>
-  <div id="notif-list" style="max-height:320px;overflow-y:auto;"></div>
-</div>
-<script nonce="{{ csp_nonce }}">
-function toggleNotifs(){var p=document.getElementById('notif-panel');p.style.display=p.style.display==='none'?'block':'none';if(p.style.display==='block')fetchNotifs();}
-async function fetchNotifs(){try{var r=await fetch('/notifications/unread');var d=await r.json();var badge=document.getElementById('notif-badge');var list=document.getElementById('notif-list');if(d.count>0){badge.textContent=d.count;badge.style.display='inline';}else{badge.style.display='none';}if(!list)return;if(d.notifications.length===0){list.innerHTML='<div style="padding:20px;text-align:center;color:var(--muted);font-size:0.8rem;">No new notifications</div>';return;}list.innerHTML=d.notifications.map(function(n){return('<a href="'+(n.link||'#')+'" onclick="readNotif('+n.id+')" style="display:block;padding:12px 14px;border-bottom:1px solid var(--border);text-decoration:none;color:var(--text);">''<div style="font-size:0.82rem;line-height:1.4;">'+n.message+'</div>''<div style="font-size:0.7rem;color:var(--muted);margin-top:4px;font-family:\'DM Mono\',monospace;">'+n.time_ago+'</div></a>');}).join('');}catch(e){}}
-async function readNotif(id){await fetch('/notifications/'+id+'/read',{method:'POST'});fetchNotifs();}
-async function markAllRead(){await fetch('/notifications/read-all',{method:'POST'});fetchNotifs();}
-document.addEventListener('click',function(e){var panel=document.getElementById('notif-panel');var btn=document.getElementById('notif-btn');if(panel&&btn&&!panel.contains(e.target)&&!btn.contains(e.target)){panel.style.display='none';}});
-setInterval(fetchNotifs,30000);fetchNotifs();
-</script>
-<div id="cursor-glow"></div>
-<script nonce="{{ csp_nonce }}">var cg=document.getElementById('cursor-glow');document.addEventListener('mousemove',function(e){cg.style.left=e.clientX+'px';cg.style.top=e.clientY+'px';});</script>
-<script>
-function pbSidebar(open){
-  var s=document.querySelector('.sidebar');
-  var o=document.getElementById('sidebar-overlay');
-  if(!s||!o)return;
-  s.classList.toggle('open',open);
-  o.classList.toggle('open',open);
-  document.body.classList.toggle('sidebar-open',open);
-}
-document.addEventListener('keydown',function(e){if(e.key==='Escape')pbSidebar(false);});
-document.addEventListener('DOMContentLoaded',function(){
-  var links=document.querySelectorAll('.sidebar .nav-item');
-  links.forEach(function(l){l.addEventListener('click',function(){pbSidebar(false);});});
-});
-</script>
-</body>
-</html>
+{% endblock %}

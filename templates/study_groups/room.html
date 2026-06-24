@@ -1,58 +1,14 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-{% include '_favicon.html' %}
-<meta name="csrf-token" content="{{ csrf_token() }}"><title>ProjectBuddy — {{ group.name }}</title>
-<meta name="robots" content="noindex, nofollow">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+{% extends 'base_app.html' %}
+{% block title %}ProjectBuddy — {{ group.name }}{% endblock %}
+
+{% block main_open %}<div class="chat-wrap">{% endblock %}
+{% block main_close %}</div>{% endblock %}
+
+{% block extra_style %}
 <style nonce="{{ csp_nonce }}">
-*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
-:root{
-  color-scheme:dark;
-  --bg:#060B1A;--bg2:#0B1430;--bg3:#13204A;--coral:#FF6B6B;--coral-hi:#FF8E8E;--coral-lo:rgba(255,107,107,0.14);
-  --card:rgba(255,255,255,0.045);--card-h:rgba(255,255,255,0.075);
-  --accent:#7C9BFF;--accent-dim:rgba(124,155,255,0.1);--accent-glow:rgba(124,155,255,0.18);
-  --text:#EEF1FF;--muted:#9AA3CC;--soft:#CAD0EF;
-  --border:rgba(255,255,255,0.085);--border-gold:rgba(124,155,255,0.12);--r:10px;
-  --red:#c0392b;--green:#3a7a52;
-}
-html.light-mode{color-scheme:light;--bg:#ffffff;--bg2:#EAEEFB;--bg3:#E0E6F8;--card:rgba(0,0,0,0.03);--card-h:rgba(0,0,0,0.06);--accent:#4658C8;--accent-dim:rgba(70,88,200,0.12);--accent-glow:rgba(70,88,200,0.18);--red:#c0392b;--green:#3a7a52;--text:#13162A;--muted:#7E839C;--soft:#474C66;--border:rgba(0,0,0,0.1);--border-gold:rgba(70,88,200,0.12);}
-html.light-mode input[type=text],html.light-mode input[type=email],html.light-mode input[type=password],html.light-mode input[type=date],html.light-mode input[type=number],html.light-mode input[type=search],html.light-mode input[type=url],html.light-mode textarea,html.light-mode select{background:rgba(0,0,0,0.04);}
 html,body{height:100%;overflow:hidden;}
-::-webkit-scrollbar{width:6px;}
-::-webkit-scrollbar-track{background:transparent;}
-::-webkit-scrollbar-thumb{background:rgba(124,155,255,0.15);border-radius:99px;}
-::-webkit-scrollbar-thumb:hover{background:rgba(124,155,255,0.3);}
-::selection{background:rgba(124,155,255,0.18);}
-body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;display:flex;position:relative;}
-body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");pointer-events:none;z-index:0;opacity:0.6;}
-#cursor-glow{position:fixed;width:700px;height:700px;border-radius:50%;background:radial-gradient(circle,rgba(124,155,255,0.035) 0%,transparent 70%);pointer-events:none;transform:translate(-50%,-50%);z-index:1;}
 
-/* ── SIDEBAR ─────────────────────────────────────────────────────────────── */
-/* SIDEBAR */
-.sidebar{width:220px;flex-shrink:0;background:linear-gradient(180deg,rgba(255,255,255,0.045),rgba(255,255,255,0.012));-webkit-backdrop-filter:blur(22px);backdrop-filter:blur(22px);border-right:1px solid rgba(255,255,255,0.08);display:flex;flex-direction:column;padding:28px 14px;position:fixed;top:0;left:0;bottom:0;z-index:50;overflow:hidden;}
-.sidebar::before{content:'';position:absolute;top:0;left:0;right:0;height:200px;background:radial-gradient(ellipse at 50% 0%,rgba(124,155,255,0.06) 0%,transparent 70%);pointer-events:none;}
-.sidebar::after{content:'';position:absolute;bottom:0;left:0;right:0;height:120px;background:radial-gradient(ellipse at 30% 100%,rgba(124,155,255,0.04) 0%,transparent 70%);pointer-events:none;}
-.logo{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--text);font-family:'DM Serif Display',serif;font-size:1.08rem;font-weight:400;margin-bottom:36px;padding:0 8px;position:relative;z-index:1;}
-.logo-icon{width:28px;height:28px;border-radius:6px;object-fit:contain;flex-shrink:0;}
-.logo span{color:var(--accent);font-style:italic;}
-.nav-mark{display:none;}
-.nav-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:var(--r);text-decoration:none;color:var(--muted);font-size:0.83rem;font-weight:500;transition:all 0.2s ease-out;margin-bottom:1px;border-left:2px solid transparent;position:relative;z-index:1;letter-spacing:0.01em;}
-.nav-item:hover{background:rgba(255,255,255,0.03);color:var(--soft);border-left-color:rgba(124,155,255,0.3);}
-.nav-item.active{background:rgba(124,155,255,0.06);color:var(--accent);border-left-color:var(--accent);}
-.sidebar-footer{margin-top:auto;padding:0 4px;position:relative;z-index:1;}
-.user-card{display:flex;align-items:center;gap:10px;padding:12px;background:rgba(255,255,255,0.045);border:1px solid var(--border);border-top-color:rgba(255,255,255,0.09);border-radius:var(--r);}
-.user-av{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#4A5BA8);color:var(--bg);display:flex;align-items:center;justify-content:center;font-size:0.72rem;font-weight:500;flex-shrink:0;}
-.user-name{font-size:0.83rem;font-weight:500;color:var(--text);}
-.user-role{font-size:0.68rem;color:var(--muted);font-family:'DM Mono',monospace;}
-
-/* ── MAIN LAYOUT ─────────────────────────────────────────────────────────── */
-.chat-wrap{margin-left:220px;display:flex;flex-direction:column;height:100vh;flex:1;position:relative;z-index:2;}
-
-/* ── ROOM HEADER ─────────────────────────────────────────────────────────── */
+/* ROOM HEADER */
 .room-header{flex-shrink:0;padding:14px 20px;background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:12px;}
 .room-title{display:flex;align-items:center;gap:10px;min-width:0;}
 .room-back{display:flex;align-items:center;gap:5px;text-decoration:none;color:var(--muted);font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.06em;transition:color 0.2s;flex-shrink:0;}
@@ -62,17 +18,16 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 .room-right{display:flex;align-items:center;gap:6px;flex-shrink:0;}
 .room-meta{font-family:'DM Mono',monospace;font-size:0.66rem;color:var(--muted);}
 
-/* header action buttons */
 .btn-hdr{display:flex;align-items:center;gap:5px;padding:6px 12px;border-radius:var(--r);font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.07em;text-transform:uppercase;border:1px solid var(--border);background:none;color:var(--muted);cursor:pointer;transition:all 0.2s;white-space:nowrap;}
 .btn-hdr:hover{border-color:rgba(255,255,255,0.15);color:var(--text);}
 .btn-hdr.active-voice{border-color:rgba(74,190,90,0.4);color:#4abe5a;background:rgba(74,190,90,0.08);}
 .btn-hdr.active-panel{border-color:rgba(124,155,255,0.35);color:var(--accent);background:var(--accent-dim);}
 .btn-hdr.danger:hover{border-color:rgba(192,57,43,0.4);color:#e07060;}
 
-/* ── ROOM BODY (messages + side panel) ─────────────────────────────────── */
+/* ROOM BODY */
 .room-body{flex:1;display:flex;overflow:hidden;}
 
-/* ── CHAT AREA ───────────────────────────────────────────────────────────── */
+/* CHAT AREA */
 .chat-area{display:flex;flex-direction:column;flex:1;overflow:hidden;}
 .messages{flex:1;overflow-y:auto;padding:20px 24px;display:flex;flex-direction:column;gap:2px;}
 .msg-group{margin-bottom:16px;}
@@ -101,17 +56,15 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 .btn-join{padding:8px 18px;border-radius:var(--r);font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;border:none;background:linear-gradient(110deg,var(--accent) 0%,var(--violet,#A78BFF) 45%,var(--coral,#FF6B6B) 100%);color:#fff;cursor:pointer;transition:all 0.2s;}
 .btn-join:hover{box-shadow:0 0 0 1px rgba(124,155,255,0.5),0 4px 20px rgba(124,155,255,0.2);}
 
-/* ── SIDE PANEL ──────────────────────────────────────────────────────────── */
+/* SIDE PANEL */
 .side-panel{width:0;flex-shrink:0;background:var(--bg2);border-left:1px solid transparent;display:flex;flex-direction:column;overflow:hidden;transition:width 0.25s ease,border-color 0.25s;}
 .side-panel.open{width:280px;border-left-color:var(--border);}
-
-/* panel tabs */
 .sp-tabs{display:flex;border-bottom:1px solid var(--border);flex-shrink:0;}
 .sp-tab{flex:1;padding:10px 0;text-align:center;font-family:'DM Mono',monospace;font-size:0.64rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);cursor:pointer;border:none;background:none;border-bottom:2px solid transparent;transition:all 0.2s;}
 .sp-tab:hover{color:var(--soft);}
 .sp-tab.active{color:var(--accent);border-bottom-color:var(--accent);}
 
-/* ── VOICE PANEL ─────────────────────────────────────────────────────────── */
+/* VOICE PANEL */
 .voice-section{display:none;flex-direction:column;flex:1;overflow:hidden;}
 .voice-section.visible{display:flex;}
 .vp-header{padding:14px 16px;border-bottom:1px solid var(--border);flex-shrink:0;}
@@ -133,7 +86,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 .vp-mic{width:14px;height:14px;flex-shrink:0;color:var(--muted);}
 .vp-mic.muted{color:rgba(192,57,43,0.7);}
 
-/* ── FILES PANEL ─────────────────────────────────────────────────────────── */
+/* FILES PANEL */
 .files-section{display:none;flex-direction:column;flex:1;overflow:hidden;}
 .files-section.visible{display:flex;}
 .fp-header{padding:14px 16px;border-bottom:1px solid var(--border);flex-shrink:0;}
@@ -152,41 +105,16 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 .file-dl:hover{border-color:rgba(124,155,255,0.3);color:var(--accent);}
 .fp-empty{font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--muted);text-align:center;padding:20px 0;font-style:italic;}
 
-/* ── TOAST ───────────────────────────────────────────────────────────────── */
+/* LOCAL TOAST */
 #toast-container{position:fixed;top:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none;}
 .toast{padding:11px 16px;border-radius:var(--r);min-width:240px;pointer-events:all;border:1px solid transparent;box-shadow:0 4px 20px rgba(0,0,0,0.5);animation:toastIn 0.3s ease both;font-size:0.82rem;backdrop-filter:blur(20px);}
 .toast.success{background:rgba(10,9,8,0.97);border-color:rgba(124,155,255,0.25);color:var(--text);}
 .toast.error{background:rgba(15,4,4,0.97);border-color:rgba(192,57,43,0.3);color:#e07060;}
 @keyframes toastIn{from{opacity:0;transform:translateX(20px);}to{opacity:1;transform:translateX(0);}}
-/* FORM ELEMENTS */
-input[type=text],input[type=email],input[type=password],input[type=date],
-input[type=number],input[type=search],input[type=url],textarea,select{
-  width:100%;padding:11px 14px;background:rgba(255,255,255,0.04);
-  border:1px solid var(--border);border-radius:var(--r);
-  color:var(--text);font-family:'Inter',sans-serif;font-size:0.88rem;
-  outline:none;transition:border-color 0.18s,box-shadow 0.18s;
-  appearance:none;-webkit-appearance:none;}
-input[type=text]:focus,input[type=email]:focus,input[type=password]:focus,
-input[type=date]:focus,input[type=number]:focus,input[type=search]:focus,
-input[type=url]:focus,textarea:focus,select:focus{
-  border-color:rgba(124,155,255,0.4);box-shadow:0 0 0 3px rgba(124,155,255,0.07);}
-::placeholder{color:var(--muted);opacity:1;}
-textarea{resize:vertical;min-height:100px;line-height:1.6;}
-select{
-  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236e6a64' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
-  background-repeat:no-repeat;background-position:right 12px center;padding-right:36px;}
 </style>
-<script nonce="{{ csp_nonce }}">if(localStorage.getItem('theme')==='light')document.documentElement.classList.add('light-mode');document.addEventListener('DOMContentLoaded',function(){var t=document.getElementById('themeToggle');if(t)t.textContent=document.documentElement.classList.contains('light-mode')?'Dark':'Light';});</script>
-<link rel="stylesheet" href="/static/css/mobile.css?v=2">
-<link rel="stylesheet" href="/static/css/pb-theme.css?v=3">
-<script src="/static/js/pb-theme.js?v=2" defer></script>
-</head>
-<body>
+{% endblock %}
 
-{% include '_user_sidebar_shell.html' %}
-<div class="chat-wrap">
-  <div id="toast-container"></div>
-
+{% block content %}
   <!-- ROOM HEADER -->
   <div class="room-header">
     <div class="room-title">
@@ -201,12 +129,10 @@ select{
       <span class="room-meta"><span id="member-count">{{ group.member_count() }}</span> member{{ 's' if group.member_count() != 1 }}</span>
 
       {% if is_member %}
-      <!-- Voice Chat button -->
       <button id="voice-btn" class="btn-hdr" onclick="toggleVoice()" title="Voice Chat">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
         Voice
       </button>
-      <!-- Files button -->
       <button id="files-btn" class="btn-hdr" onclick="openPanel('files')" title="Shared Files">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
         Files
@@ -268,9 +194,9 @@ select{
         <button class="btn-join" onclick="joinAndStay()">Join Group</button>
       </div>
       {% endif %}
-    </div><!-- /chat-area -->
+    </div>
 
-    <!-- SIDE PANEL (Voice + Files) -->
+    <!-- SIDE PANEL -->
     <div class="side-panel" id="side-panel">
       <div class="sp-tabs">
         <button class="sp-tab active" id="tab-voice" onclick="switchTab('voice')">
@@ -322,46 +248,28 @@ select{
         </div>
       </div>
 
-    </div><!-- /side-panel -->
-  </div><!-- /room-body -->
-</div><!-- /chat-wrap -->
-
-<!-- Notification Panel -->
-<div id="notif-panel" style="display:none;position:fixed;left:228px;bottom:80px;width:320px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);box-shadow:0 8px 32px rgba(0,0,0,0.6);z-index:200;overflow:hidden;">
-  <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:1px solid var(--border);">
-    <span style="font-family:'DM Serif Display',serif;font-size:0.9rem;">Notifications</span>
-    <button onclick="markAllRead()" style="background:none;border:none;color:var(--muted);font-size:0.72rem;cursor:pointer;font-family:'DM Mono',monospace;">mark all read</button>
+    </div>
   </div>
-  <div id="notif-list" style="max-height:320px;overflow-y:auto;"></div>
-</div>
+{% endblock %}
 
-<!-- Socket.IO client — loaded from CDN to avoid Render/eventlet serving issues -->
+{% block extra_script %}
 <script src="https://cdn.jsdelivr.net/npm/socket.io-client@4.7.5/dist/socket.io.min.js"></script>
-
 <script nonce="{{ csp_nonce }}">
-/* ── CSRF ───────────────────────────────────────────────────────────────── */
-function _getCsrf(){var m=document.querySelector('meta[name="csrf-token"]');return m?m.getAttribute('content'):'';}
-(function(){var o=window.fetch;window.fetch=function(url,opts){opts=opts||{};if(opts.method&&opts.method.toUpperCase()==='POST'){opts.headers=Object.assign({'X-CSRFToken':_getCsrf()},opts.headers||{});}return o.call(this,url,opts);};})();
-
-/* ── CONSTANTS ──────────────────────────────────────────────────────────── */
 var GROUP_ID   = {{ group.id }};
 var IS_MEMBER  = {{ 'true' if is_member else 'false' }};
 var MY_NAME    = "{{ user.first_name }} {{ user.last_name }}";
 var MY_INITIALS= "{{ user.first_name[0] }}{{ user.last_name[0] }}";
 var lastMsgId  = {{ messages[-1].id if messages else 0 }};
 
-/* ── SCROLL ─────────────────────────────────────────────────────────────── */
 function scrollBottom(smooth){
   var el=document.getElementById('messages');
   el.scrollTo({top:el.scrollHeight,behavior:smooth?'smooth':'instant'});
 }
 scrollBottom(false);
 
-/* ── TEXTAREA ───────────────────────────────────────────────────────────── */
 function autoResize(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,120)+'px';}
 function handleKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage();}}
 
-/* ── SEND MESSAGE ───────────────────────────────────────────────────────── */
 async function sendMessage(){
   var input=document.getElementById('msg-input');
   var body=input.value.trim();
@@ -398,7 +306,6 @@ async function pollMessages(){
 }
 if(IS_MEMBER){setInterval(pollMessages,3000);}
 
-/* ── GROUP ACTIONS ──────────────────────────────────────────────────────── */
 async function leaveGroup(){
   if(!confirm('Leave this group?'))return;
   var r=await fetch('/study-groups/'+GROUP_ID+'/leave',{method:'POST'});
@@ -415,9 +322,6 @@ async function joinAndStay(){
   if((await r.json()).ok){window.location.reload();}
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   SIDE PANEL — Voice / Files tabs
-═══════════════════════════════════════════════════════════════════════════ */
 var panelOpen = false;
 var activeTab = 'voice';
 
@@ -444,62 +348,26 @@ function switchTab(tab){
   else{document.getElementById('files-btn').classList.remove('active-panel');}
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   VOICE CHAT — WebRTC + Socket.IO
-═══════════════════════════════════════════════════════════════════════════ */
+/* VOICE CHAT — WebRTC + Socket.IO */
 var socket       = null;
 var localStream  = null;
 var isMuted      = false;
 var inVoice      = false;
 var mySid        = null;
-var peers        = {};   // {sid: RTCPeerConnection}
-var iceQueues    = {};   // {sid: RTCIceCandidateInit[]}
+var peers        = {};
 
-var ICE_CFG = {
-  iceServers: {{ ice_servers | safe }},
-  iceTransportPolicy: 'all'
-};
-var VOICE_HAS_TURN = {{ 'true' if voice_has_turn else 'false' }};
-
-function waitForSocketConnect(sock, timeoutMs){
-  return new Promise(function(resolve, reject){
-    if(sock.connected)return resolve();
-    var timer=setTimeout(function(){reject(new Error('Socket.IO connection timed out'));},timeoutMs||12000);
-    sock.once('connect',function(){clearTimeout(timer);resolve();});
-    sock.once('connect_error',function(err){clearTimeout(timer);reject(err||new Error('Socket.IO connection failed'));});
-  });
-}
-
-function flushIceQueue(remoteSid){
-  var pc=peers[remoteSid];
-  var q=iceQueues[remoteSid];
-  if(!pc||!q||!q.length)return;
-  q.forEach(function(c){pc.addIceCandidate(new RTCIceCandidate(c)).catch(function(){});});
-  delete iceQueues[remoteSid];
-}
+var ICE_CFG = { iceServers: {{ ice_servers | safe }} };
 
 function ensureSocket(){
   if(socket)return;
-  socket=io({withCredentials:true,transports:['polling','websocket']});
+  socket=io();
 
-  socket.on('connect',function(){mySid=socket.id;console.log('SocketIO connected',socket.id);});
+  socket.on('connect',function(){});
 
-  socket.on('connect_error',function(err){
-    console.warn('SocketIO connect_error',err);
-    if(inVoice)toast('Voice server connection failed. Refresh and try again.','error');
-  });
-
-  socket.on('voice_error',function(data){
-    toast((data&&data.message)||'Voice connection failed.','error');
-  });
-
-  /* Someone new joined — existing peers send them an offer */
   socket.on('voice_user_joined',function(user){
     addVpCard(user);
-    if(inVoice&&localStream)createOffer(user.sid);
   });
 
-  /* I just joined — connect to existing participants */
   socket.on('voice_existing_participants',function(data){
     mySid=data.my_sid;
     data.participants.forEach(function(user){
@@ -511,41 +379,26 @@ function ensureSocket(){
   socket.on('voice_user_left',function(data){
     removeVpCard(data.sid);
     if(peers[data.sid]){peers[data.sid].close();delete peers[data.sid];}
-    delete iceQueues[data.sid];
     var audio=document.getElementById('audio-'+data.sid);
     if(audio){audio.srcObject=null;audio.remove();}
   });
 
-  /* WebRTC signaling */
   socket.on('webrtc_offer',async function(data){
-    try{
-      var pc=getOrCreatePC(data.from_sid);
-      await pc.setRemoteDescription(new RTCSessionDescription(data.offer));
-      flushIceQueue(data.from_sid);
-      var answer=await pc.createAnswer();
-      await pc.setLocalDescription(answer);
-      socket.emit('webrtc_answer',{answer:answer,to_sid:data.from_sid});
-    }catch(err){console.warn('webrtc_offer failed:',err);}
+    var pc=getOrCreatePC(data.from_sid);
+    await pc.setRemoteDescription(new RTCSessionDescription(data.offer));
+    var answer=await pc.createAnswer();
+    await pc.setLocalDescription(answer);
+    socket.emit('webrtc_answer',{answer:answer,to_sid:data.from_sid});
   });
 
   socket.on('webrtc_answer',async function(data){
     var pc=peers[data.from_sid];
-    if(!pc)return;
-    try{
-      await pc.setRemoteDescription(new RTCSessionDescription(data.answer));
-      flushIceQueue(data.from_sid);
-    }catch(err){console.warn('webrtc_answer failed:',err);}
+    if(pc)await pc.setRemoteDescription(new RTCSessionDescription(data.answer));
   });
 
   socket.on('webrtc_ice',function(data){
     var pc=peers[data.from_sid];
-    if(!pc||!data.candidate)return;
-    if(!pc.remoteDescription||!pc.remoteDescription.type){
-      iceQueues[data.from_sid]=iceQueues[data.from_sid]||[];
-      iceQueues[data.from_sid].push(data.candidate);
-      return;
-    }
-    pc.addIceCandidate(new RTCIceCandidate(data.candidate)).catch(function(){});
+    if(pc&&data.candidate){pc.addIceCandidate(new RTCIceCandidate(data.candidate)).catch(function(){});}
   });
 }
 
@@ -555,14 +408,8 @@ async function toggleVoice(){
 
 async function joinVoice(){
   if(inVoice)return;
-
-  /* Open panel and show "connecting" state immediately */
   openPanel('voice');
-
-  /* Show yourself right away — before mic prompt so user sees feedback */
   _showMyCard(false);
-
-  /* Request microphone */
   try{
     localStream=await navigator.mediaDevices.getUserMedia({audio:true,video:false});
   }catch(e){
@@ -570,15 +417,8 @@ async function joinVoice(){
     _removeMyCard();
     return;
   }
-
-  if(!VOICE_HAS_TURN){
-    toast('Voice relay (TURN) is not configured on the server — audio may not work across different networks.','error');
-  }
-
-  /* Connect SocketIO and join the voice room */
   try{
     ensureSocket();
-    await waitForSocketConnect(socket,12000);
     socket.emit('join_voice',{group_id:GROUP_ID});
   }catch(e){
     toast('Connection error. Please refresh and try again.','error');
@@ -586,27 +426,18 @@ async function joinVoice(){
     _removeMyCard();
     return;
   }
-
   inVoice=true;
-
-  /* Show voice controls */
   document.getElementById('voice-controls').style.display='flex';
-
-  /* Mark my card as live (mic active) */
   _showMyCard(false);
-
-  /* Update header button */
   var btn=document.getElementById('voice-btn');
   btn.classList.add('active-voice');
   btn.innerHTML='<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg> In Voice';
 }
 
 function _showMyCard(muted){
-  /* Remove old "No one in voice" empty state */
   var container=document.getElementById('voice-participants');
   var empty=document.getElementById('vp-empty');
   if(empty)empty.remove();
-
   var existing=document.getElementById('vp-__me__');
   var micColor=muted?'rgba(192,57,43,0.7)':'#4abe5a';
   var micTitle=muted?'Muted':'Speaking';
@@ -614,7 +445,6 @@ function _showMyCard(muted){
     '<div class="vp-av">'+escHtml(MY_INITIALS)+'</div>'+
     '<div class="vp-name" style="flex:1;">'+escHtml(MY_NAME)+' <span style="font-family:\'DM Mono\',monospace;font-size:0.62rem;color:var(--accent);">(You)</span></div>'+
     '<svg class="vp-mic'+(muted?' muted':'')+'" title="'+micTitle+'" viewBox="0 0 24 24" fill="none" stroke="'+micColor+'" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/></svg>';
-
   if(existing){
     existing.innerHTML=html;
   }else{
@@ -640,25 +470,16 @@ function leaveVoice(){
   if(!inVoice)return;
   if(socket)socket.emit('leave_voice',{group_id:GROUP_ID});
   inVoice=false;
-
-  /* close all peer connections */
   Object.keys(peers).forEach(function(sid){
     peers[sid].close();
     var audio=document.getElementById('audio-'+sid);
     if(audio){audio.srcObject=null;audio.remove();}
   });
   peers={};
-
-  /* stop mic */
   if(localStream){localStream.getTracks().forEach(function(t){t.stop();});localStream=null;}
-
   isMuted=false;
-
-  /* reset voice panel */
   _removeMyCard();
   document.getElementById('voice-controls').style.display='none';
-
-  /* reset header button */
   var btn=document.getElementById('voice-btn');
   btn.classList.remove('active-voice');
   btn.innerHTML='<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg> Voice';
@@ -671,7 +492,6 @@ function toggleMute(){
   var btn=document.getElementById('mute-btn');
   btn.textContent=isMuted?'Unmute':'Mute';
   btn.classList.toggle('muted',isMuted);
-  /* re-render my card with updated mic state */
   _showMyCard(isMuted);
 }
 
@@ -679,11 +499,7 @@ function getOrCreatePC(remoteSid){
   if(peers[remoteSid])return peers[remoteSid];
   var pc=new RTCPeerConnection(ICE_CFG);
   peers[remoteSid]=pc;
-
-  /* add local tracks */
   if(localStream){localStream.getTracks().forEach(function(t){pc.addTrack(t,localStream);});}
-
-  /* receive remote audio */
   pc.ontrack=function(e){
     var audio=document.getElementById('audio-'+remoteSid);
     if(!audio){
@@ -693,30 +509,12 @@ function getOrCreatePC(remoteSid){
       audio.playsInline=true;
       document.body.appendChild(audio);
     }
-    /* Use stream if available, otherwise wrap track in a new MediaStream */
     audio.srcObject=(e.streams&&e.streams[0])?e.streams[0]:new MediaStream([e.track]);
     audio.play().catch(function(err){console.warn('Audio play blocked:',err);});
   };
-
-  /* relay ICE */
   pc.onicecandidate=function(e){
     if(e.candidate&&socket){socket.emit('webrtc_ice',{candidate:e.candidate,to_sid:remoteSid});}
   };
-
-  pc.oniceconnectionstatechange=function(){
-    console.log('ICE state',remoteSid,pc.iceConnectionState);
-    if(pc.iceConnectionState==='failed'){
-      toast('Voice blocked by network (ICE failed). A TURN server is required in production.','error');
-    }
-  };
-
-  pc.onconnectionstatechange=function(){
-    console.log('PeerConnection state',remoteSid,pc.connectionState);
-    if(pc.connectionState==='failed'){
-      toast('Voice peer connection failed. Check TURN configuration or try another network.','error');
-    }
-  };
-
   return pc;
 }
 
@@ -728,7 +526,6 @@ async function createOffer(remoteSid){
 }
 
 function addVpCard(user){
-  /* Use dedicated function for own card */
   if(user.sid==='__me__'||user.is_me){_showMyCard(isMuted);return;}
   var container=document.getElementById('voice-participants');
   var empty=document.getElementById('vp-empty');
@@ -749,15 +546,12 @@ function removeVpCard(sid){
   var el=document.getElementById('vp-'+sid);
   if(el)el.remove();
   var container=document.getElementById('voice-participants');
-  /* Only show empty state if we are also not in voice */
   if(!inVoice&&!container.querySelector('.voice-participant')){
     _removeMyCard();
   }
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   FILE SHARING
-═══════════════════════════════════════════════════════════════════════════ */
+/* FILE SHARING */
 var filesLoaded=false;
 
 async function loadFiles(){
@@ -772,7 +566,6 @@ async function loadFiles(){
 
 function renderFiles(files){
   var list=document.getElementById('files-list');
-  var empty=document.getElementById('fp-empty');
   if(files.length===0){
     list.innerHTML='<div class="fp-empty">No files shared yet. Upload the first one!</div>';
     return;
@@ -797,12 +590,11 @@ async function uploadFile(input){
   var label=document.getElementById('upload-label');
   label.classList.add('uploading');
   label.innerHTML='<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"/><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/></svg> Uploading…';
-
   var form=new FormData();
   form.append('file',file);
-  form.append('csrf_token',_getCsrf());
+  form.append('csrf_token', document.querySelector('meta[name="csrf-token"]') ? document.querySelector('meta[name="csrf-token"]').getAttribute('content') : '');
   try{
-    var r=await fetch('/study-groups/'+GROUP_ID+'/upload',{method:'POST',body:form,headers:{'X-CSRFToken':_getCsrf()}});
+    var r=await fetch('/study-groups/'+GROUP_ID+'/upload',{method:'POST',body:form,headers:{'X-CSRFToken': document.querySelector('meta[name="csrf-token"]') ? document.querySelector('meta[name="csrf-token"]').getAttribute('content') : ''}});
     var d=await r.json();
     if(d.id){
       filesLoaded=false;
@@ -813,7 +605,6 @@ async function uploadFile(input){
       toast(d.error||'Upload failed.','error');
     }
   }catch(e){toast('Upload failed.','error');}
-
   label.classList.remove('uploading');
   label.innerHTML='<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Upload File<input type="file" id="file-input" style="display:none;" onchange="uploadFile(this)">';
   input.value='';
@@ -839,9 +630,6 @@ function fileIconSvg(filename){
   return '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="'+color+'" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>';
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   TOAST
-═══════════════════════════════════════════════════════════════════════════ */
 function toast(msg,type){
   var c=document.getElementById('toast-container');
   var t=document.createElement('div');
@@ -850,45 +638,5 @@ function toast(msg,type){
   c.appendChild(t);
   setTimeout(function(){t.style.opacity='0';t.style.transition='opacity 0.3s';setTimeout(function(){if(t.parentNode)t.parentNode.removeChild(t);},300);},3500);
 }
-
-/* ═══════════════════════════════════════════════════════════════════════════
-   NOTIFICATIONS
-═══════════════════════════════════════════════════════════════════════════ */
-function toggleNotifs(){var p=document.getElementById('notif-panel');p.style.display=p.style.display==='none'?'block':'none';if(p.style.display==='block')fetchNotifs();}
-async function fetchNotifs(){
-  try{var r=await fetch('/notifications/unread');var d=await r.json();
-    var badge=document.getElementById('notif-badge');
-    var list=document.getElementById('notif-list');
-    if(d.count>0){badge.textContent=d.count;badge.style.display='inline';}else{badge.style.display='none';}
-    if(!list)return;
-    if(d.notifications.length===0){list.innerHTML='<div style="padding:20px;text-align:center;color:var(--muted);font-size:0.8rem;">No new notifications</div>';return;}
-    list.innerHTML=d.notifications.map(function(n){return'<a href="'+(n.link||'#')+'" onclick="readNotif('+n.id+')" style="display:block;padding:12px 14px;border-bottom:1px solid var(--border);text-decoration:none;color:var(--text);" onmouseover="this.style.background=\'rgba(255,255,255,0.04)\'" onmouseout="this.style.background=\'none\'"><div style="font-size:0.82rem;line-height:1.4;">'+n.message+'</div><div style="font-size:0.7rem;color:var(--muted);margin-top:4px;font-family:\'DM Mono\',monospace;">'+n.time_ago+'</div></a>';}).join('');
-  }catch(e){}
-}
-async function readNotif(id){await fetch('/notifications/'+id+'/read',{method:'POST'});fetchNotifs();}
-async function markAllRead(){await fetch('/notifications/read-all',{method:'POST'});fetchNotifs();}
-document.addEventListener('click',function(e){
-  var panel=document.getElementById('notif-panel');var btn=document.getElementById('notif-btn');
-  if(panel&&btn&&!panel.contains(e.target)&&!btn.contains(e.target)){panel.style.display='none';}
-});
-setInterval(fetchNotifs,30000);fetchNotifs();
 </script>
-<div id="cursor-glow"></div>
-<script nonce="{{ csp_nonce }}">var cg=document.getElementById('cursor-glow');document.addEventListener('mousemove',function(e){cg.style.left=e.clientX+'px';cg.style.top=e.clientY+'px';});</script>
-<script>
-function pbSidebar(open){
-  var s=document.querySelector('.sidebar');
-  var o=document.getElementById('sidebar-overlay');
-  if(!s||!o)return;
-  s.classList.toggle('open',open);
-  o.classList.toggle('open',open);
-  document.body.classList.toggle('sidebar-open',open);
-}
-document.addEventListener('keydown',function(e){if(e.key==='Escape')pbSidebar(false);});
-document.addEventListener('DOMContentLoaded',function(){
-  var links=document.querySelectorAll('.sidebar .nav-item');
-  links.forEach(function(l){l.addEventListener('click',function(){pbSidebar(false);});});
-});
-</script>
-</body>
-</html>
+{% endblock %}

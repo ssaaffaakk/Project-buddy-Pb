@@ -1,91 +1,24 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-{% include '_favicon.html' %}
-<meta name="csrf-token" content="{{ csrf_token() }}"><title>ProjectBuddy — Study Groups</title>
-<meta name="robots" content="noindex, nofollow">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+{% extends 'base_app.html' %}
+{% block title %}ProjectBuddy — Study Groups{% endblock %}
+
+{% block extra_style %}
 <style nonce="{{ csp_nonce }}">
-*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
-:root{
-  color-scheme:dark;
-  --bg:#060B1A;--bg2:#0B1430;--bg3:#13204A;--coral:#FF6B6B;--coral-hi:#FF8E8E;--coral-lo:rgba(255,107,107,0.14);
-  --card:rgba(255,255,255,0.045);--card-h:rgba(255,255,255,0.075);
-  --accent:#7C9BFF;--accent-dim:rgba(124,155,255,0.1);--accent-glow:rgba(124,155,255,0.18);
-  --red:#c0392b;--blue:#4a7fa5;--green:#5a8a6a;
-  --text:#EEF1FF;--muted:#9AA3CC;--soft:#CAD0EF;
-  --border:rgba(255,255,255,0.085);--border-gold:rgba(124,155,255,0.12);--r:10px;
-}
-html.light-mode{color-scheme:light;--bg:#ffffff;--bg2:#EAEEFB;--bg3:#E0E6F8;--card:rgba(0,0,0,0.03);--card-h:rgba(0,0,0,0.06);--accent:#4658C8;--accent-dim:rgba(70,88,200,0.12);--accent-glow:rgba(70,88,200,0.18);--red:#c0392b;--blue:#4a7fa5;--green:#5a8a6a;--text:#13162A;--muted:#7E839C;--soft:#474C66;--border:rgba(0,0,0,0.1);--border-gold:rgba(70,88,200,0.12);}
-html.light-mode input[type=text],html.light-mode input[type=email],html.light-mode input[type=password],html.light-mode input[type=date],html.light-mode input[type=number],html.light-mode input[type=search],html.light-mode input[type=url],html.light-mode textarea,html.light-mode select{background:rgba(0,0,0,0.04);}
-html{scrollbar-gutter:stable;overflow-y:scroll;}
-::-webkit-scrollbar{width:6px;}
-::-webkit-scrollbar-track{background:transparent;}
-::-webkit-scrollbar-thumb{background:rgba(124,155,255,0.15);border-radius:99px;}
-::-webkit-scrollbar-thumb:hover{background:rgba(124,155,255,0.3);}
-::selection{background:rgba(124,155,255,0.18);}
-body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;display:flex;min-height:100vh;position:relative;}
-body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");pointer-events:none;z-index:0;opacity:0.6;}
-#cursor-glow{position:fixed;width:700px;height:700px;border-radius:50%;background:radial-gradient(circle,rgba(124,155,255,0.035) 0%,transparent 70%);pointer-events:none;transform:translate(-50%,-50%);z-index:1;}
-
-/* SIDEBAR */
-.sidebar{width:220px;flex-shrink:0;background:linear-gradient(180deg,rgba(255,255,255,0.045),rgba(255,255,255,0.012));-webkit-backdrop-filter:blur(22px);backdrop-filter:blur(22px);border-right:1px solid rgba(255,255,255,0.08);display:flex;flex-direction:column;padding:28px 14px;position:fixed;top:0;left:0;bottom:0;z-index:50;overflow:hidden;}
-.sidebar::before{content:'';position:absolute;top:0;left:0;right:0;height:200px;background:radial-gradient(ellipse at 50% 0%,rgba(124,155,255,0.06) 0%,transparent 70%);pointer-events:none;}
-.sidebar::after{content:'';position:absolute;bottom:0;left:0;right:0;height:120px;background:radial-gradient(ellipse at 30% 100%,rgba(124,155,255,0.04) 0%,transparent 70%);pointer-events:none;}
-.logo{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--text);font-family:'DM Serif Display',serif;font-size:1.08rem;font-weight:400;margin-bottom:36px;padding:0 8px;position:relative;z-index:1;}
-.logo-icon{width:28px;height:28px;border-radius:6px;object-fit:contain;flex-shrink:0;}
-.logo span{color:var(--accent);font-style:italic;}
-.nav-mark{display:none;}
-.nav-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:var(--r);text-decoration:none;color:var(--muted);font-size:0.83rem;font-weight:500;transition:all 0.2s ease-out;margin-bottom:1px;border-left:2px solid transparent;position:relative;z-index:1;letter-spacing:0.01em;}
-.nav-item:hover{background:rgba(255,255,255,0.03);color:var(--soft);border-left-color:rgba(124,155,255,0.3);}
-.nav-item.active{background:rgba(124,155,255,0.06);color:var(--accent);border-left-color:var(--accent);}
-.sidebar-footer{margin-top:auto;padding:0 4px;position:relative;z-index:1;}
-.user-card{display:flex;align-items:center;gap:10px;padding:12px;background:rgba(255,255,255,0.045);border:1px solid var(--border);border-top-color:rgba(255,255,255,0.09);border-radius:var(--r);}
-.user-av{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#4A5BA8);color:var(--bg);display:flex;align-items:center;justify-content:center;font-size:0.72rem;font-weight:500;flex-shrink:0;}
-.user-name{font-size:0.83rem;font-weight:500;color:var(--text);}
-.user-role{font-size:0.68rem;color:var(--muted);font-family:'DM Mono',monospace;}
-
-/* MAIN */
 .main{margin-left:220px;flex:1;padding:36px 40px;min-height:100vh;position:relative;z-index:2;}
+
 .topbar{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:40px;padding-bottom:28px;border-bottom:1px solid var(--border);}
 .topbar h1{font-family:'DM Serif Display',serif;font-style:italic;font-size:2.2rem;font-weight:400;letter-spacing:-0.03em;line-height:1;}
 .topbar p{color:var(--muted);font-family:'DM Mono',monospace;font-size:0.7rem;letter-spacing:0.08em;margin-top:8px;text-transform:uppercase;}
 
-/* CREATE GROUP PANEL */
 .create-panel{background:var(--card);border:1px solid var(--border);border-top-color:rgba(255,255,255,0.08);border-radius:var(--r);padding:24px;margin-bottom:32px;backdrop-filter:blur(8px);position:relative;overflow:hidden;}
 .create-panel::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(124,155,255,0.1),transparent);}
 .create-panel h2{font-family:'DM Serif Display',serif;font-style:italic;font-size:1.05rem;font-weight:400;margin-bottom:18px;color:var(--text);}
 .create-row{display:grid;grid-template-columns:1fr 1fr 2fr auto;gap:10px;align-items:end;}
 .field label{display:block;font-family:'DM Mono',monospace;font-size:0.6rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;}
-/* FORM ELEMENTS */
-input[type=text],input[type=email],input[type=password],input[type=date],
-input[type=number],input[type=search],input[type=url],textarea,select{
-  width:100%;padding:11px 14px;background:rgba(255,255,255,0.04);
-  border:1px solid var(--border);border-radius:var(--r);
-  color:var(--text);font-family:'Inter',sans-serif;font-size:0.88rem;
-  outline:none;transition:border-color 0.18s,box-shadow 0.18s;
-  appearance:none;-webkit-appearance:none;}
-input[type=text]:focus,input[type=email]:focus,input[type=password]:focus,
-input[type=date]:focus,input[type=number]:focus,input[type=search]:focus,
-input[type=url]:focus,textarea:focus,select:focus{
-  border-color:rgba(124,155,255,0.4);box-shadow:0 0 0 3px rgba(124,155,255,0.07);}
-::placeholder{color:var(--muted);opacity:1;}
-textarea{resize:vertical;min-height:100px;line-height:1.6;}
-select{
-  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236e6a64' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
-  background-repeat:no-repeat;background-position:right 12px center;padding-right:36px;}
-.btn-gold{display:inline-block;padding:9px 20px;border-radius:var(--r);font-family:'DM Mono',monospace;font-size:0.7rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;text-decoration:none;transition:all 0.2s ease-out;border:none;background:linear-gradient(110deg,var(--accent) 0%,var(--violet,#A78BFF) 45%,var(--coral,#FF6B6B) 100%);color:#fff;}
-.btn-gold:hover{box-shadow:0 0 0 1px rgba(124,155,255,0.5),0 4px 24px rgba(124,155,255,0.2);transform:translateY(-1px);}
 
-/* FILTERS */
 .filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:24px;}
 .filter-btn{padding:6px 14px;border-radius:99px;font-family:'DM Mono',monospace;font-size:0.66rem;letter-spacing:0.08em;cursor:pointer;border:1px solid var(--border);background:none;color:var(--muted);transition:all 0.2s ease-out;}
 .filter-btn:hover,.filter-btn.active{background:var(--accent-dim);border-color:rgba(124,155,255,0.3);color:var(--accent);}
 
-/* GROUP GRID */
 .groups-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;}
 .group-card{background:var(--bg2);border:1px solid var(--border);border-top-color:rgba(255,255,255,0.07);border-radius:var(--r);padding:20px;transition:all 0.2s ease-out;cursor:pointer;text-decoration:none;display:block;position:relative;overflow:hidden;}
 .group-card:hover{border-color:var(--border-gold);transform:translateY(-2px);box-shadow:0 8px 32px rgba(0,0,0,0.4);}
@@ -100,12 +33,11 @@ select{
 .gc-join-btn{padding:5px 12px;border-radius:99px;font-family:'DM Mono',monospace;font-size:0.64rem;letter-spacing:0.04em;border:1px solid rgba(124,155,255,0.3);background:none;color:var(--accent);cursor:pointer;transition:all 0.2s ease-out;}
 .gc-join-btn:hover{background:var(--accent-dim);}
 
-/* EMPTY STATE */
 .empty{text-align:center;padding:60px 20px;color:var(--muted);}
 .empty-icon{font-family:'DM Serif Display',serif;font-style:italic;font-size:2.5rem;color:var(--accent);opacity:0.4;margin-bottom:12px;}
 .empty p{font-size:0.85rem;line-height:1.6;}
 
-/* TOAST */
+/* LOCAL TOAST — page uses its own toast() function */
 #toast-container{position:fixed;top:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none;}
 .toast{display:flex;align-items:flex-start;gap:12px;padding:13px 16px;border-radius:var(--r);min-width:280px;max-width:380px;pointer-events:all;border:1px solid transparent;box-shadow:0 8px 32px rgba(0,0,0,0.5);animation:toastIn 0.3s ease both;}
 .toast.success{background:rgba(15,12,8,0.97);border-color:rgba(124,155,255,0.3);}
@@ -113,17 +45,9 @@ select{
 .toast-msg{font-size:0.82rem;color:var(--text);flex:1;}
 @keyframes toastIn{from{opacity:0;transform:translateX(20px);}to{opacity:1;transform:translateX(0);}}
 </style>
-<script nonce="{{ csp_nonce }}">if(localStorage.getItem('theme')==='light')document.documentElement.classList.add('light-mode');document.addEventListener('DOMContentLoaded',function(){var t=document.getElementById('themeToggle');if(t)t.textContent=document.documentElement.classList.contains('light-mode')?'Dark':'Light';});</script>
-<link rel="stylesheet" href="/static/css/mobile.css?v=2">
-<link rel="stylesheet" href="/static/css/pb-theme.css?v=3">
-<script src="/static/js/pb-theme.js?v=2" defer></script>
-</head>
-<body>
+{% endblock %}
 
-{% include '_user_sidebar_shell.html' %}
-<main class="main">
-  <div id="toast-container"></div>
-
+{% block content %}
   <div class="topbar">
     <div>
       <h1>Study <em style="font-style:italic;color:var(--accent);">Groups</em></h1>
@@ -138,7 +62,7 @@ select{
   <div class="create-panel">
     <h2>Create a new study group</h2>
     <form method="POST" action="/study-groups/create">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <div class="create-row">
         <div class="field">
           <label>Group name *</label>
@@ -202,36 +126,10 @@ select{
     <p>No study groups yet.<br>Be the first to create one above.</p>
   </div>
   {% endif %}
-</main>
+{% endblock %}
 
-<!-- NOTIFICATION PANEL -->
-<div id="notif-panel" style="display:none;position:fixed;left:228px;bottom:80px;width:320px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);box-shadow:0 8px 32px rgba(0,0,0,0.6);z-index:200;overflow:hidden;">
-  <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:1px solid var(--border);">
-    <span style="font-family:'DM Serif Display',serif;font-size:0.9rem;">Notifications</span>
-    <button onclick="markAllRead()" style="background:none;border:none;color:var(--muted);font-size:0.72rem;cursor:pointer;font-family:'DM Mono',monospace;">mark all read</button>
-  </div>
-  <div id="notif-list" style="max-height:320px;overflow-y:auto;"></div>
-</div>
-
+{% block extra_script %}
 <script nonce="{{ csp_nonce }}">
-/* ── CSRF helper — reads Flask-WTF token from meta tag ──────────────────── */
-function _getCsrf(){
-  var m=document.querySelector('meta[name="csrf-token"]');
-  return m?m.getAttribute('content'):'';
-}
-/* Patch all fetch() POST calls to include the CSRF token header automatically */
-(function(){
-  var _origFetch=window.fetch;
-  window.fetch=function(url,opts){
-    opts=opts||{};
-    if(opts.method&&opts.method.toUpperCase()==='POST'){
-      opts.headers=Object.assign({'X-CSRFToken':_getCsrf()},opts.headers||{});
-    }
-    return _origFetch.call(this,url,opts);
-  };
-})();
-</script><script nonce="{{ csp_nonce }}">
-// ── FILTERS ──────────────────────────────────────────────────────────────────
 document.querySelectorAll('.filter-btn').forEach(function(btn){
   btn.addEventListener('click', function(){
     document.querySelectorAll('.filter-btn').forEach(function(b){b.classList.remove('active');});
@@ -243,7 +141,6 @@ document.querySelectorAll('.filter-btn').forEach(function(btn){
   });
 });
 
-// ── OPEN GROUP ───────────────────────────────────────────────────────────────
 function openGroup(id, isMember){
   if(isMember){ window.location.href = '/study-groups/' + id; return; }
   if(confirm('Join this group to enter the chat room?')){ joinAndOpen(id); }
@@ -256,7 +153,6 @@ async function joinAndOpen(id){
   else{ toast(d.error || 'Could not join group.', 'error'); }
 }
 
-// ── JOIN BUTTON (in card footer) ─────────────────────────────────────────────
 async function joinGroup(id, btn){
   btn.disabled = true;
   var r = await fetch('/study-groups/' + id + '/join', {method:'POST'});
@@ -271,7 +167,6 @@ async function joinGroup(id, btn){
   }
 }
 
-// ── TOAST ─────────────────────────────────────────────────────────────────────
 function toast(msg, type){
   var c = document.getElementById('toast-container');
   var t = document.createElement('div');
@@ -281,51 +176,5 @@ function toast(msg, type){
   setTimeout(function(){ t.style.opacity='0'; t.style.transition='opacity 0.3s';
     setTimeout(function(){ if(t.parentNode) t.parentNode.removeChild(t); }, 300); }, 3500);
 }
-
-// ── NOTIFICATIONS ─────────────────────────────────────────────────────────────
-function _esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#x27;');}
-function toggleNotifs(){
-  var p=document.getElementById('notif-panel');
-  p.style.display=p.style.display==='none'?'block':'none';
-  if(p.style.display==='block') fetchNotifs();
-}
-async function fetchNotifs(){
-  try{
-    var r=await fetch('/notifications/unread');
-    var d=await r.json();
-    var badge=document.getElementById('notif-badge');
-    var list=document.getElementById('notif-list');
-    if(d.count>0){badge.textContent=d.count;badge.style.display='inline';}
-    else{badge.style.display='none';}
-    if(!list)return;
-    if(d.notifications.length===0){list.innerHTML='<div style="padding:20px;text-align:center;color:var(--muted);font-size:0.8rem;">No new notifications</div>';return;}
-    list.innerHTML=d.notifications.map(function(n){return '<a href="'+(n.link||'#')+'" onclick="readNotif('+n.id+')" style="display:block;padding:12px 14px;border-bottom:1px solid var(--border);text-decoration:none;color:var(--text);"><div style="font-size:0.82rem;line-height:1.4;">'+n.message+'</div><div style="font-size:0.7rem;color:var(--muted);margin-top:4px;font-family:\'DM Mono\',monospace;">'+n.time_ago+'</div></a>';}).join('');
-  }catch(e){}
-}
-async function readNotif(id){ await fetch('/notifications/'+id+'/read',{method:'POST'}); fetchNotifs(); }
-async function markAllRead(){ await fetch('/notifications/read-all',{method:'POST'}); fetchNotifs(); }
-document.addEventListener('click',function(e){
-  var panel=document.getElementById('notif-panel');var btn=document.getElementById('notif-btn');
-  if(panel&&btn&&!panel.contains(e.target)&&!btn.contains(e.target)){panel.style.display='none';}
-});
-setInterval(fetchNotifs,30000); fetchNotifs();
 </script>
-<div id="cursor-glow"></div>
-<script nonce="{{ csp_nonce }}">var cg=document.getElementById('cursor-glow');document.addEventListener('mousemove',function(e){cg.style.left=e.clientX+'px';cg.style.top=e.clientY+'px';});</script>
-<script>
-function pbSidebar(open){
-  var s=document.querySelector('.sidebar');
-  var o=document.getElementById('sidebar-overlay');
-  if(!s||!o)return;
-  s.classList.toggle('open',open);
-  o.classList.toggle('open',open);
-  document.body.classList.toggle('sidebar-open',open);
-}
-document.addEventListener('keydown',function(e){if(e.key==='Escape')pbSidebar(false);});
-document.addEventListener('DOMContentLoaded',function(){
-  var links=document.querySelectorAll('.sidebar .nav-item');
-  links.forEach(function(l){l.addEventListener('click',function(){pbSidebar(false);});});
-});
-</script>
-</body>
-</html>
+{% endblock %}

@@ -1,154 +1,113 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-{% include '_favicon.html' %}
-<title>ProjectBuddy — Apply to Project</title>
-<meta name="robots" content="noindex, nofollow">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+{% extends 'base_app.html' %}
+{% block title %}ProjectBuddy — Apply to Project{% endblock %}
+
+{% block main_open %}<div style="display:flex;align-items:center;justify-content:center;flex:1;padding:20px;margin-left:220px;">{% endblock %}
+{% block main_close %}</div>{% endblock %}
+
+{% block extra_style %}
 <style nonce="{{ csp_nonce }}">
-*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
-html{scrollbar-gutter:stable;overflow-y:scroll;}
-:root{
-  color-scheme:dark;
-  --bg:#060B1A;--bg2:#0B1430;--bg3:#13204A;--coral:#FF6B6B;--coral-hi:#FF8E8E;--coral-lo:rgba(255,107,107,0.14);
-  --card:rgba(255,255,255,0.045);--card-h:rgba(255,255,255,0.075);
-  --accent:#7C9BFF;--accent-dim:rgba(124,155,255,0.1);--accent-glow:rgba(124,155,255,0.18);
-  --red:#c0392b;--text:#EEF1FF;--muted:#9AA3CC;--soft:#CAD0EF;
-  --border:rgba(255,255,255,0.085);--border-gold:rgba(124,155,255,0.12);--r:10px;
-}
-html.light-mode{color-scheme:light;--bg:#ffffff;--bg2:#EAEEFB;--bg3:#E0E6F8;--card:rgba(0,0,0,0.03);--card-h:rgba(0,0,0,0.06);--accent:#4658C8;--accent-dim:rgba(70,88,200,0.12);--accent-glow:rgba(70,88,200,0.18);--red:#c0392b;--text:#13162A;--muted:#7E839C;--soft:#474C66;--border:rgba(0,0,0,0.1);--border-gold:rgba(70,88,200,0.12);}
-body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px;position:relative;}
-body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");pointer-events:none;z-index:0;opacity:0.6;}
-#cursor-glow{position:fixed;width:700px;height:700px;border-radius:50%;background:radial-gradient(circle,rgba(124,155,255,0.035) 0%,transparent 70%);pointer-events:none;transform:translate(-50%,-50%);z-index:1;}
-.container{position:relative;z-index:2;}
-
-.container{width:100%;max-width:500px;}
-
+.container{width:100%;max-width:500px;position:relative;z-index:2;}
 .card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:40px;}
-
 .card-header{margin-bottom:32px;padding-bottom:24px;border-bottom:1px solid var(--border);}
-
 .back-link{display:inline-flex;align-items:center;gap:6px;text-decoration:none;color:var(--soft);font-family:'DM Mono',monospace;font-size:0.76rem;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:16px;transition:color 0.2s;}
 .back-link:hover{color:var(--text);}
-
 .card-title{font-family:'DM Serif Display',serif;font-size:1.6rem;font-weight:400;margin-bottom:8px;letter-spacing:-0.01em;}
 .card-sub{font-family:'DM Mono',monospace;font-size:0.7rem;letter-spacing:0.06em;text-transform:uppercase;color:var(--text);}
-
 .project-info{margin-bottom:32px;}
-
 .info-row{display:flex;justify-content:space-between;align-items:flex-start;padding:14px 0;border-bottom:1px solid var(--border);}
 .info-row:last-child{border-bottom:none;}
-
 .info-label{font-family:'DM Mono',monospace;font-size:0.72rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--text);flex:0 0 100px;}
-
 .info-value{font-size:0.88rem;color:var(--text);line-height:1.6;flex:1;}
-
 .actions{display:flex;gap:12px;}
-
 .btn{flex:1;padding:13px;border-radius:var(--r);font-family:'DM Mono',monospace;font-size:0.76rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;border:none;cursor:pointer;transition:all 0.2s;text-decoration:none;text-align:center;display:inline-block;}
-
 .btn-primary{background:linear-gradient(110deg,var(--accent) 0%,var(--violet,#A78BFF) 45%,var(--coral,#FF6B6B) 100%);color:#fff;box-shadow:0 0 20px rgba(124,155,255,0.15);}
 .btn-primary:hover{box-shadow:0 0 0 1px rgba(124,155,255,0.5),0 4px 24px rgba(124,155,255,0.25);transform:translateY(-1px);}
-
 .btn-secondary{background:var(--card);color:var(--soft);border:1px solid var(--border);}
 .btn-secondary:hover{border-color:rgba(255,255,255,0.12);color:var(--text);}
-
 form{display:contents;}
 </style>
-<script nonce="{{ csp_nonce }}">if(localStorage.getItem('theme')==='light')document.documentElement.classList.add('light-mode');document.addEventListener('DOMContentLoaded',function(){var t=document.getElementById('themeToggle');if(t)t.textContent=document.documentElement.classList.contains('light-mode')?'Dark':'Light';});</script>
-<link rel="stylesheet" href="/static/css/mobile.css?v=2">
-<link rel="stylesheet" href="/static/css/pb-theme.css?v=3">
-<script src="/static/js/pb-theme.js?v=2" defer></script>
-</head>
-<body>
-<a href="#" id="themeToggle" onclick="var h=document.documentElement;h.classList.toggle('light-mode');var l=h.classList.contains('light-mode');localStorage.setItem('theme',l?'light':'dark');this.textContent=l?'Dark':'Light';return false;" style="position:fixed;top:20px;right:20px;z-index:9999;font-family:'DM Mono',monospace;font-size:0.72rem;letter-spacing:0.05em;color:var(--muted);text-decoration:none;border:1px solid var(--border);padding:7px 14px;border-radius:8px;background:var(--card);transition:all 0.18s;">Light</a>
+{% endblock %}
 
-<div class="container">
-  <div class="card">
-    <div class="card-header">
-      <a href="/projects-page" class="back-link">← Back to Projects</a>
-      <div class="card-title">Apply to Project</div>
-      <div class="card-sub">Confirm your application</div>
-    </div>
+{% block content %}
+  <div class="container">
+    <div class="card">
+      <div class="card-header">
+        <a href="/projects-page" class="back-link">← Back to Projects</a>
+        <div class="card-title">Apply to Project</div>
+        <div class="card-sub">Confirm your application</div>
+      </div>
 
-    <div class="project-info">
-      <div class="info-row">
-        <div class="info-label">Project</div>
-        <div class="info-value" style="color:var(--text);font-weight:500;">{{ project.title }}</div>
-      </div>
-      <div class="info-row">
-        <div class="info-label">Owner</div>
-        <div class="info-value">
-          {% if project.owner %}
-            <a href="/user/{{ project.owner.id }}" style="color:var(--accent);text-decoration:none;">
-              {{ project.owner.first_name }} {{ project.owner.last_name }}
-            </a>
-          {% else %}Unknown{% endif %}
+      <div class="project-info">
+        <div class="info-row">
+          <div class="info-label">Project</div>
+          <div class="info-value" style="color:var(--text);font-weight:500;">{{ project.title }}</div>
         </div>
-      </div>
-      <div class="info-row">
-        <div class="info-label">Description</div>
-        <div class="info-value">{{ project.description[:200] }}{% if project.description|length > 200 %}...{% endif %}</div>
-      </div>
-      {% if project.course %}
-      <div class="info-row">
-        <div class="info-label">Course</div>
-        <div class="info-value">{{ project.course }}</div>
-      </div>
-      {% endif %}
-      <div class="info-row">
-        <div class="info-label">Team</div>
-        <div class="info-value">
-          {{ project.current_member_count() }} / {{ project.team_size }} members
-          {% if project.is_full() %}
-            <span style="color:#e07060;font-family:'DM Mono',monospace;font-size:0.7rem;margin-left:8px;">Team Full</span>
-          {% else %}
-            <span style="color:#7ab890;font-family:'DM Mono',monospace;font-size:0.7rem;margin-left:8px;">{{ project.team_size - project.current_member_count() }} spot(s) left</span>
-          {% endif %}
+        <div class="info-row">
+          <div class="info-label">Owner</div>
+          <div class="info-value">
+            {% if project.owner %}
+              <a href="/user/{{ project.owner.id }}" style="color:var(--accent);text-decoration:none;">
+                {{ project.owner.first_name }} {{ project.owner.last_name }}
+              </a>
+            {% else %}Unknown{% endif %}
+          </div>
         </div>
-      </div>
-      {% if project.deadline %}
-      <div class="info-row">
-        <div class="info-label">Deadline</div>
-        <div class="info-value">{{ project.deadline.strftime('%B %d, %Y') }}</div>
-      </div>
-      {% endif %}
-      {% if project.topic_tags %}
-      <div class="info-row">
-        <div class="info-label">Tags</div>
-        <div class="info-value" style="display:flex;flex-wrap:wrap;gap:5px;">
-          {% for tag in project.topic_tags %}
-            <span style="padding:2px 8px;background:var(--accent-dim);color:var(--accent);border-radius:3px;font-family:'DM Mono',monospace;font-size:0.62rem;">{{ tag.tag }}</span>
-          {% endfor %}
+        <div class="info-row">
+          <div class="info-label">Description</div>
+          <div class="info-value">{{ project.description[:200] }}{% if project.description|length > 200 %}...{% endif %}</div>
         </div>
-      </div>
-      {% endif %}
-      {% if project.required_skills %}
-      <div class="info-row">
-        <div class="info-label">Skills</div>
-        <div class="info-value" style="display:flex;flex-wrap:wrap;gap:5px;">
-          {% for skill in project.required_skills %}
-            <span style="padding:2px 8px;background:var(--card);border:1px solid var(--border);color:var(--soft);border-radius:3px;font-family:'DM Mono',monospace;font-size:0.62rem;">{{ skill.skill }}</span>
-          {% endfor %}
+        {% if project.course %}
+        <div class="info-row">
+          <div class="info-label">Course</div>
+          <div class="info-value">{{ project.course }}</div>
         </div>
+        {% endif %}
+        <div class="info-row">
+          <div class="info-label">Team</div>
+          <div class="info-value">
+            {{ project.current_member_count() }} / {{ project.team_size }} members
+            {% if project.is_full() %}
+              <span style="color:#e07060;font-family:'DM Mono',monospace;font-size:0.7rem;margin-left:8px;">Team Full</span>
+            {% else %}
+              <span style="color:#7ab890;font-family:'DM Mono',monospace;font-size:0.7rem;margin-left:8px;">{{ project.team_size - project.current_member_count() }} spot(s) left</span>
+            {% endif %}
+          </div>
+        </div>
+        {% if project.deadline %}
+        <div class="info-row">
+          <div class="info-label">Deadline</div>
+          <div class="info-value">{{ project.deadline.strftime('%B %d, %Y') }}</div>
+        </div>
+        {% endif %}
+        {% if project.topic_tags %}
+        <div class="info-row">
+          <div class="info-label">Tags</div>
+          <div class="info-value" style="display:flex;flex-wrap:wrap;gap:5px;">
+            {% for tag in project.topic_tags %}
+              <span style="padding:2px 8px;background:var(--accent-dim);color:var(--accent);border-radius:3px;font-family:'DM Mono',monospace;font-size:0.62rem;">{{ tag.tag }}</span>
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+        {% if project.required_skills %}
+        <div class="info-row">
+          <div class="info-label">Skills</div>
+          <div class="info-value" style="display:flex;flex-wrap:wrap;gap:5px;">
+            {% for skill in project.required_skills %}
+              <span style="padding:2px 8px;background:var(--card);border:1px solid var(--border);color:var(--soft);border-radius:3px;font-family:'DM Mono',monospace;font-size:0.62rem;">{{ skill.skill }}</span>
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
       </div>
-      {% endif %}
-    </div>
 
-    <form method="POST">
+      <form method="POST">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-      <div class="actions">
-        <a href="/projects-page" class="btn btn-secondary">Cancel</a>
-        <button type="submit" class="btn btn-primary">Submit Application</button>
-      </div>
-    </form>
+        <div class="actions">
+          <a href="/projects-page" class="btn btn-secondary">Cancel</a>
+          <button type="submit" class="btn btn-primary">Submit Application</button>
+        </div>
+      </form>
+    </div>
   </div>
-</div>
-
-<div id="cursor-glow"></div>
-<script nonce="{{ csp_nonce }}">var cg=document.getElementById('cursor-glow');document.addEventListener('mousemove',function(e){cg.style.left=e.clientX+'px';cg.style.top=e.clientY+'px';});</script>
-</body>
-</html>
+{% endblock %}
