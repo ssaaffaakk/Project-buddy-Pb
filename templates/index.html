@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="dark light">
+<meta name="theme-color" content="#060B1A" id="meta-theme-color">
+<script nonce="{{ csp_nonce }}">(function(){var l=localStorage.getItem('theme')==='light',r=document.documentElement,m=document.getElementById('meta-theme-color');if(l){r.classList.add('lm');r.style.background='#F4F5FB';r.style.color='#13162A';if(m)m.setAttribute('content','#F4F5FB');}else{r.style.background='#060B1A';r.style.color='#EEF1FF';if(m)m.setAttribute('content','#060B1A');}})();</script>
 <link rel="icon" href="/static/images/logo.svg" type="image/svg+xml">
 <title>ProjectBuddy — Find Your Perfect Teammate</title>
 <meta name="description" content="ProjectBuddy matches university students with projects by skill. Find teammates, collaborate in real time, and build your academic reputation.">
@@ -61,9 +64,9 @@ html.lm{
 body{
   background:var(--bg);color:var(--text);
   font-family:'Inter',sans-serif;overflow-x:hidden;
-  animation:page-in 1.1s cubic-bezier(0.16,1,0.3,1) forwards;
 }
-@keyframes page-in{from{opacity:0;filter:blur(6px);}to{opacity:1;filter:blur(0);}}
+body.go{animation:page-in .65s cubic-bezier(0.16,1,0.3,1) forwards;}
+@keyframes page-in{from{opacity:0;}to{opacity:1;}}
 @media(max-width:768px){body{cursor:auto;}}
 @media(prefers-reduced-motion:reduce){*{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;}}
 
@@ -88,22 +91,15 @@ html.lm .aurora{opacity:.5;}
 @media(prefers-reduced-motion:reduce){.aurora i{animation:none;}}
 
 /* ═══════════════════ PRELOADER ═══════════════════ */
-#pre{position:fixed;inset:0;z-index:10000;background:var(--bg);display:flex;flex-direction:column;justify-content:space-between;padding:46px var(--pad);overflow:hidden;transition:transform 1.05s cubic-bezier(.76,0,.24,1),visibility 0s 1.05s;}
-#pre.done{transform:translateY(-101%);visibility:hidden;}
-.pre-top{display:flex;justify-content:space-between;font-family:'DM Mono',monospace;font-size:.58rem;letter-spacing:.28em;text-transform:uppercase;color:var(--muted);}
-.pre-top em{color:var(--gold);font-style:normal;}
-.pre-mid{flex:1;display:flex;align-items:center;}
-.pre-word{font-family:'DM Serif Display',serif;font-size:clamp(2.4rem,8vw,7rem);font-weight:400;letter-spacing:-.04em;line-height:.9;color:var(--text);overflow:hidden;}
-.pre-word i{display:inline-block;font-style:normal;transform:translateY(110%);animation:preword .9s cubic-bezier(.16,1,.3,1) forwards;}
-.pre-word i:nth-child(2){animation-delay:.08s;}
-.pre-word em{color:var(--gold);font-style:italic;}
-@keyframes preword{to{transform:translateY(0);}}
-.pre-bot{display:flex;justify-content:space-between;align-items:flex-end;}
-.pre-num{font-family:'DM Serif Display',serif;font-size:clamp(4rem,13vw,11rem);line-height:.78;color:var(--text);font-variant-numeric:tabular-nums;}
-.pre-num em{color:var(--gold);font-style:normal;}
-.pre-status{font-family:'DM Mono',monospace;font-size:.58rem;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);padding-bottom:10px;}
-.pre-bar{position:absolute;left:0;bottom:0;height:2px;width:0%;background:var(--gold);box-shadow:0 0 12px var(--gold);}
-@media(max-width:768px){ #pre{padding:28px 20px;}}
+#pre{position:fixed;inset:0;z-index:10000;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:24px;transition:opacity .42s ease,visibility 0s .42s;}
+#pre.done{opacity:0;visibility:hidden;pointer-events:none;}
+.pre-inner{text-align:center;width:min(280px,88vw);}
+.pre-logo{font-family:'DM Serif Display',serif;font-size:clamp(1.6rem,6vw,2.2rem);letter-spacing:-.03em;color:var(--text);margin-bottom:22px;}
+.pre-logo em{font-style:italic;color:var(--gold);}
+.pre-track{height:2px;width:100%;background:var(--border);border-radius:99px;overflow:hidden;}
+.pre-bar{height:100%;width:0%;background:linear-gradient(90deg,var(--gold),var(--gold-hi));box-shadow:0 0 10px var(--gold-lo);transition:width .12s linear;}
+body:not(.go){overflow:hidden;}
+body:not(.go) > *:not(#pre){visibility:hidden;}
 
 /* intro-gate: hold hero animations until curtain lifts */
 .wi,.h-tag,.h-sub,.h-act,.h-stack,.h-strip,.sec-counter{animation-play-state:paused;}
@@ -558,13 +554,8 @@ footer p{font-family:'DM Mono',monospace;font-size:.6rem;letter-spacing:.04em;co
 .rv{opacity:0;transform:translateY(30px);transition:opacity .85s cubic-bezier(.16,1,.3,1),transform .85s cubic-bezier(.16,1,.3,1);}
 .rv.vis{opacity:1;transform:translateY(0);}
 
-/* ═══════════════════ PAGE TRANSITION SWEEP ═══════════════════ */
-#pt{position:fixed;inset:0;z-index:9500;pointer-events:none;transform:translateX(-100%);background:linear-gradient(110deg,var(--gold) 0%,var(--violet) 45%,var(--coral) 100%);}
-#pt.run{animation:ptsweep .9s cubic-bezier(.76,0,.24,1) forwards;}
-@keyframes ptsweep{0%{transform:translateX(-100%);}50%{transform:translateX(0);}100%{transform:translateX(100%);}}
-#pt b{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-family:'DM Serif Display',serif;font-style:italic;font-size:2rem;color:#fff;opacity:0;}
-#pt.run b{animation:ptlogo .9s ease forwards;}
-@keyframes ptlogo{0%,100%{opacity:0;}40%,60%{opacity:1;}}
+/* ═══════════════════ PAGE TRANSITION (disabled — instant nav) ═══════════════════ */
+#pt{display:none!important;}
 
 /* ═══════════════════ MOBILE NAV ═══════════════════ */
 .mob-nav{position:fixed;inset:0;z-index:200;background:rgba(8,18,42,.98);backdrop-filter:blur(24px);display:flex;flex-direction:column;align-items:flex-start;justify-content:center;padding:60px 40px;transform:translateX(100%);transition:transform .4s cubic-bezier(.16,1,.3,1);}
@@ -582,10 +573,10 @@ html.lm .mob-nav{background:rgba(247,245,241,.99);}
 <body>
 
 <div id="pre" aria-hidden="true">
-  <div class="pre-top"><span><em>ProjectBuddy</em>™ / Loading Experience</span><span class="pre-tr">Sarajevo — 2025</span></div>
-  <div class="pre-mid"><div class="pre-word"><i>Find&nbsp;</i><i><em>your</em>&nbsp;team.</i></div></div>
-  <div class="pre-bot"><div class="pre-num" id="pre-num">00</div><div class="pre-status" id="pre-status">Initializing…</div></div>
-  <div class="pre-bar" id="pre-bar"></div>
+  <div class="pre-inner">
+    <div class="pre-logo">Project<em>Buddy</em></div>
+    <div class="pre-track"><div class="pre-bar" id="pre-bar"></div></div>
+  </div>
 </div>
 
 <div class="aurora" aria-hidden="true"><i class="a1"></i><i class="a2"></i><i class="a3"></i><i class="a4"></i><i class="a5"></i></div>
@@ -1259,10 +1250,10 @@ document.getElementById('demo-play-btn').addEventListener('click',()=>{alert('Ad
 
 /* ── THEME ── */
 const $html=document.documentElement,$ti=document.querySelector('.ti');
-const sv=localStorage.getItem('theme')||'light';
+const sv=localStorage.getItem('theme')||'dark';
 if(sv==='light')$html.classList.add('lm');
 $ti.textContent=sv==='light'?'Dark':'Light';
-document.getElementById('themeToggle').addEventListener('click',()=>{$html.classList.toggle('lm');const l=$html.classList.contains('lm');localStorage.setItem('theme',l?'light':'dark');$ti.textContent=l?'Dark':'Light';});
+document.getElementById('themeToggle').addEventListener('click',()=>{$html.classList.toggle('lm');const l=$html.classList.contains('lm');localStorage.setItem('theme',l?'light':'dark');$ti.textContent=l?'Dark':'Light';document.documentElement.style.background=l?'#F4F5FB':'#060B1A';document.documentElement.style.color=l?'#13162A':'#EEF1FF';var m=document.getElementById('meta-theme-color');if(m)m.setAttribute('content',l?'#F4F5FB':'#060B1A');});
 
 /* ── MOBILE NAV ── */
 function openNav(){document.getElementById('mob-nav').classList.add('open');document.body.style.overflow='hidden';}
@@ -1280,23 +1271,38 @@ document.querySelectorAll('.btn').forEach(b=>{
   });
 });
 
-/* ── PAGE TRANSITION SWEEP ── */
-(function(){
-  const pt=document.getElementById('pt');if(!pt)return;
-  document.querySelectorAll('a[href]').forEach(a=>{
-    const href=a.getAttribute('href');
-    if(!href||href.startsWith('#')||href.startsWith('http')||href.startsWith('mailto')||href.startsWith('javascript')||a.target==='_blank')return;
-    a.addEventListener('click',e=>{
-      if(e.metaKey||e.ctrlKey||e.shiftKey||e.button!==0)return;
-      e.preventDefault();
-      if(RM){window.location.href=href;return;}
-      pt.classList.add('run');
-      setTimeout(()=>{window.location.href=href;},460);
-    });
-  });
-})();
+/* ── PAGE TRANSITION — instant navigation ── */
 
-/* ── PARALLAX DEPTH LAYERS (stable cached reference; no feedback drift) ── */
+/* ── PRELOADER ── */
+(function(){
+  const pre=document.getElementById('pre');
+  const bar=document.getElementById('pre-bar');
+  let done=false;
+  function reveal(){
+    document.body.classList.add('go');
+    badgeScramble();
+  }
+  function finish(){
+    if(done)return;
+    done=true;
+    if(bar)bar.style.width='100%';
+    if(pre){
+      pre.classList.add('done');
+      setTimeout(()=>{pre.style.display='none';},450);
+    }
+    reveal();
+  }
+  if(!pre||RM){finish();return;}
+  const dur=720,t0=performance.now();
+  (function step(t){
+    const p=Math.min((t-t0)/dur,1),e=1-Math.pow(1-p,2);
+    if(bar)bar.style.width=(e*100)+'%';
+    if(p<1)requestAnimationFrame(step);
+    else finish();
+  })(t0);
+  window.addEventListener('load',()=>setTimeout(finish,80),{once:true});
+  setTimeout(finish,1400);
+})();
 let pxNodes=[];
 function buildParallax(){
   pxNodes=[...document.querySelectorAll('.stat-ghost,.role-bg-n,.fc-bg-n')].map(el=>{
@@ -1321,32 +1327,6 @@ function parallaxLayers(){
 document.querySelectorAll('a[href^="#"]').forEach(a=>{
   a.addEventListener('click',()=>{if(a.getAttribute('href').length>1)closeNav();});
 });
-
-/* ── CINEMATIC PRELOADER ── */
-(function(){
-  const pre=document.getElementById('pre');
-  const num=document.getElementById('pre-num'),bar=document.getElementById('pre-bar'),st=document.getElementById('pre-status');
-  let done=false;
-  function go(){
-    document.body.classList.add('go');
-    badgeScramble();
-  }
-  function finish(){
-    if(done)return;done=true;
-    num.innerHTML='1<em>00</em>';bar.style.width='100%';if(st)st.textContent='Welcome';
-    setTimeout(()=>{pre&&pre.classList.add('done');go();},260);
-  }
-  if(!pre||RM){go();if(pre){pre.style.transition='none';pre.classList.add('done');}return;}
-  const dur=1500,t0=performance.now();
-  const states=['Initializing…','Loading matches…','Calibrating fit…','Almost there…'];
-  (function step(t){
-    const p=Math.min((t-t0)/dur,1),e=1-Math.pow(1-p,3),n=Math.round(e*100);
-    num.textContent=String(n).padStart(2,'0');bar.style.width=(e*100)+'%';
-    if(st)st.textContent=states[Math.min(states.length-1,Math.floor(p*states.length))];
-    if(p<1)requestAnimationFrame(step);else finish();
-  })(t0);
-  setTimeout(finish,3200); /* safety */
-})();
 
 buildParallax();
 window.addEventListener('load',buildParallax);
