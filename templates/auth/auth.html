@@ -47,7 +47,6 @@
     background: var(--red); filter: blur(80px); opacity: 0.04;
   }
   .logo { display: flex; align-items: center; gap: 8px; text-decoration: none; color: var(--text); font-family: 'DM Serif Display', serif; font-size: 1.1rem; font-weight: 400; letter-spacing: 0.01em; }
-  .logo-icon { width: 26px; height: 26px; border-radius: 4px; object-fit: contain; flex-shrink: 0; }
   .logo span { color: var(--accent); font-style: italic; }
   .left-content { flex: 1; display: flex; flex-direction: column; justify-content: center; position: relative; z-index: 1; }
   .left-content h2 { font-family: 'DM Serif Display', serif; font-size: 1.8rem; font-weight: 400; line-height: 1.2; margin-bottom: 16px; letter-spacing: -0.02em; }
@@ -205,8 +204,7 @@ select{
 <a href="#" id="themeToggle" onclick="var h=document.documentElement;h.classList.toggle('light-mode');var l=h.classList.contains('light-mode');localStorage.setItem('theme',l?'light':'dark');this.textContent=l?'Dark':'Light';return false;" style="position:fixed;top:20px;right:20px;z-index:9999;font-family:'DM Mono',monospace;font-size:0.72rem;letter-spacing:0.05em;color:var(--muted);text-decoration:none;border:1px solid var(--border);padding:7px 14px;border-radius:8px;background:var(--card);transition:all 0.18s;">Light</a>
 
 <div class="left">
-  <a href="/" class="logo">
-    <img src="/static/images/logo.png" alt="" class="logo-icon" width="28" height="28" decoding="async">
+  <a href="/" class="logo" id="auth-logo">
     Project<span>Buddy</span>
   </a>
   <div class="left-content">
@@ -457,6 +455,8 @@ function switchTab(tab) {
   document.querySelectorAll('.auth-tab').forEach((t,i) => t.classList.toggle('active', (i===0&&tab==='login')||(i===1&&tab==='register')));
   document.getElementById('panel-login').classList.toggle('active', tab==='login');
   document.getElementById('panel-register').classList.toggle('active', tab==='register');
+  var logo = document.getElementById('auth-logo');
+  if (logo) logo.style.display = tab === 'register' ? 'none' : '';
 }
 
 function goStep(n) {
