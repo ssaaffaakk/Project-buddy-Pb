@@ -6,7 +6,7 @@
 <meta name="color-scheme" content="dark light">
 <meta name="theme-color" content="#060B1A" id="meta-theme-color">
 <script nonce="{{ csp_nonce }}">(function(){var l=localStorage.getItem('theme')==='light',r=document.documentElement,m=document.getElementById('meta-theme-color');if(l){r.classList.add('lm');r.style.background='#F4F5FB';r.style.color='#13162A';if(m)m.setAttribute('content','#F4F5FB');}else{r.style.background='#060B1A';r.style.color='#EEF1FF';if(m)m.setAttribute('content','#060B1A');}})();</script>
-<link rel="icon" href="/static/images/logo.svg" type="image/svg+xml">
+<link rel="icon" href="/static/images/logo.png" type="image/png">
 <title>ProjectBuddy — Find Your Perfect Teammate</title>
 <meta name="description" content="ProjectBuddy matches university students with projects by skill. Find teammates, collaborate in real time, and build your academic reputation.">
 <meta name="robots" content="index, follow">
@@ -15,12 +15,12 @@
 <meta property="og:url" content="https://project-buddy-pb.onrender.com/">
 <meta property="og:title" content="ProjectBuddy — Find Your Perfect Teammate">
 <meta property="og:description" content="ProjectBuddy matches university students with projects by skill.">
-<meta property="og:image" content="https://project-buddy-pb.onrender.com/static/images/logo1.jpeg">
+<meta property="og:image" content="https://project-buddy-pb.onrender.com/static/images/logo.png">
 <meta property="og:site_name" content="ProjectBuddy">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="ProjectBuddy — Find Your Perfect Teammate">
 <meta name="twitter:description" content="ProjectBuddy matches university students with projects by skill.">
-<meta name="twitter:image" content="https://project-buddy-pb.onrender.com/static/images/logo1.jpeg">
+<meta name="twitter:image" content="https://project-buddy-pb.onrender.com/static/images/logo.png">
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"ProjectBuddy","url":"https://project-buddy-pb.onrender.com","description":"ProjectBuddy matches university students with projects by skill.","applicationCategory":"EducationalApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"creator":{"@type":"Person","name":"Safak Surmeli"}}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -94,7 +94,8 @@ html.lm .aurora{opacity:.5;}
 #pre{position:fixed;inset:0;z-index:10000;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:24px;transition:opacity .42s ease,visibility 0s .42s;}
 #pre.done{opacity:0;visibility:hidden;pointer-events:none;}
 .pre-inner{text-align:center;width:min(280px,88vw);}
-.pre-logo{font-family:'DM Serif Display',serif;font-size:clamp(1.6rem,6vw,2.2rem);letter-spacing:-.03em;color:var(--text);margin-bottom:22px;}
+.pre-logo{margin-bottom:22px;}
+.pre-logo img{width:clamp(48px,14vw,64px);height:clamp(48px,14vw,64px);border-radius:14px;object-fit:contain;display:block;margin:0 auto;box-shadow:0 0 32px rgba(124,155,255,.22);}
 .pre-logo em{font-style:italic;color:var(--gold);}
 .pre-track{height:2px;width:100%;background:var(--border);border-radius:99px;overflow:hidden;}
 .pre-bar{height:100%;width:0%;background:linear-gradient(90deg,var(--gold),var(--gold-hi));box-shadow:0 0 10px var(--gold-lo);transition:width .12s linear;}
@@ -132,7 +133,8 @@ html.lm .side-label{color:rgba(0,0,0,.1);}
 nav{position:fixed;top:27px;left:0;right:0;z-index:100;padding:16px var(--pad);display:flex;align-items:center;justify-content:space-between;transition:padding .4s,background .4s,top .4s;}
 nav.sc{padding:11px var(--pad);top:0;background:rgba(9,20,46,.9);backdrop-filter:blur(40px);border-bottom:1px solid var(--border);}
 html.lm nav.sc{background:rgba(247,245,241,.95);}
-.n-logo{text-decoration:none;color:var(--text);font-family:'DM Serif Display',serif;font-size:1.28rem;letter-spacing:-.02em;}
+.n-logo{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--text);font-family:'DM Serif Display',serif;font-size:1.28rem;letter-spacing:-.02em;}
+.n-logo img{width:32px;height:32px;border-radius:8px;object-fit:contain;flex-shrink:0;}
 .n-logo em{font-style:italic;color:var(--gold);}
 .n-links{display:flex;align-items:center;gap:32px;}
 .n-links a{color:var(--muted);text-decoration:none;font-family:'DM Mono',monospace;font-size:.66rem;letter-spacing:.1em;text-transform:uppercase;transition:color .2s;position:relative;}
@@ -574,7 +576,7 @@ html.lm .mob-nav{background:rgba(247,245,241,.99);}
 
 <div id="pre" aria-hidden="true">
   <div class="pre-inner">
-    <div class="pre-logo">Project<em>Buddy</em></div>
+    <div class="pre-logo"><img src="/static/images/logo.png" alt="" width="56" height="56" decoding="async"></div>
     <div class="pre-track"><div class="pre-bar" id="pre-bar"></div></div>
   </div>
 </div>
@@ -592,7 +594,7 @@ html.lm .mob-nav{background:rgba(247,245,241,.99);}
 </div>
 
 <nav id="mn">
-  <a href="/" class="n-logo">Project<em>Buddy</em></a>
+  <a href="/" class="n-logo"><img src="/static/images/logo.png" alt="" class="logo-icon" width="32" height="32" decoding="async"> Project<em>Buddy</em></a>
   <div class="n-links">
     <a href="#fp">Platform</a>
     <a href="#demo-s">Demo</a>

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="icon" href="/static/images/logo.svg" type="image/svg+xml">
+<link rel="icon" href="/static/images/logo.png" type="image/png">
 <title>Privacy Policy — ProjectBuddy</title>
 <meta name="description" content="ProjectBuddy privacy policy — how we collect, use, and protect your data.">
 <meta name="robots" content="index, follow">
@@ -55,11 +55,15 @@
     z-index: 10;
   }
   .nav-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
     font-family: 'DM Serif Display', serif;
     font-size: 1.25rem;
     text-decoration: none;
     color: var(--text);
   }
+  .nav-logo img { width: 28px; height: 28px; border-radius: 8px; object-fit: contain; flex-shrink: 0; }
   .nav-logo em { font-style: italic; color: var(--accent); }
   .nav-right { display: flex; align-items: center; gap: 16px; }
   .nav-link {
@@ -191,7 +195,7 @@
 <body>
 
 <nav>
-  <a href="/" class="nav-logo">Project<em>Buddy</em></a>
+  <a href="/" class="nav-logo"><img src="/static/images/logo.png" alt="" class="logo-icon" width="28" height="28" decoding="async"> Project<em>Buddy</em></a>
   <div class="nav-right">
     <a href="/auth/login" class="nav-link">Sign In</a>
     <a href="/auth/register" class="nav-btn">Get Started</a>

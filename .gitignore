@@ -50,6 +50,7 @@ static/images/*.mp4
 static/images/*.jpeg
 static/images/*.jpg
 static/images/*.png
+!static/images/logo.png
 !static/images/*.svg
 
 # ── macOS ─────────────────────────────────────────────────────────────────────
