@@ -453,14 +453,37 @@ var isMuted      = false;
 var inVoice      = false;
 var mySid        = null;
 var peers        = {};   // {sid: RTCPeerConnection}
+var iceQueues    = {};   // {sid: RTCIceCandidateInit[]}
 
 var ICE_CFG = { iceServers: {{ ice_servers | safe }} };
 
+function waitForSocketConnect(sock, timeoutMs){
+  return new Promise(function(resolve, reject){
+    if(sock.connected)return resolve();
+    var timer=setTimeout(function(){reject(new Error('Socket.IO connection timed out'));},timeoutMs||12000);
+    sock.once('connect',function(){clearTimeout(timer);resolve();});
+    sock.once('connect_error',function(err){clearTimeout(timer);reject(err||new Error('Socket.IO connection failed'));});
+  });
+}
+
+function flushIceQueue(remoteSid){
+  var pc=peers[remoteSid];
+  var q=iceQueues[remoteSid];
+  if(!pc||!q||!q.length)return;
+  q.forEach(function(c){pc.addIceCandidate(new RTCIceCandidate(c)).catch(function(){});});
+  delete iceQueues[remoteSid];
+}
+
 function ensureSocket(){
   if(socket)return;
-  socket=io();
+  socket=io({withCredentials:true,transports:['polling','websocket']});
 
-  socket.on('connect',function(){console.log('SocketIO connected',socket.id);});
+  socket.on('connect',function(){mySid=socket.id;console.log('SocketIO connected',socket.id);});
+
+  socket.on('connect_error',function(err){
+    console.warn('SocketIO connect_error',err);
+    if(inVoice)toast('Voice server connection failed. Refresh and try again.','error');
+  });
 
   socket.on('voice_error',function(data){
     toast((data&&data.message)||'Voice connection failed.','error');
@@ -469,7 +492,7 @@ function ensureSocket(){
   /* Someone new joined — existing peers send them an offer */
   socket.on('voice_user_joined',function(user){
     addVpCard(user);
-    createOffer(user.sid);
+    if(inVoice&&localStream)createOffer(user.sid);
   });
 
   /* I just joined — connect to existing participants */
@@ -484,6 +507,7 @@ function ensureSocket(){
   socket.on('voice_user_left',function(data){
     removeVpCard(data.sid);
     if(peers[data.sid]){peers[data.sid].close();delete peers[data.sid];}
+    delete iceQueues[data.sid];
     var audio=document.getElementById('audio-'+data.sid);
     if(audio){audio.srcObject=null;audio.remove();}
   });
@@ -493,6 +517,7 @@ function ensureSocket(){
     try{
       var pc=getOrCreatePC(data.from_sid);
       await pc.setRemoteDescription(new RTCSessionDescription(data.offer));
+      flushIceQueue(data.from_sid);
       var answer=await pc.createAnswer();
       await pc.setLocalDescription(answer);
       socket.emit('webrtc_answer',{answer:answer,to_sid:data.from_sid});
@@ -504,12 +529,19 @@ function ensureSocket(){
     if(!pc)return;
     try{
       await pc.setRemoteDescription(new RTCSessionDescription(data.answer));
+      flushIceQueue(data.from_sid);
     }catch(err){console.warn('webrtc_answer failed:',err);}
   });
 
   socket.on('webrtc_ice',function(data){
     var pc=peers[data.from_sid];
-    if(pc&&data.candidate){pc.addIceCandidate(new RTCIceCandidate(data.candidate)).catch(function(){});}
+    if(!pc||!data.candidate)return;
+    if(!pc.remoteDescription||!pc.remoteDescription.type){
+      iceQueues[data.from_sid]=iceQueues[data.from_sid]||[];
+      iceQueues[data.from_sid].push(data.candidate);
+      return;
+    }
+    pc.addIceCandidate(new RTCIceCandidate(data.candidate)).catch(function(){});
   });
 }
 
@@ -538,6 +570,7 @@ async function joinVoice(){
   /* Connect SocketIO and join the voice room */
   try{
     ensureSocket();
+    await waitForSocketConnect(socket,12000);
     socket.emit('join_voice',{group_id:GROUP_ID});
   }catch(e){
     toast('Connection error. Please refresh and try again.','error');

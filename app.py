@@ -91,9 +91,16 @@ def _initialize_extensions(app: Flask) -> None:
     # Use app.debug (set by config class) rather than FLASK_ENV env var so
     # wsgi.py's ProductionConfig is the single source of truth.
     _raw_origins = os.environ.get("CORS_ORIGINS", "")
-    cors_origins = (
-        [o.strip() for o in _raw_origins.split(",") if o.strip()] if not app.debug else "*"
-    )
+    if not app.debug:
+        origins = [o.strip() for o in _raw_origins.split(",") if o.strip()]
+        if not origins:
+            # Render sets RENDER_EXTERNAL_URL automatically; empty CORS_ORIGINS
+            # must not become [] or Socket.IO rejects the browser connection.
+            render_url = os.environ.get("RENDER_EXTERNAL_URL", "").rstrip("/")
+            origins = [render_url] if render_url else "*"
+        cors_origins = origins
+    else:
+        cors_origins = "*"
     # Redis message queue: required when running multiple Gunicorn workers so
     # SocketIO events (including voice signaling) are broadcast across all
     # processes. Falls back to None (in-process only) when REDIS_URL is unset.
@@ -102,7 +109,6 @@ def _initialize_extensions(app: Flask) -> None:
         app,
         cors_allowed_origins=cors_origins,
         message_queue=redis_url,
-        manage_session=False,
     )
 
     # Disable Secure cookie flag outside of production
