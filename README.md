@@ -16,7 +16,7 @@ ProjectBuddy is a web platform built for university students to find project col
 
 ## Video Demo
 
-[![ProjectBuddy Demo](https://img.youtube.com/vi/X3tt5sjE_ns/maxresdefault.jpg)](https://youtu.be/X3tt5sjE_ns)
+[![ProjectBuddy Demo](https://img.youtube.com/vi/RZgF-_lZQ0o/maxresdefault.jpg)](https://www.youtube.com/watch?v=RZgF-_lZQ0o)
 
 ---
 
