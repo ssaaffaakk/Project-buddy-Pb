@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{width:1200px;height:627px;overflow:hidden;font-family:'DM Serif Display','Georgia',serif;background:#060B1A;}
+
+  /* aurora blobs */
+  .aurora{position:absolute;inset:0;z-index:0;}
+  .a1{position:absolute;width:700px;height:500px;left:-80px;top:-80px;background:radial-gradient(circle at 40% 40%,rgba(124,155,255,.55),transparent 65%);filter:blur(80px);border-radius:50%;}
+  .a2{position:absolute;width:600px;height:500px;right:-60px;top:60px;background:radial-gradient(circle,rgba(167,139,255,.45),transparent 65%);filter:blur(90px);border-radius:50%;}
+  .a3{position:absolute;width:580px;height:400px;left:200px;bottom:-100px;background:radial-gradient(circle,rgba(255,107,107,.32),transparent 65%);filter:blur(80px);border-radius:50%;}
+  .grain{position:absolute;inset:0;z-index:1;opacity:.04;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");background-size:200px;}
+
+  /* border frame */
+  .frame{position:absolute;inset:0;z-index:2;border:1px solid rgba(124,155,255,.12);}
+
+  /* content */
+  .content{position:absolute;inset:0;z-index:10;display:flex;padding:64px 80px;align-items:center;gap:80px;}
+
+  /* left col */
+  .left{flex:1.1;}
+  .badge{display:inline-flex;align-items:center;gap:8px;padding:5px 14px 5px 8px;border-radius:99px;border:1px solid rgba(124,155,255,.28);background:rgba(124,155,255,.08);margin-bottom:28px;}
+  .badge-dot{width:6px;height:6px;border-radius:50%;background:#7C9BFF;box-shadow:0 0 8px #7C9BFF;}
+  .badge-txt{font-family:'DM Mono','Courier New',monospace;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#7C9BFF;}
+  .headline{font-size:62px;font-weight:400;line-height:.96;letter-spacing:-.04em;color:#EEF1FF;}
+  .headline em{font-style:italic;color:#7C9BFF;}
+  .sub{margin-top:22px;font-family:'Inter','Arial',sans-serif;font-size:17px;color:#9AA3CC;line-height:1.65;max-width:430px;}
+  .url{margin-top:28px;font-family:'DM Mono','Courier New',monospace;font-size:13px;color:rgba(124,155,255,.6);letter-spacing:.06em;}
+
+  /* right col — mock cards */
+  .right{flex:.9;display:flex;flex-direction:column;gap:12px;}
+  .card{background:rgba(14,24,52,.78);border:1px solid rgba(124,155,255,.18);border-radius:14px;padding:18px 20px;backdrop-filter:blur(12px);}
+  .card-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+  .live{font-family:'DM Mono','Courier New',monospace;font-size:10px;letter-spacing:.12em;color:#3ad17a;display:flex;align-items:center;gap:5px;}
+  .live-dot{width:5px;height:5px;border-radius:50%;background:#3ad17a;}
+  .fit{font-family:'DM Serif Display','Georgia',serif;font-size:26px;color:#7C9BFF;line-height:1;}
+  .fit s{text-decoration:none;font-size:12px;}
+  .card-id{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+  .av{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#7C9BFF,#2A2E66);display:flex;align-items:center;justify-content:center;font-size:15px;color:#0A0C1C;font-weight:700;flex-shrink:0;}
+  .nm{font-family:'Inter','Arial',sans-serif;font-weight:600;font-size:14px;color:#EEF1FF;}
+  .rl{font-family:'DM Mono','Courier New',monospace;font-size:9px;color:#7A85B8;margin-top:2px;}
+  .skills{display:flex;gap:5px;flex-wrap:wrap;}
+  .skill{font-family:'DM Mono','Courier New',monospace;font-size:9px;padding:3px 8px;border-radius:4px;background:rgba(124,155,255,.12);color:#7C9BFF;}
+  .bar{display:flex;align-items:center;gap:8px;margin-top:10px;}
+  .bar-track{flex:1;height:3px;border-radius:99px;background:rgba(255,255,255,.07);}
+  .bar-fill{height:100%;border-radius:99px;background:#7C9BFF;}
+  .bar-lbl{font-family:'DM Mono','Courier New',monospace;font-size:9px;color:#7A85B8;white-space:nowrap;}
+
+  /* dimmed second card */
+  .card.dim{opacity:.45;transform:scale(.96);transform-origin:top center;}
+
+  /* logo bottom-left */
+  .logo-mark{position:absolute;bottom:36px;left:80px;z-index:10;font-family:'DM Serif Display','Georgia',serif;font-size:18px;color:rgba(238,241,255,.4);}
+  .logo-mark em{font-style:italic;color:rgba(124,155,255,.55);}
+
+  /* NEW DESIGN pill */
+  .new-pill{position:absolute;top:36px;right:80px;z-index:10;font-family:'DM Mono','Courier New',monospace;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#EEF1FF;background:linear-gradient(110deg,#7C9BFF 0%,#A78BFF 50%,#FF6B6B 100%);padding:6px 16px;border-radius:99px;}
+</style>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<div class="aurora"><div class="a1"></div><div class="a2"></div><div class="a3"></div></div>
+<div class="grain"></div>
+<div class="frame"></div>
+
+<div class="new-pill">New Design</div>
+
+<div class="content">
+  <div class="left">
+    <div class="badge"><div class="badge-dot"></div><span class="badge-txt">Project Buddy · 2025</span></div>
+    <div class="headline">Stop settling<br>for <em>random</em><br>teammates.</div>
+    <p class="sub">Skill-matched projects, real-time chat, reputation system — built for university students.</p>
+    <div class="url">project-buddy-pb.onrender.com</div>
+  </div>
+
+  <div class="right">
+    <div class="card">
+      <div class="card-top">
+        <div class="live"><div class="live-dot"></div>Live Match</div>
+        <div class="fit">96<s>%</s></div>
+      </div>
+      <div class="card-id">
+        <div class="av">A</div>
+        <div><div class="nm">Aylin K.</div><div class="rl">CS '26 · Machine Learning</div></div>
+      </div>
+      <div class="skills"><span class="skill">Python</span><span class="skill">PyTorch</span><span class="skill">Research</span></div>
+      <div class="bar"><div class="bar-track"><div class="bar-fill" style="width:96%"></div></div><span class="bar-lbl">FIT 96%</span></div>
+    </div>
+
+    <div class="card dim">
+      <div class="card-top">
+        <div class="live"><div class="live-dot"></div>Live Match</div>
+        <div class="fit">91<s>%</s></div>
+      </div>
+      <div class="card-id">
+        <div class="av">D</div>
+        <div><div class="nm">Deniz R.</div><div class="rl">SE '25 · Frontend</div></div>
+      </div>
+      <div class="skills"><span class="skill">React</span><span class="skill">TypeScript</span><span class="skill">UI/UX</span></div>
+      <div class="bar"><div class="bar-track"><div class="bar-fill" style="width:91%"></div></div><span class="bar-lbl">FIT 91%</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="logo-mark">Project<em>Buddy</em></div>
+
+</body>
+</html>
