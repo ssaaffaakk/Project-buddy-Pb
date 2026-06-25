@@ -349,20 +349,46 @@ function switchTab(tab){
 }
 
 /* VOICE CHAT — WebRTC + Socket.IO */
-var socket       = null;
-var localStream  = null;
-var isMuted      = false;
-var inVoice      = false;
-var mySid        = null;
-var peers        = {};
+var socket            = null;
+var localStream       = null;
+var isMuted           = false;
+var inVoice           = false;
+var mySid             = null;
+var peers             = {};
+var pendingCandidates = {}; // queued ICE candidates per SID until remote desc is set
 
-var ICE_CFG = { iceServers: {{ ice_servers | safe }} };
+var ICE_CFG      = { iceServers: {{ ice_servers | safe }} };
+var VOICE_HAS_TURN = {{ 'true' if voice_has_turn else 'false' }};
+
+async function _flushCandidates(remoteSid){
+  var pc=peers[remoteSid];
+  if(!pc)return;
+  var queue=pendingCandidates[remoteSid]||[];
+  pendingCandidates[remoteSid]=[];
+  for(var i=0;i<queue.length;i++){
+    try{await pc.addIceCandidate(new RTCIceCandidate(queue[i]));}catch(e){}
+  }
+}
 
 function ensureSocket(){
   if(socket)return;
   socket=io();
 
-  socket.on('connect',function(){});
+  socket.on('connect',function(){
+    // Re-join voice room after socket reconnect (server removed us on disconnect)
+    if(inVoice){
+      Object.keys(peers).forEach(function(sid){
+        peers[sid].close();
+        var audio=document.getElementById('audio-'+sid);
+        if(audio){audio.srcObject=null;audio.remove();}
+        var card=document.getElementById('vp-'+sid);
+        if(card)card.remove();
+      });
+      peers={};
+      pendingCandidates={};
+      socket.emit('join_voice',{group_id:GROUP_ID});
+    }
+  });
 
   socket.on('voice_user_joined',function(user){
     addVpCard(user);
@@ -379,6 +405,7 @@ function ensureSocket(){
   socket.on('voice_user_left',function(data){
     removeVpCard(data.sid);
     if(peers[data.sid]){peers[data.sid].close();delete peers[data.sid];}
+    delete pendingCandidates[data.sid];
     var audio=document.getElementById('audio-'+data.sid);
     if(audio){audio.srcObject=null;audio.remove();}
   });
@@ -386,6 +413,7 @@ function ensureSocket(){
   socket.on('webrtc_offer',async function(data){
     var pc=getOrCreatePC(data.from_sid);
     await pc.setRemoteDescription(new RTCSessionDescription(data.offer));
+    await _flushCandidates(data.from_sid);
     var answer=await pc.createAnswer();
     await pc.setLocalDescription(answer);
     socket.emit('webrtc_answer',{answer:answer,to_sid:data.from_sid});
@@ -393,12 +421,20 @@ function ensureSocket(){
 
   socket.on('webrtc_answer',async function(data){
     var pc=peers[data.from_sid];
-    if(pc)await pc.setRemoteDescription(new RTCSessionDescription(data.answer));
+    if(!pc)return;
+    await pc.setRemoteDescription(new RTCSessionDescription(data.answer));
+    await _flushCandidates(data.from_sid);
   });
 
   socket.on('webrtc_ice',function(data){
     var pc=peers[data.from_sid];
-    if(pc&&data.candidate){pc.addIceCandidate(new RTCIceCandidate(data.candidate)).catch(function(){});}
+    if(!pc||!data.candidate)return;
+    if(pc.remoteDescription){
+      pc.addIceCandidate(new RTCIceCandidate(data.candidate)).catch(function(){});
+    }else{
+      if(!pendingCandidates[data.from_sid])pendingCandidates[data.from_sid]=[];
+      pendingCandidates[data.from_sid].push(data.candidate);
+    }
   });
 }
 
@@ -410,6 +446,9 @@ async function joinVoice(){
   if(inVoice)return;
   openPanel('voice');
   _showMyCard(false);
+  if(!VOICE_HAS_TURN){
+    toast('Voice may not connect on some networks — relay server not configured.','error');
+  }
   try{
     localStream=await navigator.mediaDevices.getUserMedia({audio:true,video:false});
   }catch(e){
@@ -476,6 +515,7 @@ function leaveVoice(){
     if(audio){audio.srcObject=null;audio.remove();}
   });
   peers={};
+  pendingCandidates={};
   if(localStream){localStream.getTracks().forEach(function(t){t.stop();});localStream=null;}
   isMuted=false;
   _removeMyCard();
@@ -499,6 +539,7 @@ function getOrCreatePC(remoteSid){
   if(peers[remoteSid])return peers[remoteSid];
   var pc=new RTCPeerConnection(ICE_CFG);
   peers[remoteSid]=pc;
+  if(!pendingCandidates[remoteSid])pendingCandidates[remoteSid]=[];
   if(localStream){localStream.getTracks().forEach(function(t){pc.addTrack(t,localStream);});}
   pc.ontrack=function(e){
     var audio=document.getElementById('audio-'+remoteSid);
