@@ -1,5 +1,5 @@
 {% extends 'base_app.html' %}
-{% block title %}ProjectBuddy — Study Groups{% endblock %}
+{% block title %}ProjectBuddy — Voice Chat{% endblock %}
 
 {% block extra_style %}
 <style nonce="{{ csp_nonce }}">
@@ -50,23 +50,23 @@
 {% block content %}
   <div class="topbar">
     <div>
-      <h1>Study <em style="font-style:italic;color:var(--accent);">Groups</em></h1>
-      <p>Join a topic room, ask questions, and learn together in real time.</p>
+      <h1>Voice <em style="font-style:italic;color:var(--accent);">Chat</em></h1>
+      <p>Jump into a room, talk it out, share files — your campus hangout.</p>
     </div>
     <div style="font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--muted);">
-      {{ groups|length }} groups · {{ my_ids|length }} joined
+      {{ groups|length }} rooms · {{ my_ids|length }} joined
     </div>
   </div>
 
   <!-- CREATE GROUP -->
   <div class="create-panel">
-    <h2>Create a new study group</h2>
+    <h2>🎙️ Create a new room</h2>
     <form method="POST" action="/study-groups/create">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <div class="create-row">
         <div class="field">
-          <label>Group name *</label>
-          <input type="text" name="name" placeholder="e.g. Python Beginners" maxlength="120" required>
+          <label>Room name *</label>
+          <input type="text" name="name" placeholder="e.g. Python Beginners 🐍" maxlength="120" required>
         </div>
         <div class="field">
           <label>Topic</label>
@@ -123,7 +123,7 @@
   {% else %}
   <div class="empty">
     <div class="empty-icon">—</div>
-    <p>No study groups yet.<br>Be the first to create one above.</p>
+    <p>No rooms yet.<br>Be the first — create one above and invite your friends. 🎧</p>
   </div>
   {% endif %}
 {% endblock %}
