@@ -49,6 +49,8 @@
 .composer-panel{display:none;margin-top:8px;background:var(--bg2);border:1px solid var(--border);
   border-radius:var(--r);overflow:hidden;}
 .composer-panel.open{display:block;animation:fadeDown 0.22s ease both;}
+.composer-panel.drag-over{border-color:rgba(124,155,255,0.6);box-shadow:0 0 0 3px rgba(124,155,255,0.15);}
+.btn-post:disabled{opacity:0.5;cursor:wait;}
 @keyframes fadeDown{from{opacity:0;transform:translateY(-8px);}to{opacity:1;transform:translateY(0);}}
 .composer-body{padding:22px 24px;}
 .composer-title-input{width:100%;padding:10px 14px;background:rgba(255,255,255,0.04);
@@ -211,6 +213,18 @@
 
 /* ── UTIL ── */
 .divider{height:1px;background:var(--border);margin:4px 0;}
+
+/* ── MOBILE ── */
+@media (max-width:768px){
+  .composer-footer{flex-wrap:wrap;gap:8px;padding:12px 16px;}
+  .upload-label{min-height:44px;flex:1 1 100%;justify-content:center;}
+  .upload-preview.visible{flex:1 1 100%;}
+  .composer-footer .spacer{display:none;}
+  .btn-cancel-compose{flex:1;}
+  .btn-post{flex:2;}
+  .composer-body{padding:16px;}
+  .composer-textarea,.composer-title-input,.new-comment-textarea{font-size:16px;}
+}
 </style>
 {% endblock %}
 
@@ -472,14 +486,32 @@ document.getElementById('composerTrigger').addEventListener('click', function(e)
   openComposer(e);
 });
 
-// ── COMPOSER FILE PREVIEW ────────────────────────────────────────────────────
+// ── COMPOSER FILE PREVIEW + VALIDATION ──────────────────────────────────────
+var MEDIA_EXT_OK = ['jpg','jpeg','png','webp','gif','mp4','webm','mov'];
+var MEDIA_MAX_BYTES = 50 * 1024 * 1024;
+
+function _mediaError(file) {
+  var ext = (file.name.split('.').pop() || '').toLowerCase();
+  if (MEDIA_EXT_OK.indexOf(ext) === -1) return 'Use JPG, PNG, WebP, GIF, MP4, WebM or MOV.';
+  if (file.size > MEDIA_MAX_BYTES) return 'File is too large — max 50 MB.';
+  return null;
+}
+
+function _fmtSize(b) {
+  if (b < 1048576) return (b/1024).toFixed(0) + ' KB';
+  return (b/1048576).toFixed(1) + ' MB';
+}
+
 function previewComposerFile(input) {
   var file    = input.files[0];
   var preview = document.getElementById('uploadPreview');
   var thumb   = document.getElementById('uploadThumb');
   var nameEl  = document.getElementById('uploadName');
   if (!file) { preview.classList.remove('visible'); return; }
-  nameEl.textContent = file.name.length > 28 ? file.name.slice(0,26)+'…' : file.name;
+  var err = _mediaError(file);
+  if (err) { showToast(err, 'error'); input.value = ''; preview.classList.remove('visible'); return; }
+  var shortName = file.name.length > 28 ? file.name.slice(0,26)+'…' : file.name;
+  nameEl.textContent = shortName + ' · ' + _fmtSize(file.size);
   if (file.type.startsWith('image/')) {
     var r = new FileReader();
     r.onload = function(e) { thumb.src = e.target.result; thumb.style.display = 'block'; };
@@ -493,6 +525,48 @@ function removeComposerFile() {
   document.getElementById('composer-file').value = '';
   document.getElementById('uploadPreview').classList.remove('visible');
 }
+
+// Drag & drop a photo/video anywhere onto the open composer
+(function(){
+  var panel = document.getElementById('composerPanel');
+  if (!panel) return;
+  var depth = 0;
+  panel.addEventListener('dragenter', function(e){
+    if (!e.dataTransfer || [].indexOf.call(e.dataTransfer.types, 'Files') === -1) return;
+    e.preventDefault(); depth++; panel.classList.add('drag-over');
+  });
+  panel.addEventListener('dragover', function(e){ e.preventDefault(); });
+  panel.addEventListener('dragleave', function(){
+    depth = Math.max(0, depth - 1);
+    if (depth === 0) panel.classList.remove('drag-over');
+  });
+  panel.addEventListener('drop', function(e){
+    e.preventDefault(); depth = 0; panel.classList.remove('drag-over');
+    var f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+    if (!f) return;
+    var err = _mediaError(f);
+    if (err) { showToast(err, 'error'); return; }
+    var input = document.getElementById('composer-file');
+    try {
+      var dt = new DataTransfer();
+      dt.items.add(f);
+      input.files = dt.files;
+      previewComposerFile(input);
+    } catch (ex) {
+      showToast('Drag & drop not supported here — use the Attach button.', 'error');
+    }
+  });
+})();
+
+// Prevent accidental double-posting on slow (mobile) connections
+(function(){
+  var form = document.querySelector('#composerPanel form');
+  if (!form) return;
+  form.addEventListener('submit', function(){
+    var btn = form.querySelector('.btn-post');
+    if (btn) { btn.disabled = true; btn.textContent = 'Posting…'; }
+  });
+})();
 
 // ── AUTO-RESIZE TEXTAREA ─────────────────────────────────────────────────────
 function autoResize(el) {

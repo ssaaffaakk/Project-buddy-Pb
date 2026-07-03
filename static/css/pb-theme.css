@@ -392,6 +392,32 @@ svg {
     padding-bottom: 10px !important;
   }
 
+  /* Labels & links that act as buttons (file pickers, download icons, tabs) */
+  .fp-upload-label,
+  .upload-label,
+  .attach-btn,
+  .sp-tab,
+  .vp-btn,
+  .vp-join-btn,
+  .vd-btn,
+  .gc-join-btn,
+  .chip,
+  .composer-trigger .btn-share {
+    min-height: 44px;
+  }
+
+  .file-dl {
+    width: 40px !important;
+    height: 40px !important;
+  }
+
+  /* Prevent iOS Safari focus-zoom on every mobile width, not just ≤480px */
+  input:not([type="checkbox"]):not([type="radio"]),
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+
   .filters {
     flex-wrap: nowrap !important;
     overflow-x: auto !important;

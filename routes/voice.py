@@ -164,12 +164,25 @@ def on_join_voice(data):
         'initials': _initials(name),
     }
 
-    # Send new joiner the list of everyone already here
-    existing = list(_get_participants(group_id).values())
+    participants = _get_participants(group_id)
+
+    # Drop stale sessions of this same user (left over after a reconnect on
+    # flaky networks) so phantom participants don't accumulate in the room.
+    stale = [sid for sid, p in participants.items()
+             if p.get('user_id') == current_user.id and sid != request.sid]
+    for sid in stale:
+        participants.pop(sid, None)
+        emit('voice_user_left', {'sid': sid}, to=room)
+
+    # Send new joiner the list of everyone already here.
+    # Exclude their own sid so a duplicate join_voice (client retry /
+    # reconnect race) never makes someone peer with themselves.
+    existing = [p for sid, p in participants.items() if sid != request.sid]
     emit('voice_existing_participants', {'participants': existing, 'my_sid': request.sid})
 
     # Register them now (after sending existing so they don't see themselves)
-    _add_participant(group_id, request.sid, me)
+    participants[request.sid] = me
+    _set_participants(group_id, participants)
 
     # Tell everyone else a new person joined
     emit('voice_user_joined', me, to=room, include_self=False)

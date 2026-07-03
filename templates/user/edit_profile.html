@@ -299,6 +299,18 @@ var interestCount = {{ user.interest_tags|length }};
 function previewAvatar(input) {
   var file = input.files[0];
   if (!file) return;
+  // Instant client-side checks — same limits the server enforces
+  var okTypes = ['image/jpeg', 'image/png', 'image/webp'];
+  if (okTypes.indexOf(file.type) === -1) {
+    if (window.showToast) showToast('Please choose a JPG, PNG or WebP image.', 'error');
+    input.value = '';
+    return;
+  }
+  if (file.size > 2 * 1024 * 1024) {
+    if (window.showToast) showToast('Photo is too large (' + (file.size/1048576).toFixed(1) + ' MB) — max 2 MB.', 'error');
+    input.value = '';
+    return;
+  }
   var reader = new FileReader();
   reader.onload = function(e) {
     var src = e.target.result;

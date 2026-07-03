@@ -142,15 +142,8 @@ document.querySelectorAll('.filter-btn').forEach(function(btn){
 });
 
 function openGroup(id, isMember){
-  if(isMember){ window.location.href = '/study-groups/' + id; return; }
-  if(confirm('Join this group to enter the chat room?')){ joinAndOpen(id); }
-}
-
-async function joinAndOpen(id){
-  var r = await fetch('/study-groups/' + id + '/join', {method:'POST'});
-  var d = await r.json();
-  if(d.ok){ window.location.href = '/study-groups/' + id; }
-  else{ toast(d.error || 'Could not join group.', 'error'); }
+  // Open the room directly — non-members get a preview with a Join banner inside.
+  window.location.href = '/study-groups/' + id;
 }
 
 async function joinGroup(id, btn){
