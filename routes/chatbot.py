@@ -1,9 +1,12 @@
 """
-ProjectBuddy Chatbot assistant.
+SSM-1.0 — ProjectBuddy AI assistant.
 
 Provider priority (first key found in .env wins):
-  1. Groq       — free tier, fast Llama 3 models  (GROQ_API_KEY)
+  1. Groq       — free tier, fast LLaMA 3 models  (GROQ_API_KEY)
   2. Fallback   — built-in keyword-based responses (no key needed)
+
+Groq = LLaMA running in the cloud for free. No Ollama needed on the server.
+Get your key at: https://console.groq.com/keys
 """
 
 import random
@@ -22,8 +25,10 @@ chatbot_bp = Blueprint("chatbot", __name__, url_prefix="/chatbot")
 HISTORY_LIMIT = 20   # keep last 20 turns per user
 
 _SYSTEM_PROMPT = (
-    "You are ProjectBuddy AI — a friendly academic collaboration assistant "
-    "for university students. "
+    "You are SSM-1.0, the AI assistant built into ProjectBuddy — "
+    "a collaboration platform for university students. "
+    "Your name is SSM-1.0. If asked who you are, say: "
+    "'I'm SSM-1.0, the AI assistant powering ProjectBuddy.' "
     "Help users with project planning, finding teammates, managing deadlines, "
     "skill development, and general study advice. "
     "Be concise, warm, and practical. Keep replies under 150 words unless asked for more."
@@ -96,7 +101,7 @@ def _groq_reply(history: list, user_message: str) -> str:
             "Content-Type":  "application/json",
         },
         json={
-            "model":       current_app.config.get("GROQ_MODEL", "llama-3.1-8b-instant"),
+            "model":       current_app.config.get("GROQ_MODEL", "llama-3.3-70b-versatile"),
             "messages":    messages,
             "max_tokens":  512,
             "temperature": 0.7,
