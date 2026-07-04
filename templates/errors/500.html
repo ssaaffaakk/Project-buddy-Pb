@@ -6,23 +6,35 @@
 {% include '_favicon.html' %}
 <title>500 — Server Error</title>
 <meta name="robots" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style nonce="{{ csp_nonce }}">
 *{margin:0;padding:0;box-sizing:border-box;}
 body{background:#060B1A;color:#EEF1FF;font-family:'Inter',sans-serif;
-  display:flex;align-items:center;justify-content:center;min-height:100vh;text-align:center;padding:20px;}
-.code{font-size:5rem;font-weight:700;color:#c0392b;letter-spacing:-0.04em;line-height:1;}
-.msg{font-size:1.1rem;color:#8A93C0;margin:12px 0 28px;}
-a{color:#7C9BFF;text-decoration:none;border-bottom:1px solid rgba(124,155,255,0.3);padding-bottom:2px;}
+  display:flex;align-items:center;justify-content:center;min-height:100vh;text-align:center;padding:20px;overflow:hidden;position:relative;}
+.aurora{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;}
+.aurora i{position:absolute;display:block;border-radius:48% 52% 60% 40%/55% 45% 55% 45%;filter:blur(72px);mix-blend-mode:screen;opacity:.5;}
+.aurora .a1{width:70vw;height:60vh;left:-12vw;top:-10vh;background:radial-gradient(circle at 40% 40%,rgba(255,107,107,.5),transparent 68%);animation:au1 27s ease-in-out infinite;}
+.aurora .a2{width:62vw;height:58vh;right:-10vw;bottom:-8vh;background:radial-gradient(circle at 50% 50%,rgba(124,155,255,.5),transparent 70%);animation:au2 33s ease-in-out infinite;}
+@keyframes au1{0%,100%{transform:translate(0,0) scale(1);}50%{transform:translate(13vw,9vh) scale(1.22);}}
+@keyframes au2{0%,100%{transform:translate(0,0) scale(1.1);}50%{transform:translate(-11vw,-7vh) scale(.9);}}
+@media(prefers-reduced-motion:reduce){.aurora i{animation:none;}}
+.box{position:relative;z-index:1;animation:up .6s cubic-bezier(.16,1,.3,1) both;}
+@keyframes up{from{opacity:0;transform:translateY(18px);}to{opacity:1;transform:translateY(0);}}
+.code{font-family:'DM Serif Display',serif;font-style:italic;font-size:clamp(6rem,18vw,10rem);font-weight:400;color:#FF8E8E;letter-spacing:-0.05em;line-height:1;text-shadow:0 0 60px rgba(255,107,107,0.35);}
+.msg{font-size:1.05rem;color:#9AA3CC;margin:16px 0 32px;line-height:1.6;}
+.btn-home{display:inline-flex;align-items:center;gap:8px;padding:13px 30px;border-radius:99px;font-family:'DM Mono',monospace;font-size:0.72rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;text-decoration:none;color:#fff;background:linear-gradient(110deg,#7C9BFF 0%,#A78BFF 45%,#FF6B6B 100%);transition:all .3s cubic-bezier(.16,1,.3,1);position:relative;overflow:hidden;}
+.btn-home:hover{box-shadow:0 0 30px rgba(255,107,107,.4),0 0 18px rgba(124,155,255,.4);filter:saturate(1.15);transform:translateY(-1px);}
+.btn-home::after{content:'';position:absolute;top:0;left:-120%;width:55%;height:100%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.5),transparent);transform:skewX(-18deg);animation:sh 4.5s ease-in-out infinite;}
+@keyframes sh{0%,100%{left:-120%;}55%,70%{left:130%;}}
 </style>
-<link rel="stylesheet" href="/static/css/mobile.css?v=2">
-<link rel="stylesheet" href="/static/css/pb-theme.css?v=3">
-<script src="/static/js/pb-theme.js?v=2" defer></script>
 </head>
 <body>
-<div>
+<div class="aurora" aria-hidden="true"><i class="a1"></i><i class="a2"></i></div>
+<div class="box">
   <div class="code">500</div>
-  <div class="msg">Something went wrong on our end. Please try again.</div>
-  <a href="/">← Back to ProjectBuddy</a>
+  <div class="msg">Something went wrong on our end.<br>We're on it — please try again in a moment.</div>
+  <a href="/" class="btn-home">← Back to ProjectBuddy</a>
 </div>
 </body>
 </html>

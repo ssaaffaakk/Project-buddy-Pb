@@ -141,7 +141,7 @@ document.addEventListener('click', (e) => {
 document.querySelector('form').addEventListener('submit', (e) => {
   if (!targetIdField.value) {
     e.preventDefault();
-    alert('Please select a user or project from the search results');
+    showToast('Please select a user or project from the search results', 'error');
   }
 });
 </script>

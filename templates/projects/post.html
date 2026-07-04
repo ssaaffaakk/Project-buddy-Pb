@@ -519,12 +519,12 @@ var teamSize   = 3;
 
 function goStep(n) {
   if (n === 2) {
-    if (!document.getElementById('titleInput').value.trim()) { alert('Please enter a project title.'); return; }
-    if (!document.getElementById('descInput').value.trim())  { alert('Please enter a project description.'); return; }
-    if (!document.getElementById('typeInput').value)         { alert('Please select a project type.'); return; }
+    if (!document.getElementById('titleInput').value.trim()) { showToast('Please enter a project title.', 'error'); return; }
+    if (!document.getElementById('descInput').value.trim())  { showToast('Please enter a project description.', 'error'); return; }
+    if (!document.getElementById('typeInput').value)         { showToast('Please select a project type.', 'error'); return; }
   }
   if (n === 3) {
-    if (topicCount !== 5) { alert('Please select exactly 5 topic tags.'); return; }
+    if (topicCount !== 5) { showToast('Please select exactly 5 topic tags.', 'error'); return; }
     document.getElementById('rv-title').textContent   = document.getElementById('titleInput').value || '—';
     document.getElementById('rv-type').textContent    = document.getElementById('typeInput').value  || '—';
     document.getElementById('rv-course').textContent  = document.getElementById('courseInput').value || 'None';

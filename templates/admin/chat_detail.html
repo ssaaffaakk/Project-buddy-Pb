@@ -174,11 +174,12 @@ async function sendMessage() {
       
       const messageEl = document.createElement('div');
       messageEl.className = 'message own';
+      const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
       messageEl.innerHTML = `
         <div class="message-content">
-          <div class="message-sender">${data.message.sender}</div>
-          <div class="message-text">${data.message.text}</div>
-          <div class="message-time">${data.message.created_at}</div>
+          <div class="message-sender">${esc(data.message.sender)}</div>
+          <div class="message-text">${esc(data.message.text)}</div>
+          <div class="message-time">${esc(data.message.created_at)}</div>
         </div>
       `;
       messagesContainer.appendChild(messageEl);

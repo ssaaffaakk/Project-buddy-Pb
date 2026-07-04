@@ -297,7 +297,7 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;displ
           {% endif %}
           {% if item.target_project %}
           <form method="POST" action="/admin/project/{{ item.target_project.id }}/remove" style="margin:0;"
-                onsubmit="return confirm('Remove this project? This cannot be undone.');">
+                data-confirm="Remove this project? This cannot be undone.">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <button type="submit" class="btn-ban" style="width:100%;">Remove Project</button>
           </form>
@@ -441,7 +441,7 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;displ
               </td>
               <td>
                 <form method="POST" action="/admin/project/{{ project.id }}/remove" style="margin:0;display:inline;"
-                      onsubmit="return confirm('Remove this project? This cannot be undone.')">
+                      data-confirm="Remove this project? This cannot be undone.">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                   <button type="submit" class="btn-sm-remove">Remove</button>
                 </form>
@@ -514,6 +514,43 @@ document.addEventListener('DOMContentLoaded',function(){
   var links=document.querySelectorAll('.sidebar .nav-item');
   links.forEach(function(l){l.addEventListener('click',function(){pbSidebar(false);});});
 });
+</script>
+
+<!-- Styled confirm for destructive admin actions -->
+<div id="pb-confirm-overlay" style="position:fixed;inset:0;background:rgba(4,7,16,0.7);backdrop-filter:blur(10px);z-index:10000;display:none;align-items:center;justify-content:center;padding:20px;">
+  <div style="width:100%;max-width:400px;background:linear-gradient(155deg,rgba(20,30,62,0.95),rgba(11,20,48,0.97));border:1px solid rgba(224,82,82,0.3);border-radius:16px;padding:28px;box-shadow:0 40px 90px rgba(0,0,0,0.7);">
+    <div style="font-family:'DM Serif Display',serif;font-style:italic;font-size:1.15rem;margin-bottom:8px;color:var(--text,#EEF1FF);">Are you sure?</div>
+    <div id="pbc-msg" style="font-size:0.85rem;color:var(--soft,#CAD0EF);line-height:1.65;margin-bottom:22px;"></div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;">
+      <button id="pbc-cancel" type="button" style="padding:9px 18px;border-radius:10px;font-family:'DM Mono',monospace;font-size:0.66rem;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.05);color:var(--soft,#CAD0EF);">Cancel</button>
+      <button id="pbc-ok" type="button" style="padding:9px 18px;border-radius:10px;font-family:'DM Mono',monospace;font-size:0.66rem;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;border:none;background:linear-gradient(110deg,#e05252,#c0392b);color:#fff;font-weight:600;">Remove</button>
+    </div>
+  </div>
+</div>
+<script nonce="{{ csp_nonce }}">
+(function(){
+  var pendingForm = null;
+  var overlay = document.getElementById('pb-confirm-overlay');
+  document.querySelectorAll('form[data-confirm]').forEach(function(f){
+    f.addEventListener('submit', function(e){
+      if (f.dataset.confirmed) return;
+      e.preventDefault();
+      pendingForm = f;
+      document.getElementById('pbc-msg').textContent = f.getAttribute('data-confirm');
+      overlay.style.display = 'flex';
+    });
+  });
+  document.getElementById('pbc-ok').addEventListener('click', function(){
+    overlay.style.display = 'none';
+    if (pendingForm){ pendingForm.dataset.confirmed = '1'; pendingForm.submit(); }
+  });
+  document.getElementById('pbc-cancel').addEventListener('click', function(){
+    overlay.style.display = 'none'; pendingForm = null;
+  });
+  overlay.addEventListener('click', function(e){
+    if (e.target === overlay){ overlay.style.display = 'none'; pendingForm = null; }
+  });
+})();
 </script>
 </body>
 </html>
