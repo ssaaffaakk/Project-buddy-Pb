@@ -319,12 +319,12 @@ async function pollMessages(){
 if(IS_MEMBER){setInterval(pollMessages,3000);}
 
 async function leaveGroup(){
-  if(!confirm('Leave this group?'))return;
+  if(!await pbConfirm({title:'Leave this group?', message:'You can rejoin any time from the Voice Chat page.', confirmText:'Leave', danger:true}))return;
   var r=await fetch('/study-groups/'+GROUP_ID+'/leave',{method:'POST'});
   if((await r.json()).ok){window.location.href='/study-groups';}
 }
 async function deleteGroup(){
-  if(!confirm('Permanently delete this group?'))return;
+  if(!await pbConfirm({title:'Delete this group?', message:'This permanently deletes the group, its messages, and shared files. This cannot be undone.', confirmText:'Delete Forever', danger:true}))return;
   var r=await fetch('/study-groups/'+GROUP_ID+'/delete',{method:'POST'});
   var d=await r.json();
   if(d.ok){window.location.href='/study-groups';}else{toast(d.error,'error');}

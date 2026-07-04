@@ -16,7 +16,8 @@
 .content-grid{display:grid;grid-template-columns:1fr 350px;gap:24px;flex:1;}
 
 /* LEFT COLUMN */
-.project-info{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:24px;}
+.project-info{background:linear-gradient(155deg,rgba(255,255,255,0.05),rgba(255,255,255,0.012));border:1px solid rgba(255,255,255,0.09);border-radius:16px;padding:24px;-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);position:relative;overflow:hidden;}
+.project-info::before{content:'';position:absolute;top:0;left:0;right:0;height:1.5px;background:linear-gradient(90deg,transparent,rgba(124,155,255,0.6),transparent);opacity:.6;}
 .info-section{margin-bottom:24px;padding-bottom:24px;border-bottom:1px solid var(--border);}
 .info-section:last-child{border-bottom:none;}
 .info-label{font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--text);margin-bottom:8px;}
@@ -32,7 +33,7 @@
 .status-badge{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:var(--r);background:var(--accent-dim);color:var(--accent);font-family:'DM Mono',monospace;font-size:0.7rem;font-weight:600;text-transform:uppercase;}
 
 /* CHAT */
-.chat-container{display:flex;flex-direction:column;height:500px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;}
+.chat-container{display:flex;flex-direction:column;height:500px;background:linear-gradient(155deg,rgba(255,255,255,0.045),rgba(255,255,255,0.012));border:1px solid rgba(255,255,255,0.09);border-radius:16px;overflow:hidden;-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);}
 .chat-messages{flex:1;padding:16px;overflow-y:auto;display:flex;flex-direction:column;gap:12px;}
 .message{display:flex;flex-direction:column;gap:4px;}
 .message.sent{align-items:flex-end;}
@@ -57,7 +58,7 @@
 .empty-messages{display:flex;align-items:center;justify-content:center;height:100%;color:var(--muted);font-size:0.85rem;text-align:center;}
 
 /* VOTE PANEL */
-.vote-panel{display:flex;align-items:center;justify-content:center;gap:16px;padding:18px;background:var(--card);border:1px solid var(--border);border-radius:var(--r);}
+.vote-panel{display:flex;align-items:center;justify-content:center;gap:16px;padding:18px;background:linear-gradient(155deg,rgba(255,255,255,0.05),rgba(255,255,255,0.012));border:1px solid rgba(255,255,255,0.09);border-radius:16px;-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);}
 .vote-big-btn{display:flex;flex-direction:column;align-items:center;gap:4px;background:none;border:none;cursor:pointer;padding:10px 16px;border-radius:var(--r);transition:background 0.15s,color 0.15s;}
 .vote-big-btn span{font-family:'DM Mono',monospace;font-size:0.6rem;letter-spacing:0.08em;text-transform:uppercase;}
 .vote-big-btn.up{color:var(--muted);}
@@ -73,12 +74,12 @@
 {% block content %}
   <a href="/my-projects" class="back-link">← Back to My Projects</a>
 
-  <div class="project-header">
+  <div class="project-header fx-up">
     <div class="project-title">{{ project.title }}</div>
     <div class="project-course">{{ project.course }}</div>
   </div>
 
-  <div class="content-grid">
+  <div class="content-grid fx-stagger">
     <!-- LEFT: Project Info + Chat -->
     <div>
       <div class="project-info">

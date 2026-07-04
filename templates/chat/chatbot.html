@@ -57,10 +57,10 @@ html,body{height:100%;overflow:hidden;}
   <!-- HEADER -->
   <div class="chat-header">
     <div class="chat-header-left">
-      <div class="ai-avatar">B</div>
+      <div class="ai-avatar">S</div>
       <div>
-        <div class="chat-header-title">ProjectBuddy <em style="color:var(--accent);">Assistant</em></div>
-        <div class="chat-header-sub">Your academic collaboration assistant</div>
+        <div class="chat-header-title">SSM<em style="color:var(--accent);">-1.0</em></div>
+        <div class="chat-header-sub">ProjectBuddy's AI assistant · online</div>
       </div>
     </div>
     <button class="btn-ghost" onclick="clearChat()">Clear history</button>
@@ -70,8 +70,8 @@ html,body{height:100%;overflow:hidden;}
   <div class="messages" id="messages">
     {% if not history %}
     <div class="welcome" id="welcome-screen">
-      <div class="welcome-icon">B</div>
-      <h2>Hi {{ user.first_name }}! I'm your <em style="color:var(--accent);">ProjectBuddy Assistant.</em></h2>
+      <div class="welcome-icon">S</div>
+      <h2>Hi {{ user.first_name }}! I'm <em style="color:var(--accent);">SSM-1.0.</em></h2>
       <p>Ask me anything about project planning, finding teammates, managing deadlines, or learning new skills.</p>
       <div class="prompt-chips">
         <div class="chip" onclick="useChip(this)">How do I find good teammates?</div>
@@ -94,7 +94,7 @@ html,body{height:100%;overflow:hidden;}
         </div>
         {% else %}
         <div class="msg-row ai">
-          <div class="bubble-av ai">B</div>
+          <div class="bubble-av ai">S</div>
           <div class="bubble ai">{{ h.content }}</div>
         </div>
         {% endif %}
@@ -151,7 +151,7 @@ function addMsg(role, text){
   row.className = 'msg-row ' + role;
 
   var avHtml = role === 'ai'
-    ? '<div class="bubble-av ai">B</div>'
+    ? '<div class="bubble-av ai">S</div>'
     : '<div class="bubble-av user">'+(USER_AVATAR?'<img src="'+USER_AVATAR+'" alt="">':USER_INITIALS)+'</div>';
 
   row.innerHTML = avHtml + '<div class="bubble '+role+'">'+escHtml(text)+'</div>';
@@ -168,7 +168,7 @@ function addTyping(){
   var row = document.createElement('div');
   row.className = 'msg-row ai';
   row.id = 'typing-indicator';
-  row.innerHTML = '<div class="bubble-av ai">B</div><div class="bubble ai"><div class="typing"><span></span><span></span><span></span></div></div>';
+  row.innerHTML = '<div class="bubble-av ai">S</div><div class="bubble ai"><div class="typing"><span></span><span></span><span></span></div></div>';
   feed.appendChild(row);
   scrollBottom(true);
   return row;
@@ -207,7 +207,7 @@ async function send(){
 }
 
 async function clearChat(){
-  if(!confirm('Clear your entire conversation history?')) return;
+  if(!await pbConfirm({title:'Clear conversation?', message:'Your entire chat history with SSM-1.0 will be erased.', confirmText:'Clear All', danger:true})) return;
   await fetch('/chatbot/clear', {method:'POST'});
   window.location.reload();
 }

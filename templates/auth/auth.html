@@ -17,12 +17,25 @@
   color-scheme:dark;
     --bg: #060B1A; --bg2: #0B1430; --bg3: #13204A; --coral:#FF6B6B; --coral-hi:#FF8E8E; --coral-lo:rgba(255,107,107,0.14); --card: rgba(255,255,255,0.03);
     --card-h: rgba(255,255,255,0.085); --accent: #7C9BFF; --accent-dim: rgba(124,155,255,0.12);
-    --red: #c0392b; --text: #EEF1FF; --muted: #4a4540; --soft: #8a8078;
+    --red: #c0392b; --text: #EEF1FF; --muted: #9AA3CC; --soft: #CAD0EF;
     --border: rgba(255,255,255,0.06); --r: 8px;
   }
   html.light-mode{color-scheme:light;--bg:#ffffff;--bg2:#EAEEFB;--bg3:#E0E6F8;--card:rgba(0,0,0,0.03);--card-h:rgba(0,0,0,0.06);--accent:#4658C8;--accent-dim:rgba(70,88,200,0.12);--red:#c0392b;--text:#13162A;--muted:#7E839C;--soft:#474C66;--border:rgba(0,0,0,0.1);}
   html.light-mode input[type=text],html.light-mode input[type=email],html.light-mode input[type=password],html.light-mode input[type=date],html.light-mode input[type=number],html.light-mode input[type=search],html.light-mode input[type=url],html.light-mode textarea,html.light-mode select{background:rgba(0,0,0,0.04);}
   body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; min-height: 100vh; display: flex; overflow-x: hidden; }
+
+  /* AURORA AMBIENT (matches landing page) */
+  .aurora{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;}
+  .aurora i{position:absolute;display:block;border-radius:48% 52% 60% 40%/55% 45% 55% 45%;filter:blur(72px);mix-blend-mode:screen;opacity:.5;will-change:transform,opacity;}
+  .aurora .a1{width:70vw;height:60vh;left:-12vw;top:-10vh;background:radial-gradient(circle at 40% 40%,rgba(124,155,255,.6),transparent 68%);animation:au1 27s ease-in-out infinite;}
+  .aurora .a2{width:62vw;height:58vh;right:-10vw;top:14vh;background:radial-gradient(circle at 50% 50%,rgba(167,139,255,.55),transparent 70%);animation:au2 33s ease-in-out infinite;}
+  .aurora .a3{width:66vw;height:56vh;left:8vw;bottom:-14vh;background:radial-gradient(circle at 50% 50%,rgba(255,107,107,.42),transparent 70%);animation:au3 30s ease-in-out infinite;}
+  @keyframes au1{0%,100%{transform:translate(0,0) scale(1) rotate(0deg);}50%{transform:translate(13vw,9vh) scale(1.22) rotate(18deg);}}
+  @keyframes au2{0%,100%{transform:translate(0,0) scale(1.1) rotate(0deg);}50%{transform:translate(-11vw,7vh) scale(.9) rotate(-16deg);}}
+  @keyframes au3{0%,100%{transform:translate(0,0) scale(1) rotate(0deg);}50%{transform:translate(9vw,-7vh) scale(1.26) rotate(14deg);}}
+  html.light-mode .aurora{opacity:.5;}
+  @media(prefers-reduced-motion:reduce){.aurora i{animation:none;}}
+  .right{position:relative;z-index:1;}
 
   ::-webkit-scrollbar { width: 4px; }
   ::-webkit-scrollbar-track { background: transparent; }
@@ -200,6 +213,7 @@ select{
 <script src="/static/js/pb-theme.js?v=2" defer></script>
 </head>
 <body>
+<div class="aurora" aria-hidden="true"><i class="a1"></i><i class="a2"></i><i class="a3"></i></div>
 
 <a href="#" id="themeToggle" onclick="var h=document.documentElement;h.classList.toggle('light-mode');var l=h.classList.contains('light-mode');localStorage.setItem('theme',l?'light':'dark');this.textContent=l?'Dark':'Light';return false;" style="position:fixed;top:20px;right:20px;z-index:9999;font-family:'DM Mono',monospace;font-size:0.72rem;letter-spacing:0.05em;color:var(--muted);text-decoration:none;border:1px solid var(--border);padding:7px 14px;border-radius:8px;background:var(--card);transition:all 0.18s;">Light</a>
 
@@ -244,8 +258,8 @@ select{
       {% if messages %}
         {% for category, message in messages %}
           <div style="padding:12px 16px;border-radius:10px;margin-bottom:16px;font-size:0.85rem;
-            background:{% if category == 'success' %}rgba(0,229,176,0.1){% else %}rgba(239,68,68,0.1){% endif %};
-            border:1px solid {% if category == 'success' %}rgba(0,229,176,0.3){% else %}rgba(239,68,68,0.3){% endif %};
+            background:{% if category == 'success' %}rgba(124,155,255,0.1){% else %}rgba(239,68,68,0.1){% endif %};
+            border:1px solid {% if category == 'success' %}rgba(124,155,255,0.3){% else %}rgba(239,68,68,0.3){% endif %};
             color:{% if category == 'success' %}var(--accent){% else %}#f87171{% endif %};">
             {{ message }}
           </div>

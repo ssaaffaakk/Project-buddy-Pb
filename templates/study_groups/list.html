@@ -20,9 +20,15 @@
 .filter-btn:hover,.filter-btn.active{background:var(--accent-dim);border-color:rgba(124,155,255,0.3);color:var(--accent);}
 
 .groups-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;}
-.group-card{background:var(--bg2);border:1px solid var(--border);border-top-color:rgba(255,255,255,0.07);border-radius:var(--r);padding:20px;transition:all 0.2s ease-out;cursor:pointer;text-decoration:none;display:block;position:relative;overflow:hidden;}
-.group-card:hover{border-color:var(--border-gold);transform:translateY(-2px);box-shadow:0 8px 32px rgba(0,0,0,0.4);}
-.group-card.is-member{border-color:rgba(124,155,255,0.15);}
+.group-card{background:linear-gradient(155deg,rgba(255,255,255,0.055),rgba(255,255,255,0.014));border:1px solid rgba(255,255,255,0.09);border-radius:16px;padding:20px;transition:transform .45s cubic-bezier(.16,1,.3,1),border-color .3s,box-shadow .45s;cursor:pointer;text-decoration:none;display:block;position:relative;overflow:hidden;-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);}
+.group-card::before{content:'';position:absolute;inset:0;border-radius:16px;pointer-events:none;opacity:0;transition:opacity .35s;background:radial-gradient(380px circle at var(--mx,50%) var(--my,50%),rgba(124,155,255,0.16),transparent 60%);}
+.group-card>*{position:relative;z-index:1;}
+.group-card:hover{border-color:rgba(124,155,255,0.38);transform:translateY(-4px);box-shadow:0 18px 46px rgba(0,0,0,0.42),0 0 36px rgba(124,155,255,0.1);}
+.group-card:hover::before{opacity:1;}
+.group-card.is-member{border-color:rgba(124,155,255,0.18);}
+.gc-live{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:99px;font-family:'DM Mono',monospace;font-size:0.58rem;letter-spacing:0.1em;text-transform:uppercase;background:rgba(74,190,90,0.1);color:#4abe5a;border:1px solid rgba(74,190,90,0.35);margin-bottom:10px;}
+.gc-live b{width:6px;height:6px;border-radius:50%;background:#4abe5a;animation:gcPulse 1.6s ease-out infinite;}
+@keyframes gcPulse{0%{box-shadow:0 0 0 0 rgba(74,190,90,0.55);}70%{box-shadow:0 0 0 6px rgba(74,190,90,0);}100%{box-shadow:0 0 0 0 rgba(74,190,90,0);}}
 .gc-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px;gap:10px;}
 .gc-name{font-family:'DM Serif Display',serif;font-size:1rem;font-weight:400;color:var(--text);line-height:1.3;}
 .gc-topic{display:inline-block;padding:3px 9px;border-radius:99px;font-family:'DM Mono',monospace;font-size:0.6rem;letter-spacing:0.06em;background:var(--accent-dim);color:var(--accent);border:1px solid rgba(124,155,255,0.2);white-space:nowrap;flex-shrink:0;}
@@ -30,11 +36,11 @@
 .gc-footer{display:flex;align-items:center;justify-content:space-between;}
 .gc-meta{font-family:'DM Mono',monospace;font-size:0.65rem;color:var(--muted);}
 .gc-member-badge{padding:4px 10px;border-radius:99px;font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.04em;background:rgba(90,138,106,0.12);color:#7ab88a;border:1px solid rgba(90,138,106,0.25);}
-.gc-join-btn{padding:5px 12px;border-radius:99px;font-family:'DM Mono',monospace;font-size:0.64rem;letter-spacing:0.04em;border:1px solid rgba(124,155,255,0.3);background:none;color:var(--accent);cursor:pointer;transition:all 0.2s ease-out;}
-.gc-join-btn:hover{background:var(--accent-dim);}
+.gc-join-btn{padding:6px 16px;border-radius:99px;font-family:'DM Mono',monospace;font-size:0.64rem;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;border:none;background:linear-gradient(110deg,var(--accent) 0%,var(--violet,#A78BFF) 55%,var(--coral,#FF6B6B) 135%);color:#fff;cursor:pointer;transition:all 0.25s cubic-bezier(.16,1,.3,1);box-shadow:0 2px 10px rgba(124,155,255,0.2);}
+.gc-join-btn:hover{box-shadow:0 0 0 1px rgba(124,155,255,0.5),0 4px 18px rgba(124,155,255,0.35);transform:translateY(-1px);}
 
 .empty{text-align:center;padding:60px 20px;color:var(--muted);}
-.empty-icon{font-family:'DM Serif Display',serif;font-style:italic;font-size:2.5rem;color:var(--accent);opacity:0.4;margin-bottom:12px;}
+.empty-icon{width:56px;height:56px;margin:0 auto 16px;border-radius:50%;background:var(--accent-dim);border:1px solid rgba(124,155,255,0.25);display:flex;align-items:center;justify-content:center;color:var(--accent);box-shadow:0 0 30px rgba(124,155,255,0.12);}
 .empty p{font-size:0.85rem;line-height:1.6;}
 
 /* LOCAL TOAST — page uses its own toast() function */
@@ -94,10 +100,13 @@
 
   <!-- GROUPS GRID -->
   {% if groups %}
-  <div class="groups-grid" id="groups-grid">
+  <div class="groups-grid fx-stagger" id="groups-grid">
     {% for g in groups %}
     <div class="group-card {% if g.id in my_ids %}is-member{% endif %}" data-topic="{{ g.topic or '' }}"
          onclick="openGroup({{ g.id }}, {{ 'true' if g.id in my_ids else 'false' }})">
+      {% if voice_counts and voice_counts.get(g.id, 0) > 0 %}
+      <div class="gc-live"><b></b>Live · {{ voice_counts[g.id] }} in voice</div>
+      {% endif %}
       <div class="gc-header">
         <div class="gc-name">{{ g.name }}</div>
         {% if g.topic %}<span class="gc-topic">{{ g.topic }}</span>{% endif %}
@@ -122,7 +131,9 @@
   </div>
   {% else %}
   <div class="empty">
-    <div class="empty-icon">—</div>
+    <div class="empty-icon">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+    </div>
     <p>No study groups yet.<br>Be the first to create one above.</p>
   </div>
   {% endif %}
@@ -141,10 +152,19 @@ document.querySelectorAll('.filter-btn').forEach(function(btn){
   });
 });
 
-function openGroup(id, isMember){
+async function openGroup(id, isMember){
   if(isMember){ window.location.href = '/study-groups/' + id; return; }
-  if(confirm('Join this group to enter the chat room?')){ joinAndOpen(id); }
+  if(await pbConfirm({title:'Join this group?', message:'You need to join before entering the chat room.', confirmText:'Join & Enter'})){ joinAndOpen(id); }
 }
+
+/* cursor spotlight on cards */
+document.querySelectorAll('.group-card').forEach(function(c){
+  c.addEventListener('mousemove', function(e){
+    var r = c.getBoundingClientRect();
+    c.style.setProperty('--mx', (e.clientX - r.left) + 'px');
+    c.style.setProperty('--my', (e.clientY - r.top) + 'px');
+  });
+});
 
 async function joinAndOpen(id){
   var r = await fetch('/study-groups/' + id + '/join', {method:'POST'});

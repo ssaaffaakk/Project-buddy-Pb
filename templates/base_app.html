@@ -140,6 +140,69 @@ select{
 .topbar{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:44px;padding-bottom:28px;border-bottom:1px solid var(--border);}
 .topbar h1{font-family:'DM Serif Display',serif;font-style:italic;font-size:2.4rem;font-weight:400;letter-spacing:-0.03em;line-height:1;}
 .topbar p{color:var(--muted);font-family:'DM Mono',monospace;font-size:0.7rem;letter-spacing:0.08em;margin-top:8px;text-transform:uppercase;}
+
+/* ── AURORA AMBIENT (ported from landing page) ────────────────────────────── */
+.aurora{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;}
+.aurora i{position:absolute;display:block;border-radius:48% 52% 60% 40%/55% 45% 55% 45%;filter:blur(72px);mix-blend-mode:screen;opacity:.5;will-change:transform,opacity;}
+.aurora .a1{width:70vw;height:60vh;left:-12vw;top:-10vh;background:radial-gradient(circle at 40% 40%,rgba(124,155,255,.6),transparent 68%);animation:au1 27s ease-in-out infinite;}
+.aurora .a2{width:62vw;height:58vh;right:-10vw;top:14vh;background:radial-gradient(circle at 50% 50%,rgba(167,139,255,.55),transparent 70%);animation:au2 33s ease-in-out infinite;}
+.aurora .a3{width:66vw;height:56vh;left:8vw;bottom:-14vh;background:radial-gradient(circle at 50% 50%,rgba(255,107,107,.42),transparent 70%);animation:au3 30s ease-in-out infinite;}
+.aurora .a4{width:50vw;height:50vh;right:4vw;bottom:2vh;background:radial-gradient(circle at 50% 50%,rgba(124,155,255,.42),transparent 72%);animation:au4 24s ease-in-out infinite;}
+@keyframes au1{0%,100%{transform:translate(0,0) scale(1) rotate(0deg);}50%{transform:translate(13vw,9vh) scale(1.22) rotate(18deg);}}
+@keyframes au2{0%,100%{transform:translate(0,0) scale(1.1) rotate(0deg);}50%{transform:translate(-11vw,7vh) scale(.9) rotate(-16deg);}}
+@keyframes au3{0%,100%{transform:translate(0,0) scale(1) rotate(0deg);}50%{transform:translate(9vw,-7vh) scale(1.26) rotate(14deg);}}
+@keyframes au4{0%,100%{transform:translate(0,0) scale(.95) rotate(0deg);}50%{transform:translate(-9vw,-9vh) scale(1.18) rotate(-12deg);}}
+html.light-mode .aurora{opacity:.5;}
+@media(prefers-reduced-motion:reduce){.aurora i{animation:none;}}
+
+/* Light-mode glass: white-alpha card gradients are invisible on white — swap to solid white glass */
+html.light-mode .group-card,html.light-mode .post-card,html.light-mode .project-section,
+html.light-mode .joined-card,html.light-mode .profile-header,html.light-mode .project-info,
+html.light-mode .vote-panel,html.light-mode .chat-container,html.light-mode .stat-card,
+html.light-mode .rec-card,html.light-mode .project-card{
+  background:rgba(255,255,255,0.82);border-color:rgba(40,50,110,0.13);
+  box-shadow:0 6px 30px rgba(19,22,42,0.07),0 1px 0 rgba(255,255,255,0.9) inset;}
+html.light-mode .group-card:hover,html.light-mode .project-card:hover,html.light-mode .rec-card:hover,
+html.light-mode .joined-card:hover,html.light-mode .stat-card:hover{
+  border-color:rgba(70,88,200,0.3);box-shadow:0 14px 40px rgba(19,22,42,0.12);}
+
+/* ── BUTTON KIT: shimmer sweep + click ripple (from landing) ──────────────── */
+.btn-gold{position:relative;overflow:hidden;}
+.btn-gold::after{content:'';position:absolute;top:0;left:-120%;width:55%;height:100%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.5),transparent);transform:skewX(-18deg);animation:bshimmer 4.5s ease-in-out infinite;pointer-events:none;}
+@keyframes bshimmer{0%,100%{left:-120%;}55%,70%{left:130%;}}
+.rpl{position:absolute;border-radius:50%;transform:translate(-50%,-50%) scale(0);background:rgba(255,255,255,.5);pointer-events:none;animation:rpl .6s ease-out forwards;mix-blend-mode:overlay;}
+@keyframes rpl{to{transform:translate(-50%,-50%) scale(1);opacity:0;}}
+.btn-ghost{background:var(--card);}
+.btn-ghost:hover{border-color:rgba(124,155,255,0.3);color:var(--text);background:var(--card-h);}
+
+/* ── ENTRANCE MOTION ──────────────────────────────────────────────────────── */
+@keyframes fxUp{from{opacity:0;transform:translateY(18px);}to{opacity:1;transform:translateY(0);}}
+.fx-up{animation:fxUp .55s cubic-bezier(.16,1,.3,1) both;}
+.fx-stagger>*{animation:fxUp .55s cubic-bezier(.16,1,.3,1) both;}
+.fx-stagger>*:nth-child(1){animation-delay:.03s;}.fx-stagger>*:nth-child(2){animation-delay:.08s;}
+.fx-stagger>*:nth-child(3){animation-delay:.13s;}.fx-stagger>*:nth-child(4){animation-delay:.18s;}
+.fx-stagger>*:nth-child(5){animation-delay:.23s;}.fx-stagger>*:nth-child(6){animation-delay:.28s;}
+.fx-stagger>*:nth-child(7){animation-delay:.33s;}.fx-stagger>*:nth-child(8){animation-delay:.38s;}
+.fx-stagger>*:nth-child(n+9){animation-delay:.43s;}
+@media(prefers-reduced-motion:reduce){.fx-up,.fx-stagger>*{animation:none;}}
+
+/* ── PB CONFIRM DIALOG (replaces native confirm) ──────────────────────────── */
+#pb-confirm-overlay{position:fixed;inset:0;background:rgba(4,7,16,0.7);backdrop-filter:blur(10px);z-index:10000;display:none;align-items:center;justify-content:center;padding:20px;}
+#pb-confirm-overlay.open{display:flex;animation:pbcFade .2s ease both;}
+@keyframes pbcFade{from{opacity:0;}to{opacity:1;}}
+.pbc-box{width:100%;max-width:400px;background:linear-gradient(155deg,rgba(20,30,62,0.95),rgba(11,20,48,0.97));border:1px solid rgba(124,155,255,0.22);border-radius:16px;padding:28px;box-shadow:0 40px 90px rgba(0,0,0,0.7),0 0 60px rgba(124,155,255,0.08);animation:pbcIn .28s cubic-bezier(.16,1,.3,1) both;position:relative;overflow:hidden;}
+.pbc-box::before{content:'';position:absolute;top:0;left:0;right:0;height:1.5px;background:linear-gradient(90deg,transparent,rgba(124,155,255,0.7),transparent);}
+@keyframes pbcIn{from{opacity:0;transform:translateY(16px) scale(.97);}to{opacity:1;transform:translateY(0) scale(1);}}
+html.light-mode .pbc-box{background:rgba(255,255,255,0.97);border-color:rgba(70,88,200,0.2);}
+.pbc-title{font-family:'DM Serif Display',serif;font-style:italic;font-size:1.15rem;margin-bottom:8px;color:var(--text);}
+.pbc-msg{font-size:0.85rem;color:var(--soft);line-height:1.65;margin-bottom:22px;}
+.pbc-actions{display:flex;gap:10px;justify-content:flex-end;}
+.pbc-btn{padding:9px 18px;border-radius:var(--r);font-family:'DM Mono',monospace;font-size:0.66rem;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;transition:all 0.2s;border:1px solid var(--border);background:var(--card);color:var(--soft);}
+.pbc-btn:hover{border-color:rgba(124,155,255,0.3);color:var(--text);background:var(--card-h);}
+.pbc-btn.confirm{border:none;background:linear-gradient(110deg,var(--accent) 0%,var(--violet) 45%,var(--coral) 100%);color:#fff;font-weight:600;}
+.pbc-btn.confirm:hover{box-shadow:0 0 0 1px rgba(124,155,255,0.5),0 4px 20px rgba(124,155,255,0.3);transform:translateY(-1px);}
+.pbc-btn.confirm.danger{background:linear-gradient(110deg,#e05252,#c0392b);}
+.pbc-btn.confirm.danger:hover{box-shadow:0 0 0 1px rgba(224,82,82,0.5),0 4px 20px rgba(224,82,82,0.3);}
 </style>
 {% block extra_style %}{% endblock %}
 <script nonce="{{ csp_nonce }}">if(localStorage.getItem('theme')==='light')document.documentElement.classList.add('light-mode');</script>
@@ -148,6 +211,7 @@ select{
 <script src="/static/js/pb-theme.js?v=3" defer></script>
 </head>
 <body>
+<div class="aurora" aria-hidden="true"><i class="a1"></i><i class="a2"></i><i class="a3"></i><i class="a4"></i></div>
 <button class="ham-btn" id="ham-btn" aria-label="Open menu" onclick="pbSidebar(true)">
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
 </button>
@@ -171,6 +235,68 @@ select{
 </div>
 
 <div id="cursor-glow"></div>
+
+<div id="pb-confirm-overlay">
+  <div class="pbc-box">
+    <div class="pbc-title" id="pbc-title"></div>
+    <div class="pbc-msg" id="pbc-msg"></div>
+    <div class="pbc-actions">
+      <button class="pbc-btn" id="pbc-cancel">Cancel</button>
+      <button class="pbc-btn confirm" id="pbc-ok">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<script nonce="{{ csp_nonce }}">
+/* Styled confirm dialog — returns a Promise<boolean>. Use instead of confirm(). */
+window.pbConfirm = function(opts){
+  if (typeof opts === 'string') opts = {message: opts};
+  var overlay = document.getElementById('pb-confirm-overlay');
+  var okBtn = document.getElementById('pbc-ok');
+  document.getElementById('pbc-title').textContent = opts.title || 'Are you sure?';
+  document.getElementById('pbc-msg').textContent = opts.message || '';
+  okBtn.textContent = opts.confirmText || 'Confirm';
+  okBtn.classList.toggle('danger', !!opts.danger);
+  overlay.classList.add('open');
+  return new Promise(function(resolve){
+    function done(val){
+      overlay.classList.remove('open');
+      okBtn.removeEventListener('click', onOk);
+      document.getElementById('pbc-cancel').removeEventListener('click', onNo);
+      overlay.removeEventListener('click', onBg);
+      document.removeEventListener('keydown', onKey);
+      resolve(val);
+    }
+    function onOk(){done(true);}
+    function onNo(){done(false);}
+    function onBg(e){if(e.target===overlay)done(false);}
+    function onKey(e){if(e.key==='Escape')done(false);if(e.key==='Enter')done(true);}
+    okBtn.addEventListener('click', onOk);
+    document.getElementById('pbc-cancel').addEventListener('click', onNo);
+    overlay.addEventListener('click', onBg);
+    document.addEventListener('keydown', onKey);
+    okBtn.focus();
+  });
+};
+
+/* Click ripple on primary action buttons (ported from landing page) */
+document.addEventListener('click', function(e){
+  var el = e.target.closest('.btn-gold,.send-btn,.search-btn,.btn-voice,.vp-join-btn,.btn-join,.btn-share,.btn-post,.btn-post-comment,.btn-apply,.apply-link,.btn-accept,.modal-apply,.btn-submit,.btn-primary,.btn-complete,.btn-send,.pbc-btn.confirm');
+  if(!el) return;
+  var cs = getComputedStyle(el);
+  if(cs.position === 'static') el.style.position = 'relative';
+  if(cs.overflow !== 'hidden') el.style.overflow = 'hidden';
+  var r = el.getBoundingClientRect();
+  var d = Math.max(r.width, r.height) * 2.2;
+  var rp = document.createElement('span');
+  rp.className = 'rpl';
+  rp.style.width = rp.style.height = d + 'px';
+  rp.style.left = (e.clientX - r.left) + 'px';
+  rp.style.top = (e.clientY - r.top) + 'px';
+  el.appendChild(rp);
+  setTimeout(function(){ if(rp.parentNode) rp.parentNode.removeChild(rp); }, 650);
+});
+</script>
 {% block extra_script %}{% endblock %}
 </body>
 </html>

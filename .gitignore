@@ -70,3 +70,4 @@ static/images/*.png
 .coverage
 htmlcov/
 .pytest_cache/
+.claude/

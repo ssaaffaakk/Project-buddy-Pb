@@ -107,7 +107,20 @@ def index():
     """All public groups + groups the user is in."""
     all_groups = StudyGroup.query.filter_by(is_private=False).order_by(StudyGroup.created_at.desc()).all()
     my_ids = {m.group_id for m in StudyGroupMember.query.filter_by(user_id=current_user.id).all()}
-    return render_template("study_groups/list.html", groups=all_groups, my_ids=my_ids, user=current_user)
+
+    # Live voice presence per group (for "LIVE · n in voice" badges)
+    from routes.voice import _get_participants
+    voice_counts = {}
+    for g in all_groups:
+        try:
+            n = len(_get_participants(g.id))
+        except Exception:
+            n = 0
+        if n:
+            voice_counts[g.id] = n
+
+    return render_template("study_groups/list.html", groups=all_groups, my_ids=my_ids,
+                           user=current_user, voice_counts=voice_counts)
 
 
 # ── CREATE GROUP ─────────────────────────────────────────────────────────────

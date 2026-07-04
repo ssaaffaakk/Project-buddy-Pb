@@ -10,9 +10,10 @@
 .back-link:hover{gap:10px;}
 
 /* PROFILE HEADER */
-.profile-header{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:24px;margin-bottom:32px;display:flex;gap:24px;align-items:start;}
-.profile-avatar{width:80px;height:80px;border-radius:8px;background:linear-gradient(135deg,var(--accent),#4A5BA8);
-  display:flex;align-items:center;justify-content:center;font-size:2rem;font-weight:600;color:var(--bg);flex-shrink:0;}
+.profile-header{background:linear-gradient(155deg,rgba(255,255,255,0.05),rgba(255,255,255,0.012));border:1px solid rgba(255,255,255,0.09);border-radius:16px;padding:24px;margin-bottom:32px;display:flex;gap:24px;align-items:start;-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);position:relative;overflow:hidden;}
+.profile-header::before{content:'';position:absolute;top:0;left:0;right:0;height:1.5px;background:linear-gradient(90deg,transparent,rgba(124,155,255,0.6),transparent);opacity:.6;}
+.profile-avatar{width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#4A5BA8);
+  display:flex;align-items:center;justify-content:center;font-size:2rem;font-weight:600;color:var(--bg);flex-shrink:0;box-shadow:0 0 24px rgba(124,155,255,0.2);}
 .profile-info{flex:1;}
 .profile-name{font-family:'DM Serif Display',serif;font-size:1.4rem;font-weight:400;margin-bottom:4px;}
 .profile-role{font-family:'DM Mono',monospace;font-size:0.7rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);margin-bottom:12px;}
