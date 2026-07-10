@@ -97,7 +97,7 @@
     <div class="warning-banner-inner">
       <div class="warning-icon">!</div>
       <div class="warning-body">
-        <div class="warning-title">Official Warning from ProjectBuddy</div>
+        <div class="warning-title">{{ _('Official Warning from ProjectBuddy') }}</div>
         {% for w in warnings %}
         <div class="warning-msg">{{ w.content }}</div>
         {% if not loop.last %}<hr style="border:none;border-top:1px solid rgba(192,57,43,0.2);margin:8px 0;">{% endif %}
@@ -105,7 +105,7 @@
       </div>
       <form method="POST" action="/warnings/dismiss" style="flex-shrink:0;">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <button type="submit" class="warning-dismiss">Dismiss</button>
+        <button type="submit" class="warning-dismiss">{{ _('Dismiss') }}</button>
       </form>
     </div>
   </div>
@@ -113,32 +113,32 @@
 
   <div class="topbar">
     <div>
-      <div class="greet-eyebrow"><span class="greet-dot"></span><span id="greet-text">Welcome back</span></div>
+      <div class="greet-eyebrow"><span class="greet-dot"></span><span id="greet-text" data-morning="{{ _('Good morning') }}" data-afternoon="{{ _('Good afternoon') }}" data-evening="{{ _('Good evening') }}">{{ _('Welcome back') }}</span></div>
       <h1>{{ user.first_name }} {{ user.last_name }}</h1>
-      <p>{{ active_projects|length }} active · {{ pending_apps|length }} pending applications · {{ completed_count }} completed</p>
+      <p>{{ active_projects|length }} {{ _('active') }} · {{ pending_apps|length }} {{ _('pending applications') }} · {{ completed_count }} {{ _('completed') }}</p>
     </div>
     <div style="display:flex;gap:12px;">
-      <a href="/chatbot/" class="btn-gold">AI Assistant</a>
-      <a href="/post-project-page" class="btn-gold">+ Post Project</a>
+      <a href="/chatbot/" class="btn-gold">{{ _('AI Assistant') }}</a>
+      <a href="/post-project-page" class="btn-gold">+ {{ _('Post Project') }}</a>
     </div>
   </div>
 
   <div class="stats-row">
     <div class="stat-card">
-      <div class="stat-label">Active</div>
+      <div class="stat-label">{{ _('Active') }}</div>
       <div class="stat-value">{{ active_projects|length }}</div>
-      <div class="stat-sub">Max 3</div>
+      <div class="stat-sub">{{ _('Max 3') }}</div>
     </div>
     <div class="stat-card">
-      <div class="stat-label">Completed</div>
+      <div class="stat-label">{{ _('Completed') }}</div>
       <div class="stat-value" style="color:var(--soft);">{{ completed_count }}</div>
     </div>
     <div class="stat-card">
-      <div class="stat-label">Avg Rating</div>
+      <div class="stat-label">{{ _('Avg Rating') }}</div>
       <div class="stat-value">{{ avg_rating if avg_rating else '—' }}</div>
     </div>
     <div class="stat-card">
-      <div class="stat-label">Endorsements</div>
+      <div class="stat-label">{{ _('Endorsements') }}</div>
       <div class="stat-value" style="color:var(--soft);">{{ endorsement_count }}</div>
     </div>
   </div>
@@ -146,66 +146,66 @@
   <div class="grid-2">
     <div class="section-card" style="margin-bottom:0;">
       <div class="section-header">
-        <h2>Recommended for you</h2>
-        <a href="/projects-page" class="see-all">All Projects →</a>
+        <h2>{{ _('Recommended for you') }}</h2>
+        <a href="/projects-page" class="see-all">{{ _('All Projects') }} →</a>
       </div>
       {% if recommendations %}
         <div class="rec-grid">
           {% for project, fit in recommendations %}
           <div class="rec-card">
-            <div class="rec-match">{{ fit|round|int }}% fit</div>
+            <div class="rec-match">{{ fit|round|int }}% {{ _('fit') }}</div>
             <div class="rec-title">{{ project.title }}</div>
             <div class="rec-tags">
               {% for t in project.topic_tags[:3] %}<span class="tag">{{ t.tag }}</span>{% endfor %}
             </div>
-            <a href="/projects/{{ project.id }}/apply" class="btn-apply">Apply</a>
+            <a href="/projects/{{ project.id }}/apply" class="btn-apply">{{ _('Apply') }}</a>
           </div>
           {% endfor %}
         </div>
       {% else %}
-        <p class="empty">No recommendations yet — update your interest tags.</p>
+        <p class="empty">{{ _('No recommendations yet — update your interest tags.') }}</p>
       {% endif %}
     </div>
 
     <div class="section-card" style="margin-bottom:0;">
       <div class="section-header">
-        <h2>Pending Applications</h2>
+        <h2>{{ _('Pending Applications') }}</h2>
       </div>
       {% if pending_apps %}
         {% for app in pending_apps %}
         <div class="notif-item">
           <div class="notif-dot"></div>
           <div>
-            <div class="notif-text">Application for <strong>{{ app.project.title if app.project else 'your project' }}</strong></div>
+            <div class="notif-text">{{ _('Application for') }} <strong>{{ app.project.title if app.project else _('your project') }}</strong></div>
             <div class="notif-time">{{ app.created_at.strftime('%d %b %Y') if app.created_at else '' }}</div>
           </div>
         </div>
         {% endfor %}
       {% else %}
-        <p class="empty">No pending applications.</p>
+        <p class="empty">{{ _('No pending applications.') }}</p>
       {% endif %}
     </div>
   </div>
 
   <div class="section-card">
-    <div class="section-header"><h2>Active Projects</h2></div>
+    <div class="section-header"><h2>{{ _('Active Projects') }}</h2></div>
     {% if active_projects %}
       {% for project in active_projects %}
       <div class="proj-item">
         <div class="proj-info">
           <div class="proj-title">{{ project.title }}</div>
-          <div class="proj-meta">{{ project.course or 'Personal' }} · {{ project.current_member_count() }} member(s)</div>
+          <div class="proj-meta">{{ project.course or _('Personal') }} · {{ project.current_member_count() }} {{ _('member(s)') }}</div>
         </div>
-        <div class="status status-active">Active</div>
+        <div class="status status-active">{{ _('Active') }}</div>
       </div>
       {% endfor %}
     {% else %}
-      <p class="empty">No active projects. <a href="/post-project-page">Post one →</a></p>
+      <p class="empty">{{ _('No active projects.') }} <a href="/post-project-page">{{ _('Post one') }} →</a></p>
     {% endif %}
   </div>
 
   <div class="section-card">
-    <div class="section-header"><h2>Achievements</h2></div>
+    <div class="section-header"><h2>{{ _('Achievements') }}</h2></div>
     {% if badges %}
       {% for badge in badges %}
       <div class="badge-item">
@@ -217,7 +217,7 @@
       </div>
       {% endfor %}
     {% else %}
-      <p class="empty">Complete projects to earn badges.</p>
+      <p class="empty">{{ _('Complete projects to earn badges.') }}</p>
     {% endif %}
   </div>
 {% endblock %}
@@ -226,9 +226,10 @@
 <script nonce="{{ csp_nonce }}">
 /* Time-of-day greeting */
 (function(){
+  var el = document.getElementById('greet-text');
   var h = new Date().getHours();
-  var g = h < 6 ? 'Burning the midnight oil' : h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening';
-  document.getElementById('greet-text').textContent = g;
+  var g = h < 12 ? el.dataset.morning : h < 18 ? el.dataset.afternoon : el.dataset.evening;
+  el.textContent = g;
 })();
 
 /* Odometer count-up on stat values (ported from landing page) */

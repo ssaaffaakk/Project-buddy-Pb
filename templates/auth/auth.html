@@ -229,29 +229,29 @@ select{
     Project<span>Buddy</span>
   </a>
   <div class="left-content">
-    <h2>Build something<br><span style="color:var(--accent)">great together.</span></h2>
-    <p>Your next great project starts with the right people. Join the collaboration platform built for students who are serious about what they make.</p>
+    <h2>{{ _('Build something') }}<br><span style="color:var(--accent)">{{ _('great together.') }}</span></h2>
+    <p>{{ _('Your next great project starts with the right people. Join the collaboration platform built for students who are serious about what they make.') }}</p>
     <div class="left-features">
       <div class="left-feat">
         <div class="lf-icon">01</div>
-        <div class="lf-text">5-tag interest matching for personalized recommendations</div>
+        <div class="lf-text">{{ _('5-tag interest matching for personalized recommendations') }}</div>
       </div>
       <div class="left-feat">
         <div class="lf-icon">02</div>
-        <div class="lf-text">Build a real reputation with peer ratings and badges</div>
+        <div class="lf-text">{{ _('Build a real reputation with peer ratings and badges') }}</div>
       </div>
       <div class="left-feat">
         <div class="lf-icon">03</div>
-        <div class="lf-text">Course-integrated projects from instructors</div>
+        <div class="lf-text">{{ _('Course-integrated projects from instructors') }}</div>
       </div>
     </div>
     <div class="left-quote">
-      <p>"Found an amazing team for my final year project in under 24 hours. The skill matching is actually scary good."</p>
+      <p>{{ _('"Found an amazing team for my final year project in under 24 hours. The skill matching is actually scary good."') }}</p>
       <div class="left-quote-author">
         <div class="quote-avatar">AK</div>
         <div>
           <div class="quote-name">Aldin Kušlić</div>
-          <div class="quote-role">CS Student · 3rd Year</div>
+          <div class="quote-role">{{ _('CS Student · 3rd Year') }}</div>
         </div>
       </div>
     </div>
@@ -276,46 +276,46 @@ select{
 
     <!-- TABS -->
     <div class="auth-tabs">
-      <button class="auth-tab active" onclick="switchTab('login')">Log In</button>
-      <button class="auth-tab" onclick="switchTab('register')">Create Account</button>
+      <button class="auth-tab active" onclick="switchTab('login')">{{ _('Log In') }}</button>
+      <button class="auth-tab" onclick="switchTab('register')">{{ _('Create Account') }}</button>
     </div>
 
     <!-- LOGIN PANEL -->
     <div class="panel active" id="panel-login">
-      <div class="auth-title">Welcome back </div>
-      <div class="auth-sub">Sign in to your ProjectBuddy account</div>
+      <div class="auth-title">{{ _('Welcome back') }} </div>
+      <div class="auth-sub">{{ _('Sign in to your ProjectBuddy account') }}</div>
 
       <form method="POST" action="/auth/login">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="form-group">
-          <label>University Email</label>
+          <label>{{ _('University Email') }}</label>
           <input type="email" name="email" id="email-login" placeholder="you@example.com" autocomplete="email">
         </div>
         <div class="form-group">
-          <label>Password</label>
+          <label>{{ _('Password') }}</label>
           <div class="password-wrap">
-            <input type="password" name="password" id="pw-login" placeholder="Enter your password" autocomplete="current-password">
+            <input type="password" name="password" id="pw-login" placeholder="{{ _('Enter your password') }}" autocomplete="current-password">
             <span class="pw-toggle" onclick="togglePw('pw-login')">&#9679;</span>
           </div>
         </div>
         <div style="display:flex;justify-content:flex-end;margin-top:-8px;margin-bottom:16px;">
-          <a href="{{ url_for('auth.forgot_password') }}" style="font-size:0.8rem;color:var(--accent);text-decoration:none;">Forgot password?</a>
+          <a href="{{ url_for('auth.forgot_password') }}" style="font-size:0.8rem;color:var(--accent);text-decoration:none;">{{ _('Forgot password?') }}</a>
         </div>
-        <button type="submit" class="btn-12 btn-12-gold btn-12-full"><span>Sign In →</span></button>
+        <button type="submit" class="btn-12 btn-12-gold btn-12-full"><span>{{ _('Sign In') }} →</span></button>
       </form>
 
-      <div class="divider">or</div>
+      <div class="divider">{{ _('or') }}</div>
 
       <div class="github-btn-wrap">
         <a href="{{ url_for('auth.github_login') }}" class="github-oauth-btn">
           <svg viewBox="0 0 24 24" fill="#fff" xmlns="http://www.w3.org/2000/svg">
             <path d="M12 0.297C5.37 0.297 0 5.67 0 12.297C0 17.6 3.438 22.097 8.205 23.682C8.805 23.795 9.025 23.424 9.025 23.105C9.025 22.82 9.015 22.065 9.01 21.065C5.672 21.789 4.968 19.455 4.968 19.455C4.422 18.07 3.633 17.7 3.633 17.7C2.546 16.956 3.717 16.971 3.717 16.971C4.922 17.055 5.555 18.207 5.555 18.207C6.625 20.042 8.364 19.512 9.05 19.205C9.158 18.429 9.467 17.9 9.81 17.6C7.145 17.3 4.344 16.268 4.344 11.67C4.344 10.36 4.809 9.29 5.579 8.45C5.444 8.147 5.039 6.927 5.684 5.274C5.684 5.274 6.689 4.952 8.984 6.504C9.944 6.237 10.964 6.105 11.984 6.099C13.004 6.105 14.024 6.237 14.984 6.504C17.264 4.952 18.269 5.274 18.269 5.274C18.914 6.927 18.509 8.147 18.389 8.45C19.154 9.29 19.619 10.36 19.619 11.67C19.619 16.28 16.814 17.295 14.144 17.59C14.564 17.95 14.954 18.686 14.954 19.81C14.954 21.416 14.939 22.706 14.939 23.096C14.939 23.411 15.149 23.786 15.764 23.666C20.565 22.092 24 17.592 24 12.297C24 5.67 18.627 0.297 12 0.297Z"/>
           </svg>
-          Continue with GitHub
+          {{ _('Continue with GitHub') }}
         </a>
       </div>
 
-      <div class="auth-link">Don't have an account? <a href="#" onclick="switchTab('register')">Create one</a> · <a href="/auth/admin-login">Admin Login</a></div>
+      <div class="auth-link">{{ _("Don't have an account?") }} <a href="#" onclick="switchTab('register')">{{ _('Create one') }}</a> · <a href="/auth/admin-login">{{ _('Admin Login') }}</a></div>
     </div>
 
     <!-- REGISTER PANEL -->
@@ -329,27 +329,27 @@ select{
           <div class="step-line"></div>
           <div class="step-dot">3</div>
         </div>
-        <div class="auth-title">Create account</div>
-        <div class="auth-sub">Step 1 of 3 — Basic information</div>
+        <div class="auth-title">{{ _('Create account') }}</div>
+        <div class="auth-sub">{{ _('Step 1 of 3 — Basic information') }}</div>
         <div class="form-row">
           <div class="form-group">
-            <label>First Name</label>
+            <label>{{ _('First Name') }}</label>
             <input type="text" id="reg-first-name" placeholder="Şafak">
           </div>
           <div class="form-group">
-            <label>Last Name</label>
+            <label>{{ _('Last Name') }}</label>
             <input type="text" id="reg-last-name" placeholder="Sürmeli">
           </div>
         </div>
         <div class="form-group">
-          <label>University Email</label>
+          <label>{{ _('University Email') }}</label>
           <input type="email" id="reg-email" placeholder="you@example.com">
-          <div class="input-hint">Use any valid email address.</div>
+          <div class="input-hint">{{ _('Use any valid email address.') }}</div>
         </div>
         <div class="form-group">
-          <label>Department</label>
+          <label>{{ _('Department') }}</label>
           <select id="reg-department">
-            <option disabled selected>Select your department</option>
+            <option disabled selected>{{ _('Select your department') }}</option>
             <option>Computer Science</option>
             <option>Software Engineering</option>
             <option>Electrical Engineering</option>
@@ -359,7 +359,7 @@ select{
             <option>Psychology</option>
           </select>
         </div>
-        <button class="btn-submit" onclick="goStep(2)">Continue →</button>
+        <button class="btn-submit" onclick="goStep(2)">{{ _('Continue') }} →</button>
       </div>
 
       <!-- Step 2: Password -->
@@ -371,19 +371,19 @@ select{
           <div class="step-line"></div>
           <div class="step-dot">3</div>
         </div>
-        <div class="auth-title">Set a password</div>
-        <div class="auth-sub">Step 2 of 3 — Account security</div>
+        <div class="auth-title">{{ _('Set a password') }}</div>
+        <div class="auth-sub">{{ _('Step 2 of 3 — Account security') }}</div>
         <div class="form-group">
-          <label>Password</label>
+          <label>{{ _('Password') }}</label>
           <div class="password-wrap">
-            <input type="password" id="pw-reg" placeholder="At least 8 chars, 1 number, 1 symbol">
+            <input type="password" id="pw-reg" placeholder="{{ _('At least 8 chars, 1 number, 1 symbol') }}">
             <span class="pw-toggle" onclick="togglePw('pw-reg')">&#9679;</span>
           </div>
         </div>
         <div class="form-group">
-          <label>Confirm Password</label>
+          <label>{{ _('Confirm Password') }}</label>
           <div class="password-wrap">
-            <input type="password" id="pw-reg2" placeholder="Repeat password">
+            <input type="password" id="pw-reg2" placeholder="{{ _('Repeat password') }}">
             <span class="pw-toggle" onclick="togglePw('pw-reg2')">&#9679;</span>
           </div>
         </div>
@@ -395,10 +395,10 @@ select{
             <div id="s3" style="flex:1;height:3px;border-radius:3px;background:var(--border);transition:all 0.3s;"></div>
             <div id="s4" style="flex:1;height:3px;border-radius:3px;background:var(--border);transition:all 0.3s;"></div>
           </div>
-          <div id="strength-label" style="font-size:0.75rem;color:var(--muted);">Enter a password</div>
+          <div id="strength-label" style="font-size:0.75rem;color:var(--muted);">{{ _('Enter a password') }}</div>
         </div>
-        <button class="btn-submit" onclick="goStep(3)">Continue →</button>
-        <button class="btn-back" onclick="goStep(1)">← Back</button>
+        <button class="btn-submit" onclick="goStep(3)">{{ _('Continue') }} →</button>
+        <button class="btn-back" onclick="goStep(1)">← {{ _('Back') }}</button>
       </div>
 
       <!-- Step 3: Interests -->
@@ -410,10 +410,10 @@ select{
           <div class="step-line done"></div>
           <div class="step-dot active">3</div>
         </div>
-        <div class="auth-title">Pick your interests</div>
-        <div class="auth-sub">Step 3 of 3 — Select exactly 5 areas</div>
-        <div class="tags-hint" style="font-size:0.82rem;color:var(--soft);margin-bottom:14px;">These power your project recommendations. Choose wisely — you can update them later.</div>
-        <input type="text" class="tag-search" id="interestSearch" placeholder="Search interests — e.g. psychology, finance, robotics…" oninput="filterTags(this.value)" autocomplete="off">
+        <div class="auth-title">{{ _('Pick your interests') }}</div>
+        <div class="auth-sub">{{ _('Step 3 of 3 — Select exactly 5 areas') }}</div>
+        <div class="tags-hint" style="font-size:0.82rem;color:var(--soft);margin-bottom:14px;">{{ _('These power your project recommendations. Choose wisely — you can update them later.') }}</div>
+        <input type="text" class="tag-search" id="interestSearch" placeholder="{{ _('Search interests — e.g. psychology, finance, robotics…') }}" oninput="filterTags(this.value)" autocomplete="off">
         <div class="tags-grid" id="interestGrid">
           {% for cat in INTEREST_CATEGORIES %}
           <div class="tag-group">
@@ -424,7 +424,7 @@ select{
           </div>
           {% endfor %}
         </div>
-        <div class="selected-count"><span id="tagCount">0</span> / 5 selected</div>
+        <div class="selected-count"><span id="tagCount">0</span> / 5 {{ _('selected') }}</div>
         <form method="POST" action="/auth/register" id="registerForm">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <input type="hidden" name="first_name" id="fn-hidden">
@@ -434,10 +434,10 @@ select{
         <input type="hidden" name="password" id="pw-hidden">
         <input type="hidden" name="password_confirm" id="pw2-hidden">
         <div id="tags-hidden-container"></div>
-        <button type="submit" class="btn-submit" id="finishBtn" style="opacity:0.4;pointer-events:none;" onclick="submitRegister()">Create Account</button>
+        <button type="submit" class="btn-submit" id="finishBtn" style="opacity:0.4;pointer-events:none;" onclick="submitRegister()">{{ _('Create Account') }}</button>
 </form>
-        <p style="font-family:'DM Mono',monospace;font-size:0.62rem;color:var(--muted);text-align:center;margin-top:10px;">By creating an account you agree to our <a href="/privacy" target="_blank" style="color:var(--accent);text-decoration:none;">Privacy Policy</a>.</p>
-        <button class="btn-back" onclick="goStep(2)">← Back</button>
+        <p style="font-family:'DM Mono',monospace;font-size:0.62rem;color:var(--muted);text-align:center;margin-top:10px;">{{ _('By creating an account you agree to our') }} <a href="/privacy" target="_blank" style="color:var(--accent);text-decoration:none;">{{ _('Privacy Policy') }}</a>.</p>
+        <button class="btn-back" onclick="goStep(2)">← {{ _('Back') }}</button>
       </div>
     </div>
   </div>
