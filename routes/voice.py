@@ -162,6 +162,7 @@ def on_join_voice(data):
         'user_id':  current_user.id,
         'name':     name,
         'initials': _initials(name),
+        'avatar':   getattr(current_user, 'avatar_url', None) or '',
     }
 
     # Send new joiner the list of everyone already here
@@ -236,6 +237,27 @@ def on_ice(data):
     emit('webrtc_ice',
          {'candidate': data['candidate'], 'from_sid': request.sid},
          to=to_sid)
+
+
+@socketio.on('voice_state')
+def on_voice_state(data):
+    """Relay a participant's mute / camera / screen-share state to the room so
+    peers can render the right tile chrome (mic icon, 'presenting' badge)."""
+    if not current_user.is_authenticated:
+        return
+    try:
+        group_id = int(data.get('group_id', 0))
+    except (TypeError, ValueError):
+        return
+    if not group_id:
+        return
+    payload = {'sid': request.sid}
+    if 'muted' in data:
+        payload['muted'] = bool(data['muted'])
+    if 'video' in data:
+        kind = data['video']
+        payload['video'] = kind if kind in ('camera', 'screen', 'none') else 'none'
+    emit('voice_state', payload, to=f'voice_{group_id}', include_self=False)
 
 
 # ── Collaborative notes ──────────────────────────────────────────────────────
