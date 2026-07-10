@@ -117,7 +117,14 @@ select{
   /* INTEREST TAGS */
   .tags-label { font-size: 0.76rem; font-weight: 500; color: var(--soft); margin-bottom: 10px; letter-spacing: 0.08em; text-transform: uppercase; font-family: 'DM Mono', monospace; }
   .tags-hint { font-size: 0.72rem; color: var(--muted); margin-bottom: 12px; font-family: 'DM Mono', monospace; }
-  .tags-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+  .tags-grid { display: flex; flex-wrap: wrap; gap: 8px; max-height: 300px; overflow-y: auto; padding-right: 4px; }
+  .tag-search { width: 100%; box-sizing: border-box; margin-bottom: 12px; padding: 10px 14px; border-radius: var(--r); border: 1px solid var(--border); background: var(--bg3); color: var(--text); font-family: 'Inter', sans-serif; font-size: 0.82rem; outline: none; transition: border-color 0.2s; }
+  .tag-search:focus { border-color: rgba(124,155,255,0.35); }
+  .tag-group { width: 100%; }
+  .tag-group.hidden { display: none; }
+  .tag-cat { font-family: 'DM Mono', monospace; font-size: 0.56rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin: 14px 0 8px; }
+  .tag-cat-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+  .interest-tag.hidden { display: none; }
   .interest-tag {
     padding: 8px 12px; border-radius: var(--r); font-size: 0.76rem; font-weight: 500;
     cursor: pointer; transition: all 0.2s; border: 1px solid var(--border);
@@ -406,23 +413,16 @@ select{
         <div class="auth-title">Pick your interests</div>
         <div class="auth-sub">Step 3 of 3 — Select exactly 5 areas</div>
         <div class="tags-hint" style="font-size:0.82rem;color:var(--soft);margin-bottom:14px;">These power your project recommendations. Choose wisely — you can update them later.</div>
+        <input type="text" class="tag-search" id="interestSearch" placeholder="Search interests — e.g. psychology, finance, robotics…" oninput="filterTags(this.value)" autocomplete="off">
         <div class="tags-grid" id="interestGrid">
-          <div class="interest-tag" onclick="toggleTag(this)">React</div>
-          <div class="interest-tag" onclick="toggleTag(this)">Python</div>
-          <div class="interest-tag" onclick="toggleTag(this)">SQL / DB</div>
-          <div class="interest-tag" onclick="toggleTag(this)">Machine Learning</div>
-          <div class="interest-tag" onclick="toggleTag(this)">Mobile Dev</div>
-          <div class="interest-tag" onclick="toggleTag(this)">UI/UX Design</div>
-          <div class="interest-tag" onclick="toggleTag(this)">Cloud Computing</div>
-          <div class="interest-tag" onclick="toggleTag(this)">Cybersecurity</div>
-          <div class="interest-tag" onclick="toggleTag(this)">DevOps</div>
-          <div class="interest-tag" onclick="toggleTag(this)">IoT</div>
-          <div class="interest-tag" onclick="toggleTag(this)">Web Scraping</div>
-          <div class="interest-tag" onclick="toggleTag(this)">Data Analysis</div>
-          <div class="interest-tag" onclick="toggleTag(this)">Blockchain</div>
-          <div class="interest-tag" onclick="toggleTag(this)">Game Development</div>
-          <div class="interest-tag" onclick="toggleTag(this)">Networks</div>
-          <div class="interest-tag" onclick="toggleTag(this)">Business</div>
+          {% for cat in INTEREST_CATEGORIES %}
+          <div class="tag-group">
+            <div class="tag-cat">{{ cat.name }}</div>
+            <div class="tag-cat-tags">
+              {% for t in cat.tags %}<div class="interest-tag" onclick="toggleTag(this)">{{ t }}</div>{% endfor %}
+            </div>
+          </div>
+          {% endfor %}
         </div>
         <div class="selected-count"><span id="tagCount">0</span> / 5 selected</div>
         <form method="POST" action="/auth/register" id="registerForm">
@@ -522,6 +522,19 @@ function toggleTag(el) {
   const btn = document.getElementById('finishBtn');
   btn.style.opacity = selectedTags === 5 ? '1' : '0.4';
   btn.style.pointerEvents = selectedTags === 5 ? 'auto' : 'none';
+}
+
+function filterTags(query) {
+  const q = query.trim().toLowerCase();
+  document.querySelectorAll('#interestGrid .tag-group').forEach(function (group) {
+    let anyVisible = false;
+    group.querySelectorAll('.interest-tag').forEach(function (tag) {
+      const match = tag.textContent.toLowerCase().includes(q);
+      tag.classList.toggle('hidden', !match);
+      if (match) anyVisible = true;
+    });
+    group.classList.toggle('hidden', !anyVisible);
+  });
 }
 
 document.getElementById('pw-reg')?.addEventListener('input', function() {

@@ -111,8 +111,14 @@ main_bp = Blueprint("main", __name__)
 
 @main_bp.app_context_processor
 def _inject_profile_helpers():
-    """Make banner_style() and the preset list available to every template."""
-    return {"banner_style": banner_style, "BANNER_PRESETS": BANNER_PRESETS}
+    """Make banner_style(), the preset list, and the interest taxonomy
+    available to every template (registration + edit-profile share them)."""
+    from services.interests import INTEREST_CATEGORIES
+    return {
+        "banner_style": banner_style,
+        "BANNER_PRESETS": BANNER_PRESETS,
+        "INTEREST_CATEGORIES": INTEREST_CATEGORIES,
+    }
 
 
 def _wall_comment_json(c):

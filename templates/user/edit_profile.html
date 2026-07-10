@@ -34,6 +34,13 @@
 .hint{font-family:'DM Mono',monospace;font-size:0.64rem;color:var(--muted);margin-top:5px;line-height:1.5;letter-spacing:0.02em;}
 /* SKILLS TAG SELECTOR */
 .tags-wrap{display:flex;flex-wrap:wrap;gap:6px;}
+.tag-search{width:100%;box-sizing:border-box;margin-bottom:12px;padding:9px 13px;border-radius:var(--r);border:1px solid var(--border);background:var(--bg3);color:var(--text);font-family:'Inter',sans-serif;font-size:0.8rem;outline:none;transition:border-color 0.2s;}
+.tag-search:focus{border-color:rgba(124,155,255,0.35);}
+.tag-group{width:100%;}
+.tag-group.hidden{display:none;}
+.tag-cat{font-family:'DM Mono',monospace;font-size:0.55rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);margin:12px 0 7px;}
+.tag-cat-tags{display:flex;flex-wrap:wrap;gap:6px;}
+.sel-tag.hidden{display:none;}
 .sel-tag{padding:5px 12px;border-radius:3px;font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.03em;cursor:pointer;border:1px solid var(--border);background:var(--card);color:var(--soft);user-select:none;transition:all 0.18s;}
 .sel-tag:hover{border-color:rgba(124,155,255,0.3);color:var(--text);}
 .sel-tag.selected{background:var(--accent-dim);border-color:rgba(124,155,255,0.4);color:var(--accent);}
@@ -284,23 +291,16 @@
         <div class="form-section">
           <div class="form-section-title">Interest Tags</div>
           <div class="hint" style="margin-bottom:14px;">Select exactly 5 interest areas. These power your project recommendations.</div>
-          <div class="tags-wrap" id="interestTagsWrap">
-            {% set user_tags = user.interest_tags | map(attribute='tag') | list %}
-            {% for t in [
-              'Python','JavaScript','React','Node.js','SQL / DB','Machine Learning','AI / NLP',
-              'Cloud','Cybersecurity','DevOps','Mobile Dev','Game Dev','Blockchain','IoT',
-              'Data Analysis','Computer Vision','Big Data','UI/UX Design','Flutter','Swift',
-              'Docker / K8s','Networks','Embedded Systems','Electronics','Robotics',
-              'Control Systems','Signal Processing','3D Modeling / CAD','Architecture Design',
-              'Urban Planning','Sustainable Design','BIM / Revit',
-              'Marketing','Finance','Entrepreneurship','Management','Supply Chain',
-              'Business Analytics','E-commerce','HR / People Ops','Consulting',
-              'Psychology','Communication','Media & Journalism','Graphic Design',
-              'Video Editing','Photography','Animation','Translation',
-              'International Relations','Law','Economics','Research & Academia',
-              'Biomedical Research','Genetics','Statistics','Mathematics'
-            ] %}
-              <div class="sel-tag {% if t in user_tags %}selected{% endif %}" onclick="toggleInterest(this)">{{ t }}</div>
+          {% set user_tags = user.interest_tags | map(attribute='tag') | list %}
+          <input type="text" class="tag-search" id="epInterestSearch" placeholder="Search interests — e.g. psychology, finance, robotics…" oninput="filterInterests(this.value)" autocomplete="off">
+          <div class="tags-wrap" id="interestTagsWrap" style="max-height:300px;overflow-y:auto;padding-right:4px;">
+            {% for cat in INTEREST_CATEGORIES %}
+            <div class="tag-group">
+              <div class="tag-cat">{{ cat.name }}</div>
+              <div class="tag-cat-tags">
+                {% for t in cat.tags %}<div class="sel-tag {% if t in user_tags %}selected{% endif %}" onclick="toggleInterest(this)">{{ t }}</div>{% endfor %}
+              </div>
+            </div>
             {% endfor %}
           </div>
           <div class="tag-count-lbl"><span id="interestCount">{{ user.interest_tags|length }}</span> / 5 selected</div>
@@ -403,6 +403,19 @@ function toggleInterest(el) {
     span.className = 'preview-tag';
     span.textContent = t.textContent.trim();
     preview.appendChild(span);
+  });
+}
+
+function filterInterests(query) {
+  var q = query.trim().toLowerCase();
+  document.querySelectorAll('#interestTagsWrap .tag-group').forEach(function(group) {
+    var anyVisible = false;
+    group.querySelectorAll('.sel-tag').forEach(function(tag) {
+      var match = tag.textContent.toLowerCase().indexOf(q) !== -1;
+      tag.classList.toggle('hidden', !match);
+      if (match) anyVisible = true;
+    });
+    group.classList.toggle('hidden', !anyVisible);
   });
 }
 
