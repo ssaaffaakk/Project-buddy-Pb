@@ -49,6 +49,13 @@ def create_app(config_class=None):
     # Register blueprints
     _register_blueprints(app)
 
+    # CLI: retrain the teammate/project recommender  →  flask train-recommender
+    @app.cli.command("train-recommender")
+    def train_recommender_cmd():
+        """Retrain the ML recommender on current data and save the artifact."""
+        from services.ml.train_recommender import train
+        train()
+
     @app.route("/favicon.ico")
     def favicon():
         from flask import send_from_directory

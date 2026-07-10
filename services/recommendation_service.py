@@ -1,4 +1,8 @@
+import logging
+
 from models import Application, Project, ProjectMember, UserInterest
+
+logger = logging.getLogger(__name__)
 
 
 INTEREST_TO_TOPIC_MAP = {
@@ -21,6 +25,21 @@ INTEREST_TO_TOPIC_MAP = {
 
 
 def get_recommended_projects(user_id):
+    """Return [(project, fit_percent), ...] ranked best-first.
+
+    Uses the trained ML recommender when a model artifact is available;
+    otherwise falls back to the rule-based tag-overlap scorer.
+    """
+    # ── ML path (learned recommender) ────────────────────────────────────────
+    try:
+        from services.ml.recommender import rank_open_projects
+        ranked = rank_open_projects(user_id)
+        if ranked is not None:
+            return ranked  # [(project, fit_percent_float)]
+    except Exception:
+        logger.exception("ML recommender failed; falling back to rule-based scorer")
+
+    # ── Rule-based fallback ──────────────────────────────────────────────────
     user_interests = UserInterest.query.filter_by(user_id=user_id).all()
     if not user_interests:
         return []
@@ -52,7 +71,9 @@ def get_recommended_projects(user_id):
         ),
         reverse=True,
     )
-    return recommendations
+    # Express the tag-overlap count as a rough fit % so the UI is consistent
+    # with the ML path (which returns a probability-based percentage).
+    return [(project, min(99, round(count / 5 * 100))) for project, count in recommendations]
 
 
 def expand_user_interests(tags):

@@ -1,0 +1,106 @@
+{
+  "trained_at": "2026-07-10T13:17:35+00:00",
+  "model": "LogisticRegression (balanced) + StandardScaler",
+  "n_samples": 104,
+  "n_features": 14,
+  "feature_names": [
+    "interest_topic_overlap",
+    "interest_topic_jaccard",
+    "skill_overlap",
+    "skill_jaccard",
+    "course_match",
+    "user_n_interests",
+    "user_n_skills",
+    "proj_n_tags",
+    "proj_n_skills",
+    "proj_team_size",
+    "proj_member_count",
+    "proj_age_days",
+    "proj_vote_score",
+    "semantic_sim"
+  ],
+  "cv_folds": 5,
+  "roc_auc": 0.8895,
+  "pr_auc": 0.6063,
+  "random_pr_auc": 0.25,
+  "comparison": [
+    {
+      "name": "Rule-based overlap (baseline)",
+      "roc_auc": 0.8905,
+      "pr_auc": 0.604
+    },
+    {
+      "name": "Semantic embeddings only (retriever)",
+      "roc_auc": 0.5789,
+      "pr_auc": 0.3164
+    },
+    {
+      "name": "Full model (overlap + embeddings)",
+      "roc_auc": 0.8895,
+      "pr_auc": 0.6063
+    }
+  ],
+  "embedding": {
+    "docs": 52,
+    "dims": 32,
+    "method": "TF-IDF + Truncated SVD (LSA)"
+  },
+  "feature_weights": [
+    {
+      "feature": "user_n_skills",
+      "weight": 1.6677
+    },
+    {
+      "feature": "proj_vote_score",
+      "weight": 1.1363
+    },
+    {
+      "feature": "skill_jaccard",
+      "weight": 0.864
+    },
+    {
+      "feature": "skill_overlap",
+      "weight": -0.7875
+    },
+    {
+      "feature": "proj_team_size",
+      "weight": -0.5922
+    },
+    {
+      "feature": "interest_topic_jaccard",
+      "weight": -0.4307
+    },
+    {
+      "feature": "proj_age_days",
+      "weight": 0.4078
+    },
+    {
+      "feature": "proj_n_skills",
+      "weight": 0.32
+    },
+    {
+      "feature": "proj_member_count",
+      "weight": -0.1701
+    },
+    {
+      "feature": "interest_topic_overlap",
+      "weight": -0.1553
+    },
+    {
+      "feature": "user_n_interests",
+      "weight": 0.1161
+    },
+    {
+      "feature": "semantic_sim",
+      "weight": 0.1108
+    }
+  ],
+  "n_users": 38,
+  "n_projects": 14,
+  "n_positive": 26,
+  "n_negative": 78,
+  "positive_source": {
+    "members": 12,
+    "applications": 14
+  }
+}

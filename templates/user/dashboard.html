@@ -151,9 +151,9 @@
       </div>
       {% if recommendations %}
         <div class="rec-grid">
-          {% for project, match_count in recommendations %}
+          {% for project, fit in recommendations %}
           <div class="rec-card">
-            <div class="rec-match">{{ match_count }}/5</div>
+            <div class="rec-match">{{ fit|round|int }}% fit</div>
             <div class="rec-title">{{ project.title }}</div>
             <div class="rec-tags">
               {% for t in project.topic_tags[:3] %}<span class="tag">{{ t.tag }}</span>{% endfor %}

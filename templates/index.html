@@ -620,6 +620,40 @@ footer p{font-family:'DM Mono',monospace;font-size:.6rem;letter-spacing:.04em;co
 .collab-cta:hover .ar{transform:translateX(4px);}
 .collab-cta::after{content:'';position:absolute;top:0;left:-120%;width:55%;height:100%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.5),transparent);transform:skewX(-18deg);animation:bshimmer 4.5s ease-in-out infinite;}
 @media(max-width:920px){.collab-body{grid-template-columns:1fr;}.collab-stage{border-right:none;border-bottom:1px solid rgba(255,255,255,.06);}.collab-info{flex-direction:column;align-items:flex-start;}}
+
+/* ═══════════════════ ML / AI SHOWCASE ═══════════════════ */
+.ml-s{padding:78px var(--pad) 84px;border-bottom:1px solid var(--border);position:relative;overflow:hidden;}
+.ml-s::before{content:'';position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse 70% 60% at 80% 40%,rgba(167,139,255,.06),transparent 60%);}
+.ml-grid{display:grid;grid-template-columns:1fr 1fr;gap:52px;align-items:center;max-width:1080px;margin:0 auto;position:relative;}
+@media(max-width:900px){.ml-grid{grid-template-columns:1fr;gap:34px;}}
+.ml-eyebrow{font-family:'DM Mono',monospace;font-size:.6rem;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);opacity:.75;margin-bottom:18px;}
+.ml-h2{font-family:'DM Serif Display',serif;font-size:clamp(2rem,4vw,3.1rem);font-weight:400;letter-spacing:-.03em;line-height:1.04;margin-bottom:18px;}
+.ml-h2 em{font-style:italic;color:var(--gold);}
+.ml-lead{font-size:.9rem;color:var(--soft);line-height:1.7;margin-bottom:22px;max-width:440px;}
+.ml-facts{list-style:none;display:flex;flex-direction:column;gap:11px;margin-bottom:24px;}
+.ml-facts li{position:relative;padding-left:26px;font-size:.85rem;color:var(--soft);line-height:1.5;}
+.ml-facts li::before{content:'';position:absolute;left:0;top:5px;width:15px;height:15px;border-radius:50%;background:var(--gold-lo);border:1px solid rgba(124,155,255,.4);}
+.ml-facts li::after{content:'✓';position:absolute;left:3.5px;top:3px;font-size:.62rem;color:var(--gold);}
+.ml-facts b{color:var(--text);font-weight:600;}
+.ml-link{font-family:'DM Mono',monospace;font-size:.68rem;letter-spacing:.06em;text-transform:uppercase;color:var(--gold);text-decoration:none;border-bottom:1px solid rgba(124,155,255,.3);padding-bottom:3px;transition:all .2s;}
+.ml-link:hover{color:var(--gold-hi);border-color:var(--gold);}
+
+.ml-vis{background:rgba(14,22,48,.55);border:1px solid var(--border);border-radius:18px;padding:22px;backdrop-filter:blur(12px);box-shadow:0 30px 80px rgba(0,0,0,.4);}
+.ml-towers{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:6px;}
+.ml-tower{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:12px;padding:12px 13px;}
+.ml-tower-h{font-family:'DM Mono',monospace;font-size:.58rem;letter-spacing:.09em;text-transform:uppercase;color:var(--gold);margin-bottom:9px;}
+.ml-chip{display:inline-block;font-family:'DM Mono',monospace;font-size:.55rem;color:var(--soft);background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:99px;padding:2px 8px;margin:0 4px 4px 0;}
+.ml-embed{display:flex;align-items:center;gap:10px;justify-content:center;padding:12px 0;}
+.ml-embed .lbl{font-family:'DM Mono',monospace;font-size:.52rem;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);}
+.ml-vec{display:flex;align-items:flex-end;gap:3px;height:28px;}
+.ml-vec i{width:4px;border-radius:2px;background:linear-gradient(to top,var(--gold),var(--violet));opacity:.85;}
+.ml-out{border-top:1px solid var(--border);margin-top:4px;padding-top:14px;display:flex;flex-direction:column;gap:9px;}
+.ml-row{display:flex;align-items:center;gap:10px;}
+.ml-row .nm{font-size:.72rem;color:var(--soft);width:112px;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.ml-row .bar{flex:1;height:8px;border-radius:4px;background:var(--bg3);overflow:hidden;}
+.ml-row .bar i{display:block;height:100%;border-radius:4px;background:linear-gradient(90deg,var(--gold),var(--violet));}
+.ml-row .pct{font-family:'DM Mono',monospace;font-size:.62rem;color:var(--gold);width:38px;text-align:right;flex-shrink:0;}
+@media(max-width:768px){.ml-s{padding:60px 20px;}}
 @media(max-width:768px){.feat-s{padding:64px 20px;}.feat-trio{grid-template-columns:1fr;}}
 
 /* ═══════════════════ CTA SOCIAL PROOF ═══════════════════ */
@@ -930,6 +964,48 @@ html.lm .mob-nav{background:rgba(247,245,241,.99);}
         <div class="fcard-tags"><span>Video calls</span><span class="c">Screen sharing</span><span class="v">Live shared notes</span><span>Zero installs</span></div>
       </div>
       <a href="/auth/register" class="btn collab-cta btn-mag">Open a Live Room <span class="ar">→</span></a>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════ ML / AI SHOWCASE ════════════════ -->
+<section class="ml-s rv" id="ml-s" data-sec="Under the hood">
+  <div class="ml-grid">
+    <div class="ml-text">
+      <div class="ml-eyebrow">Under the hood · Machine learning</div>
+      <h2 class="ml-h2">Your matches are <em>trained</em>,<br>not guessed.</h2>
+      <p class="ml-lead">Most platforms match on keywords. ProjectBuddy learns from what actually works — who joined and thrived on which teams — with a real model that ranks every open project by predicted fit, and retrains as the community grows.</p>
+      <ul class="ml-facts">
+        <li><b>0.89 ROC-AUC</b>, measured with leakage-free cross-validation</li>
+        <li><b>Two towers</b> — your profile and every project embedded into one semantic space</li>
+        <li><b>Benchmarked honestly</b> against a rule-based baseline, not just shipped on faith</li>
+      </ul>
+      <a href="/ml/recommender" class="ml-link">See the model card →</a>
+    </div>
+
+    <div class="ml-vis" aria-hidden="true">
+      <div class="ml-towers">
+        <div class="ml-tower">
+          <div class="ml-tower-h">You · tower</div>
+          <span class="ml-chip">bio</span><span class="ml-chip">Python</span><span class="ml-chip">ML</span><span class="ml-chip">research</span>
+        </div>
+        <div class="ml-tower">
+          <div class="ml-tower-h">Project · tower</div>
+          <span class="ml-chip">description</span><span class="ml-chip">AI / ML</span><span class="ml-chip">data</span>
+        </div>
+      </div>
+      <div class="ml-embed">
+        <span class="lbl">embed →</span>
+        <div class="ml-vec">
+          <i style="height:13px"></i><i style="height:22px"></i><i style="height:9px"></i><i style="height:26px"></i><i style="height:16px"></i><i style="height:11px"></i><i style="height:20px"></i><i style="height:8px"></i><i style="height:24px"></i><i style="height:14px"></i><i style="height:18px"></i><i style="height:10px"></i>
+        </div>
+        <span class="lbl">← one space</span>
+      </div>
+      <div class="ml-out">
+        <div class="ml-row"><span class="nm">Bus Tracker</span><span class="bar"><i style="width:89%"></i></span><span class="pct">89%</span></div>
+        <div class="ml-row"><span class="nm">ML Study Tool</span><span class="bar"><i style="width:72%"></i></span><span class="pct">72%</span></div>
+        <div class="ml-row"><span class="nm">Portfolio Site</span><span class="bar"><i style="width:41%"></i></span><span class="pct">41%</span></div>
+      </div>
     </div>
   </div>
 </section>

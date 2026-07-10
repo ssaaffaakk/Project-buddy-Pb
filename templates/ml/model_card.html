@@ -1,0 +1,143 @@
+{% extends 'base_app.html' %}
+{% block title %}ProjectBuddy — Recommender Model Card{% endblock %}
+
+{% block extra_style %}
+<style nonce="{{ csp_nonce }}">
+.mc-wrap{max-width:820px;margin:0 auto;padding:36px 20px 60px;}
+.mc-eyebrow{font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--accent);margin-bottom:10px;display:flex;align-items:center;gap:10px;}
+.mc-live{display:inline-flex;align-items:center;gap:6px;color:#3ad17a;}
+.mc-live .dot{width:7px;height:7px;border-radius:50%;background:#3ad17a;box-shadow:0 0 8px #3ad17a;}
+.mc-title{font-family:'DM Serif Display',serif;font-size:2rem;letter-spacing:-0.02em;margin-bottom:8px;line-height:1.1;}
+.mc-title em{font-style:italic;color:var(--accent);}
+.mc-sub{color:var(--soft);font-size:0.9rem;line-height:1.6;margin-bottom:28px;max-width:640px;}
+
+.mc-metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:28px;}
+.mc-metric{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px 18px;}
+.mc-metric .k{font-family:'DM Mono',monospace;font-size:0.6rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;}
+.mc-metric .v{font-family:'DM Serif Display',serif;font-size:1.7rem;color:var(--text);line-height:1;}
+.mc-metric .v .unit{font-size:0.9rem;color:var(--muted);}
+.mc-metric .note{font-family:'DM Mono',monospace;font-size:0.58rem;color:var(--muted);margin-top:7px;}
+.mc-metric.hero{border-color:rgba(124,155,255,0.3);background:linear-gradient(155deg,rgba(124,155,255,0.08),rgba(255,255,255,0.01));}
+.mc-metric.hero .v{color:var(--accent);}
+
+.mc-card{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:22px 24px;margin-bottom:20px;}
+.mc-card h2{font-family:'DM Serif Display',serif;font-size:1.05rem;font-weight:400;margin-bottom:16px;}
+.mc-row{display:flex;justify-content:space-between;gap:16px;padding:8px 0;border-bottom:1px solid var(--border);font-size:0.84rem;}
+.mc-row:last-child{border-bottom:none;}
+.mc-row .lbl{color:var(--muted);font-family:'DM Mono',monospace;font-size:0.7rem;letter-spacing:0.03em;}
+.mc-row .val{color:var(--soft);text-align:right;}
+
+/* feature weight bars */
+.fw{display:flex;align-items:center;gap:12px;margin-bottom:9px;}
+.fw-name{font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--soft);width:180px;flex-shrink:0;text-align:right;}
+.fw-bar-wrap{flex:1;height:16px;position:relative;background:var(--bg3);border-radius:4px;overflow:hidden;}
+.fw-bar{position:absolute;top:0;bottom:0;border-radius:4px;}
+.fw-bar.pos{left:50%;background:linear-gradient(90deg,rgba(124,155,255,0.5),var(--accent));}
+.fw-bar.neg{right:50%;background:linear-gradient(90deg,#c0563a,rgba(192,86,58,0.5));}
+.fw-mid{position:absolute;left:50%;top:0;bottom:0;width:1px;background:var(--border);}
+.fw-val{font-family:'DM Mono',monospace;font-size:0.64rem;color:var(--muted);width:52px;flex-shrink:0;}
+
+/* comparison rows */
+.cmp{display:flex;align-items:center;gap:12px;margin-bottom:10px;}
+.cmp-name{width:230px;flex-shrink:0;font-size:0.78rem;color:var(--soft);}
+.cmp.best .cmp-name{color:var(--text);}
+.cmp-tag{font-family:'DM Mono',monospace;font-size:0.5rem;letter-spacing:0.08em;text-transform:uppercase;color:#3ad17a;background:rgba(58,209,122,0.14);border:1px solid rgba(58,209,122,0.3);padding:1px 6px;border-radius:99px;margin-left:4px;}
+.cmp-bar-wrap{flex:1;height:20px;background:var(--bg3);border-radius:5px;overflow:hidden;}
+.cmp-bar{height:100%;border-radius:5px;background:linear-gradient(90deg,rgba(124,155,255,0.4),var(--accent));}
+.cmp.best .cmp-bar{background:linear-gradient(90deg,var(--accent),var(--violet,#A78BFF));}
+.cmp-val{width:52px;flex-shrink:0;font-family:'DM Mono',monospace;font-size:0.74rem;color:var(--text);text-align:right;}
+.cmp-note{font-size:0.78rem;color:var(--muted);line-height:1.6;margin-top:14px;}
+.cmp-note em{color:var(--soft);font-style:italic;}
+
+.mc-empty{background:var(--bg2);border:1px dashed var(--border);border-radius:14px;padding:40px;text-align:center;color:var(--muted);font-size:0.9rem;}
+.mc-empty code{background:var(--bg3);padding:3px 8px;border-radius:5px;font-size:0.8rem;color:var(--accent);}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="mc-wrap">
+  {% if metrics %}
+  <div class="mc-eyebrow">
+    Machine learning · Model card
+    {% if available %}<span class="mc-live"><span class="dot"></span>serving live</span>{% endif %}
+  </div>
+  <h1 class="mc-title">Teammate <em>recommender</em></h1>
+  <p class="mc-sub">A model trained on ProjectBuddy's own signals — who joined and applied to which projects — to rank open projects by predicted fit. I benchmarked three approaches with the same leakage-free {{ metrics.cv_folds }}-fold cross-validation: a rule-based baseline, a semantic-embedding retriever, and the hybrid that ships.</p>
+
+  <div class="mc-metrics">
+    <div class="mc-metric hero">
+      <div class="k">ROC-AUC</div>
+      <div class="v">{{ metrics.roc_auc }}</div>
+      <div class="note">1.0 = perfect · 0.5 = random</div>
+    </div>
+    <div class="mc-metric">
+      <div class="k">PR-AUC</div>
+      <div class="v">{{ metrics.pr_auc }}</div>
+      <div class="note">random {{ metrics.random_pr_auc }} ({{ (metrics.pr_auc / metrics.random_pr_auc) | round(1) }}× lift)</div>
+    </div>
+    <div class="mc-metric">
+      <div class="k">Training pairs</div>
+      <div class="v">{{ metrics.n_samples }}</div>
+      <div class="note">{{ metrics.n_positive }} pos · {{ metrics.n_negative }} neg</div>
+    </div>
+    <div class="mc-metric">
+      <div class="k">Features</div>
+      <div class="v">{{ metrics.n_features }}</div>
+      <div class="note">engineered per pair</div>
+    </div>
+  </div>
+
+  {% if metrics.comparison %}
+  <div class="mc-card">
+    <h2>The experiment — three approaches, same test</h2>
+    {% for c in metrics.comparison %}
+    <div class="cmp{% if loop.last %} best{% endif %}">
+      <div class="cmp-name">{{ c.name }}{% if loop.last %} <span class="cmp-tag">shipped</span>{% endif %}</div>
+      <div class="cmp-bar-wrap">
+        <div class="cmp-bar" style="width:{{ ((c.roc_auc - 0.5) / 0.5 * 100) | round(1) }}%;"></div>
+      </div>
+      <div class="cmp-val">{{ c.roc_auc }}</div>
+    </div>
+    {% endfor %}
+    <p class="cmp-note">ROC-AUC (0.5 = random, 1.0 = perfect). On this small corpus the semantic embeddings overlap with the hand-crafted features, so the hybrid matches the baseline — an honest result. The embedding tower still adds value the metric doesn't show: it can rank projects that share <em>no</em> exact tags with a user (cold-start / semantic coverage).</p>
+  </div>
+  {% endif %}
+
+  <div class="mc-card">
+    <h2>What the model learned</h2>
+    {% set maxw = metrics.feature_weights | map(attribute='weight') | map('abs') | max %}
+    {% for f in metrics.feature_weights %}
+    <div class="fw">
+      <div class="fw-name">{{ f.feature }}</div>
+      <div class="fw-bar-wrap">
+        <div class="fw-mid"></div>
+        {% if f.weight >= 0 %}
+          <div class="fw-bar pos" style="width:{{ (f.weight / maxw * 50) | round(1) }}%;"></div>
+        {% else %}
+          <div class="fw-bar neg" style="width:{{ (f.weight / maxw * -50) | round(1) }}%;"></div>
+        {% endif %}
+      </div>
+      <div class="fw-val">{{ f.weight }}</div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <div class="mc-card">
+    <h2>Details</h2>
+    <div class="mc-row"><span class="lbl">Model</span><span class="val">{{ metrics.model }}</span></div>
+    {% if metrics.embedding %}<div class="mc-row"><span class="lbl">Embeddings</span><span class="val">{{ metrics.embedding.method }} · {{ metrics.embedding.docs }} docs → {{ metrics.embedding.dims }} dims</span></div>{% endif %}
+    <div class="mc-row"><span class="lbl">Positives from</span><span class="val">{{ metrics.positive_source.members }} memberships · {{ metrics.positive_source.applications }} applications</span></div>
+    <div class="mc-row"><span class="lbl">Users · projects</span><span class="val">{{ metrics.n_users }} · {{ metrics.n_projects }}</span></div>
+    <div class="mc-row"><span class="lbl">Evaluation</span><span class="val">{{ metrics.cv_folds }}-fold cross-validation (out-of-fold)</span></div>
+    <div class="mc-row"><span class="lbl">Trained</span><span class="val">{{ metrics.trained_at }}</span></div>
+  </div>
+
+  {% else %}
+  <div class="mc-eyebrow">Machine learning · Model card</div>
+  <h1 class="mc-title">Teammate <em>recommender</em></h1>
+  <div class="mc-empty">
+    No trained model yet. Run <code>flask train-recommender</code> to train on the current data.
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

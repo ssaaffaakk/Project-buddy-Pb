@@ -973,6 +973,18 @@ def edit_profile():
     return render_template("user/edit_profile.html", user=user)
 
 
+# ── ML MODEL CARD (recommender metrics) ───────────────────────────────────────
+@main_bp.route("/ml/recommender")
+@login_required
+def ml_model_card():
+    from services.ml.recommender import load_metrics, model_available
+    return render_template(
+        "ml/model_card.html",
+        metrics=load_metrics(),
+        available=model_available(),
+    )
+
+
 # ── FIRST-RUN ONBOARDING (pick avatar + banner) ───────────────────────────────
 @main_bp.route("/welcome", methods=["GET", "POST"])
 @login_required

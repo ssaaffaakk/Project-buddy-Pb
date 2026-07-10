@@ -14,3 +14,8 @@ eventlet==0.40.4
 gunicorn==23.0.0
 redis==5.2.1
 boto3==1.35.99
+
+# ── Machine learning (teammate recommender) ──
+numpy==2.0.2
+scikit-learn==1.6.1
+joblib==1.5.3
