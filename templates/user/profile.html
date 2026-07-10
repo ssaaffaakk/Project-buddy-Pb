@@ -76,7 +76,7 @@
 {% endblock %}
 
 {% block content %}
-  <div class="cover"></div>
+  <div class="cover" style="{{ banner_style(user.banner_url) }}"></div>
   <div class="ph">
     <div class="avatar-big" style="overflow:hidden;">
       {% if user.avatar_url %}

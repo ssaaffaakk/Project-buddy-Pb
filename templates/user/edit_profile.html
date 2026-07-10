@@ -103,8 +103,55 @@
     </div>
   </form>
 
-  <form method="POST" action="/edit-profile">
+  <form method="POST" action="/edit-profile" enctype="multipart/form-data">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+    <style nonce="{{ csp_nonce }}">
+      .eb-cover{height:120px;border-radius:12px;border:1px solid var(--border);overflow:hidden;margin-bottom:12px;}
+      .eb-presets{display:grid;grid-template-columns:repeat(auto-fit,minmax(72px,1fr));gap:8px;margin-bottom:12px;}
+      .eb-swatch{height:44px;border-radius:8px;border:2px solid transparent;cursor:pointer;transition:transform .15s,border-color .15s;position:relative;}
+      .eb-swatch:hover{transform:translateY(-2px);}
+      .eb-swatch.active{border-color:#fff;box-shadow:0 0 0 2px var(--accent);}
+      .eb-swatch.active::after{content:'✓';position:absolute;top:2px;right:5px;color:#fff;font-size:0.7rem;text-shadow:0 1px 2px rgba(0,0,0,0.5);}
+      .eb-upload{display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border-radius:var(--r);border:1px solid var(--border);background:var(--card);color:var(--soft);font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.06em;text-transform:uppercase;cursor:pointer;transition:all .2s;}
+      .eb-upload:hover{border-color:rgba(124,155,255,0.4);color:var(--text);}
+    </style>
+    <div class="form-section" style="margin-bottom:28px;">
+      <div class="form-section-title">Cover Banner</div>
+      <div class="eb-cover" id="eb-cover" style="{{ banner_style(user.banner_url) }}"></div>
+      <div class="eb-presets" id="eb-presets">
+        {% for p in BANNER_PRESETS %}
+        <div class="eb-swatch{% if user.banner_url == 'preset:' ~ p.key %} active{% endif %}" data-key="{{ p.key }}" data-css="{{ p.css }}" style="background:{{ p.css }};" title="{{ p.key }}"></div>
+        {% endfor %}
+      </div>
+      <label class="eb-upload">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        Upload your own
+        <input type="file" name="banner" accept="image/*" id="eb-banner-input" style="display:none;">
+      </label>
+      <input type="hidden" name="banner_preset" id="eb-banner-preset" value="">
+    </div>
+    <script nonce="{{ csp_nonce }}">
+      (function(){
+        var cover=document.getElementById('eb-cover');
+        document.getElementById('eb-presets').addEventListener('click',function(e){
+          var sw=e.target.closest('.eb-swatch'); if(!sw)return;
+          document.querySelectorAll('.eb-swatch').forEach(function(s){s.classList.remove('active');});
+          sw.classList.add('active');
+          cover.style.background=sw.getAttribute('data-css');
+          document.getElementById('eb-banner-preset').value=sw.getAttribute('data-key');
+          document.getElementById('eb-banner-input').value='';
+        });
+        document.getElementById('eb-banner-input').addEventListener('change',function(e){
+          var f=e.target.files[0]; if(!f)return;
+          var r=new FileReader();
+          r.onload=function(){cover.style.background="#0a1024 center/cover url('"+r.result+"')";
+            document.querySelectorAll('.eb-swatch').forEach(function(s){s.classList.remove('active');});
+            document.getElementById('eb-banner-preset').value='';};
+          r.readAsDataURL(f);
+        });
+      })();
+    </script>
 
     <div class="form-grid">
       <div>

@@ -23,6 +23,10 @@ class User(UserMixin, db.Model):
     department: Mapped[Optional[str]] = mapped_column(String(100))
     bio: Mapped[Optional[str]] = mapped_column(Text)
     avatar_url: Mapped[Optional[str]] = mapped_column(String(500))
+    # Profile cover image — an uploaded URL, or a "preset:<key>" gradient token
+    banner_url: Mapped[Optional[str]] = mapped_column(String(500))
+    # False until the user finishes (or skips) the first-run profile setup
+    onboarded: Mapped[bool] = mapped_column(Boolean, default=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     is_banned: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
@@ -435,9 +439,12 @@ class StudyGroupMessage(db.Model):
     group_id: Mapped[int] = mapped_column(db.ForeignKey("study_groups.id"))
     author_id: Mapped[int] = mapped_column(db.ForeignKey("users.id"))
     body: Mapped[str] = mapped_column(Text)
+    # Optional file dropped straight into the chat (rendered inline in the stream)
+    attachment_id: Mapped[Optional[int]] = mapped_column(db.ForeignKey("shared_files.id"), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     author = db.relationship("User", lazy=True)
+    attachment = db.relationship("SharedFile", lazy=True, foreign_keys=[attachment_id])
 
 
 class StudyGroupNote(db.Model):
@@ -453,6 +460,37 @@ class StudyGroupNote(db.Model):
         default=lambda: datetime.now(timezone.utc),
         onupdate=lambda: datetime.now(timezone.utc),
     )
+
+
+class ProfileComment(db.Model):
+    """A public wall post left on someone's profile. Anyone may post; the
+    profile owner (or an admin) can delete; anyone can report or like."""
+    __tablename__ = "profile_comments"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    profile_id: Mapped[int] = mapped_column(db.ForeignKey("users.id"), index=True)  # whose wall
+    author_id: Mapped[int] = mapped_column(db.ForeignKey("users.id"))               # who wrote it
+    body: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+    author = db.relationship("User", lazy=True, foreign_keys=[author_id])
+    likes = db.relationship("ProfileCommentLike", lazy=True, cascade="all, delete-orphan")
+
+    def like_count(self) -> int:
+        return len(self.likes)
+
+    def liked_by(self, user_id: int) -> bool:
+        return any(l.user_id == user_id for l in self.likes)
+
+
+class ProfileCommentLike(db.Model):
+    __tablename__ = "profile_comment_likes"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    comment_id: Mapped[int] = mapped_column(db.ForeignKey("profile_comments.id"))
+    user_id: Mapped[int] = mapped_column(db.ForeignKey("users.id"))
+
+    __table_args__ = (db.UniqueConstraint("comment_id", "user_id"),)
 
 
 # ── AI CHATBOT ────────────────────────────────────────────────────────────────

@@ -141,7 +141,8 @@ def register():
         db.session.commit()
         login_user(user)
         flash(f'Welcome, {user.first_name}! Your account has been created.', 'success')
-        return redirect(url_for('main.dashboard'))
+        # First-run: let them pick an avatar + banner before landing on the dashboard
+        return redirect(url_for('main.welcome'))
 
     return render_template('auth/auth.html', action='register')
 

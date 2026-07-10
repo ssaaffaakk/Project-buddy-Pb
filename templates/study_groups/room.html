@@ -56,6 +56,26 @@ html,body{height:100%;overflow:hidden;}
 .send-btn{padding:10px 18px;border-radius:var(--r);font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;border:none;background:linear-gradient(110deg,var(--accent) 0%,var(--violet,#A78BFF) 45%,var(--coral,#FF6B6B) 100%);color:#fff;cursor:pointer;font-weight:500;transition:all 0.2s;flex-shrink:0;}
 .send-btn:hover{box-shadow:0 0 0 1px rgba(124,155,255,0.5),0 4px 20px rgba(124,155,255,0.2);}
 .send-btn:disabled{opacity:0.4;cursor:default;box-shadow:none;}
+.attach-btn{flex-shrink:0;width:42px;height:42px;border-radius:var(--r);border:1px solid var(--border);background:var(--bg3);color:var(--muted);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.2s;}
+.attach-btn:hover{border-color:rgba(124,155,255,0.35);color:var(--accent);background:var(--card-h);}
+.staged-file{display:flex;align-items:center;gap:8px;margin-bottom:8px;padding:7px 10px;border-radius:var(--r);background:var(--accent-dim);border:1px solid rgba(124,155,255,0.2);max-width:340px;}
+.sf-ic{color:var(--accent);flex-shrink:0;display:flex;}
+.sf-name{font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--soft);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.sf-x{border:none;background:none;color:var(--muted);cursor:pointer;font-size:1.1rem;line-height:1;padding:0 2px;flex-shrink:0;}
+.sf-x:hover{color:#e07060;}
+/* chat attachments */
+.msg-att-img{display:block;margin-left:36px;margin-top:4px;max-width:280px;border-radius:var(--r);overflow:hidden;border:1px solid var(--border);}
+.msg-att-img.mine{margin-left:auto;margin-right:0;}
+.msg-att-img img{display:block;width:100%;height:auto;max-height:320px;object-fit:cover;}
+.msg-att-file{display:flex;align-items:center;gap:10px;margin-left:36px;margin-top:4px;max-width:320px;padding:10px 12px;border-radius:var(--r);background:var(--card);border:1px solid var(--border);text-decoration:none;transition:border-color 0.2s;}
+.msg-att-file.mine{margin-left:auto;margin-right:0;background:var(--accent-dim);border-color:rgba(124,155,255,0.15);}
+.msg-att-file:hover{border-color:rgba(124,155,255,0.3);}
+.maf-ic{width:34px;height:34px;border-radius:7px;background:var(--bg3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--accent);flex-shrink:0;}
+.maf-info{flex:1;min-width:0;display:flex;flex-direction:column;}
+.maf-name{font-size:0.78rem;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.maf-size{font-family:'DM Mono',monospace;font-size:0.6rem;color:var(--muted);}
+.maf-dl{color:var(--muted);flex-shrink:0;}
+.fp-hint{font-family:'DM Mono',monospace;font-size:0.58rem;color:var(--muted);line-height:1.5;margin-top:2px;}
 .join-banner{flex-shrink:0;padding:14px 20px;background:rgba(124,155,255,0.05);border-top:1px solid rgba(124,155,255,0.12);display:flex;align-items:center;justify-content:space-between;gap:12px;}
 .join-banner p{font-size:0.83rem;color:var(--soft);}
 .btn-join{padding:8px 18px;border-radius:var(--r);font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;border:none;background:linear-gradient(110deg,var(--accent) 0%,var(--violet,#A78BFF) 45%,var(--coral,#FF6B6B) 100%);color:#fff;cursor:pointer;transition:all 0.2s;}
@@ -252,14 +272,36 @@ html,body{height:100%;overflow:hidden;}
               </span>
               <span class="msg-time">{{ msg.created_at.strftime('%H:%M') }}</span>
             </div>
-            <div class="msg-bubble {% if mine %}mine{% endif %}">{{ msg.body }}</div>
+            {% if msg.body %}<div class="msg-bubble {% if mine %}mine{% endif %}">{{ msg.body }}</div>{% endif %}
+            {% if msg.attachment %}
+              {% set aurl = url_for('study_groups.download_file', group_id=group.id, file_id=msg.attachment.id) %}
+              {% set aext = (msg.attachment.filename.rsplit('.', 1)[-1] | lower) if '.' in msg.attachment.filename else '' %}
+              {% if aext in ['png','jpg','jpeg','gif','webp'] %}
+                <a class="msg-att-img {% if mine %}mine{% endif %}" href="{{ aurl }}" target="_blank" rel="noopener"><img src="{{ aurl }}" alt="{{ msg.attachment.filename }}" loading="lazy"></a>
+              {% else %}
+                <a class="msg-att-file {% if mine %}mine{% endif %}" href="{{ aurl }}" download>
+                  <span class="maf-ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></span>
+                  <span class="maf-info"><span class="maf-name">{{ msg.attachment.filename }}</span><span class="maf-size">{% set kb = msg.attachment.file_size / 1024 %}{% if kb < 1024 %}{{ kb | round(1) }} KB{% else %}{{ (kb / 1024) | round(1) }} MB{% endif %}</span></span>
+                  <span class="maf-dl"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></span>
+                </a>
+              {% endif %}
+            {% endif %}
           </div>
         {% endfor %}
       </div>
 
       {% if is_member %}
       <div class="input-bar">
+        <div class="staged-file" id="staged-file" style="display:none;">
+          <span class="sf-ic"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></span>
+          <span class="sf-name" id="sf-name"></span>
+          <button class="sf-x" onclick="clearStaged()" title="Remove" aria-label="Remove file">&times;</button>
+        </div>
         <div class="input-wrap">
+          <input type="file" id="chat-file" style="display:none;" onchange="stageFile(this)">
+          <button class="attach-btn" onclick="document.getElementById('chat-file').click()" title="Attach a file" aria-label="Attach a file">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a5 5 0 0 1-7.07-7.07l9.19-9.19a3.5 3.5 0 0 1 4.95 4.95l-9.2 9.19a1.5 1.5 0 0 1-2.12-2.12l8.49-8.49"/></svg>
+          </button>
           <textarea class="msg-input" id="msg-input" placeholder="Message {{ group.name }}…" rows="1"
                     onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
           <button class="send-btn" id="send-btn" onclick="sendMessage()">Send</button>
@@ -286,17 +328,11 @@ html,body{height:100%;overflow:hidden;}
         </button>
       </div>
 
-      <!-- FILES TAB -->
+      <!-- FILES TAB — read-only gallery of everything shared in chat -->
       <div class="files-section visible" id="files-section">
         <div class="fp-header">
           <div class="fp-title">Shared Files</div>
-          {% if is_member %}
-          <label class="fp-upload-label" id="upload-label" for="file-input">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-            Upload File
-            <input type="file" id="file-input" style="display:none;" onchange="uploadFile(this)">
-          </label>
-          {% endif %}
+          <div class="fp-hint">Everything dropped into the chat, collected here.</div>
         </div>
         <div class="files-list" id="files-list">
           <div class="skel-row"><div class="skel skel-icon"></div><div class="skel-lines"><div class="skel skel-line"></div><div class="skel skel-line short"></div></div></div>
@@ -340,19 +376,56 @@ scrollBottom(false);
 function autoResize(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,120)+'px';}
 function handleKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage();}}
 
+var stagedFile=null;
+function stageFile(input){
+  var f=input.files[0];
+  if(!f)return;
+  stagedFile=f;
+  document.getElementById('sf-name').textContent=f.name;
+  document.getElementById('staged-file').style.display='flex';
+}
+function clearStaged(){
+  stagedFile=null;
+  var el=document.getElementById('chat-file'); if(el)el.value='';
+  var chip=document.getElementById('staged-file'); if(chip)chip.style.display='none';
+}
+
 async function sendMessage(){
   var input=document.getElementById('msg-input');
   var body=input.value.trim();
-  if(!body)return;
+  if(!body && !stagedFile)return;
   var btn=document.getElementById('send-btn');
   btn.disabled=true;
   try{
-    var r=await fetch('/study-groups/'+GROUP_ID+'/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({body:body})});
+    var r;
+    if(stagedFile){
+      var form=new FormData();
+      form.append('file',stagedFile);
+      form.append('body',body);
+      r=await fetch('/study-groups/'+GROUP_ID+'/send',{method:'POST',body:form});
+    }else{
+      r=await fetch('/study-groups/'+GROUP_ID+'/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({body:body})});
+    }
     var d=await r.json();
-    if(d.id){input.value='';input.style.height='auto';appendMessage(d,true);lastMsgId=d.id;scrollBottom(true);}
-    else{toast(d.error||'Could not send.','error');}
+    if(d.id){
+      input.value='';input.style.height='auto';clearStaged();
+      appendMessage(d,true);lastMsgId=d.id;scrollBottom(true);
+      filesLoaded=false; // gallery will refresh next time it's opened
+    }else{toast(d.error||'Could not send.','error');}
   }catch(e){toast('Network error.','error');}
   btn.disabled=false;
+}
+
+function attachHtml(a,mine){
+  var mc=mine?' mine':'';
+  if(a.is_image){
+    return '<a class="msg-att-img'+mc+'" href="'+escAttr(a.url)+'" target="_blank" rel="noopener"><img src="'+escAttr(a.url)+'" alt="'+escAttr(a.filename)+'" loading="lazy"></a>';
+  }
+  return '<a class="msg-att-file'+mc+'" href="'+escAttr(a.url)+'" download>'+
+    '<span class="maf-ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></span>'+
+    '<span class="maf-info"><span class="maf-name">'+escHtml(a.filename)+'</span><span class="maf-size">'+formatBytes(a.file_size)+'</span></span>'+
+    '<span class="maf-dl"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></span>'+
+    '</a>';
 }
 
 function appendMessage(m,mine){
@@ -361,7 +434,10 @@ function appendMessage(m,mine){
   div.id='msg-'+m.id;
   div.className='msg-group'+(mine?' msg-mine-row':'');
   var av=m.author_avatar?'<img src="'+m.author_avatar+'" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">':m.author_initials;
-  div.innerHTML='<div class="msg-author-row"><div class="msg-av">'+av+'</div><span class="msg-author-name'+(mine?' mine':'')+'">'+escHtml(m.author_name)+'</span><span class="msg-time">'+m.time+'</span></div><div class="msg-bubble'+(mine?' mine':'')+'">'+escHtml(m.body)+'</div>';
+  var html='<div class="msg-author-row"><div class="msg-av">'+av+'</div><span class="msg-author-name'+(mine?' mine':'')+'">'+escHtml(m.author_name)+'</span><span class="msg-time">'+m.time+'</span></div>';
+  if(m.body){html+='<div class="msg-bubble'+(mine?' mine':'')+'">'+escHtml(m.body)+'</div>';}
+  if(m.attachment){html+=attachHtml(m.attachment,mine);}
+  div.innerHTML=html;
   feed.appendChild(div);
 }
 
@@ -893,7 +969,7 @@ async function loadFiles(){
 function renderFiles(files){
   var list=document.getElementById('files-list');
   if(files.length===0){
-    list.innerHTML='<div class="fp-empty">No files shared yet. Upload the first one!</div>';
+    list.innerHTML='<div class="fp-empty">No files yet. Drop one into the chat to share it.</div>';
     return;
   }
   list.innerHTML=files.map(function(f){
@@ -908,32 +984,6 @@ function renderFiles(files){
       '</a>'+
     '</div>';
   }).join('');
-}
-
-async function uploadFile(input){
-  var file=input.files[0];
-  if(!file)return;
-  var label=document.getElementById('upload-label');
-  label.classList.add('uploading');
-  label.innerHTML='<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"/><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/></svg> Uploading…';
-  var form=new FormData();
-  form.append('file',file);
-  form.append('csrf_token', document.querySelector('meta[name="csrf-token"]') ? document.querySelector('meta[name="csrf-token"]').getAttribute('content') : '');
-  try{
-    var r=await fetch('/study-groups/'+GROUP_ID+'/upload',{method:'POST',body:form,headers:{'X-CSRFToken': document.querySelector('meta[name="csrf-token"]') ? document.querySelector('meta[name="csrf-token"]').getAttribute('content') : ''}});
-    var d=await r.json();
-    if(d.id){
-      filesLoaded=false;
-      await loadFiles();
-      filesLoaded=true;
-      toast(escHtml(d.filename)+' uploaded.','success');
-    } else {
-      toast(d.error||'Upload failed.','error');
-    }
-  }catch(e){toast('Upload failed.','error');}
-  label.classList.remove('uploading');
-  label.innerHTML='<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Upload File<input type="file" id="file-input" style="display:none;" onchange="uploadFile(this)">';
-  input.value='';
 }
 
 function formatBytes(b){

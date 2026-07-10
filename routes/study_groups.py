@@ -197,7 +197,51 @@ def room(group_id):
     )
 
 
-# ── SEND MESSAGE ─────────────────────────────────────────────────────────────
+IMAGE_EXT = {"png", "jpg", "jpeg", "gif", "webp"}
+
+
+def _attachment_json(sf, group_id):
+    """Serialize a SharedFile for inline rendering in the chat stream."""
+    if not sf:
+        return None
+    ext = sf.filename.rsplit(".", 1)[-1].lower() if "." in sf.filename else ""
+    is_image = (sf.mime_type or "").startswith("image/") or ext in IMAGE_EXT
+    return {
+        "id":        sf.id,
+        "filename":  sf.filename,
+        "file_size": sf.file_size,
+        "is_image":  is_image,
+        "url":       url_for("study_groups.download_file", group_id=group_id, file_id=sf.id),
+    }
+
+
+def _store_attachment(group_id, f):
+    """Persist an uploaded file as a SharedFile. Returns (SharedFile, None) or
+    (None, (error_message, status_code))."""
+    if not f or not f.filename:
+        return None, ("No file selected.", 400)
+    if not _allowed(f.filename):
+        return None, ("File type not allowed.", 400)
+    data = f.read()
+    if len(data) > MAX_FILE_BYTES:
+        return None, ("File too large (max 25 MB).", 400)
+    ext = f.filename.rsplit(".", 1)[1].lower()
+    stored_name = f"{uuid.uuid4().hex}.{ext}"
+    storage.save(data, stored_name, category="study_groups")
+    sf = SharedFile(
+        group_id=group_id,
+        uploader_id=current_user.id,
+        filename=secure_filename(f.filename),
+        stored_name=stored_name,
+        file_size=len(data),
+        mime_type=f.mimetype or "application/octet-stream",
+    )
+    db.session.add(sf)
+    db.session.flush()  # assign sf.id before we reference it on the message
+    return sf, None
+
+
+# ── SEND MESSAGE (optionally with a file dropped into chat) ──────────────────
 @study_groups_bp.route("/<int:group_id>/send", methods=["POST"])
 @login_required
 def send_message(group_id):
@@ -205,14 +249,30 @@ def send_message(group_id):
     if not group.is_member(current_user.id):
         return jsonify({"error": "Join the group first."}), 403
 
-    data = request.get_json(silent=True) or {}
-    body = (data.get("body") or "").strip()
-    if not body:
-        return jsonify({"error": "Message cannot be empty."}), 400
+    f = request.files.get("file")
+    if f is not None and f.filename:
+        body = (request.form.get("body") or "").strip()
+    else:
+        f = None
+        data = request.get_json(silent=True) or {}
+        body = (data.get("body") or "").strip()
+
     if len(body) > 2000:
         return jsonify({"error": "Too long (max 2000 chars)."}), 400
 
-    msg = StudyGroupMessage(group_id=group_id, author_id=current_user.id, body=body)
+    attachment = None
+    if f is not None:
+        attachment, err = _store_attachment(group_id, f)
+        if err:
+            return jsonify({"error": err[0]}), err[1]
+
+    if not body and attachment is None:
+        return jsonify({"error": "Message cannot be empty."}), 400
+
+    msg = StudyGroupMessage(
+        group_id=group_id, author_id=current_user.id, body=body,
+        attachment_id=attachment.id if attachment else None,
+    )
     db.session.add(msg)
     db.session.commit()
 
@@ -225,6 +285,7 @@ def send_message(group_id):
         "author_avatar":   u.avatar_url or "",
         "author_id":       u.id,
         "time":            msg.created_at.strftime("%H:%M"),
+        "attachment":      _attachment_json(attachment, group_id),
     })
 
 
@@ -250,6 +311,7 @@ def poll_messages(group_id):
         "author_id":       m.author.id,
         "time":            m.created_at.strftime("%H:%M"),
         "is_mine":         m.author_id == current_user.id,
+        "attachment":      _attachment_json(m.attachment, group_id) if m.attachment_id else None,
     } for m in msgs])
 
 

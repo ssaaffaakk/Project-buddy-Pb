@@ -9,6 +9,40 @@
   font-size:0.85rem;font-weight:500;margin-bottom:24px;transition:all 0.2s;}
 .back-link:hover{gap:10px;}
 
+/* COVER BANNER */
+.pv-cover{height:150px;border-radius:16px 16px 0 0;border:1px solid rgba(255,255,255,0.09);border-bottom:none;overflow:hidden;position:relative;}
+.profile-header.pv-under{border-radius:0 0 16px 16px;border-top:none;}
+.profile-header.pv-under::before{display:none;}
+.profile-header.pv-under .profile-avatar{margin-top:-58px;border:4px solid var(--bg);width:92px;height:92px;}
+
+/* PROFILE WALL */
+.pv-wall{margin-top:36px;}
+.pv-wall-head{display:flex;align-items:baseline;gap:10px;margin-bottom:16px;}
+.pv-wall-head h3{font-family:'DM Serif Display',serif;font-size:1.1rem;font-weight:400;}
+.pv-wall-head .cnt{font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--muted);}
+.wall-form{display:flex;gap:10px;margin-bottom:22px;align-items:flex-end;}
+.wall-input{flex:1;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:12px 14px;color:var(--text);font-family:'Inter',sans-serif;font-size:0.85rem;resize:none;min-height:44px;max-height:140px;outline:none;transition:border-color 0.2s;}
+.wall-input:focus{border-color:rgba(124,155,255,0.35);}
+.wall-post{padding:12px 20px;border-radius:var(--r);border:none;background:linear-gradient(110deg,var(--accent) 0%,var(--violet,#A78BFF) 45%,var(--coral,#FF6B6B) 100%);color:#fff;font-family:'DM Mono',monospace;font-size:0.66rem;letter-spacing:0.08em;text-transform:uppercase;font-weight:600;cursor:pointer;transition:all 0.2s;flex-shrink:0;}
+.wall-post:hover{box-shadow:0 0 0 1px rgba(124,155,255,0.5),0 4px 18px rgba(124,155,255,0.2);}
+.wall-post:disabled{opacity:0.4;cursor:default;box-shadow:none;}
+.wall-list{display:flex;flex-direction:column;gap:12px;}
+.wc{display:flex;gap:12px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:14px;}
+.wc-av{width:38px;height:38px;border-radius:50%;flex-shrink:0;overflow:hidden;background:linear-gradient(135deg,var(--accent),#4A5BA8);display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:0.7rem;color:#fff;text-decoration:none;}
+.wc-av img{width:100%;height:100%;object-fit:cover;}
+.wc-main{flex:1;min-width:0;}
+.wc-top{display:flex;align-items:center;gap:8px;margin-bottom:3px;}
+.wc-name{font-size:0.85rem;font-weight:600;color:var(--text);text-decoration:none;}
+.wc-name:hover{color:var(--accent);}
+.wc-time{font-family:'DM Mono',monospace;font-size:0.58rem;color:var(--muted);}
+.wc-body{font-size:0.85rem;color:var(--soft);line-height:1.55;word-break:break-word;white-space:pre-wrap;}
+.wc-actions{display:flex;gap:16px;margin-top:9px;}
+.wc-act{display:inline-flex;align-items:center;gap:5px;background:none;border:none;color:var(--muted);font-family:'DM Mono',monospace;font-size:0.6rem;letter-spacing:0.04em;text-transform:uppercase;cursor:pointer;transition:color 0.2s;padding:0;}
+.wc-act:hover{color:var(--soft);}
+.wc-act.liked{color:var(--coral,#FF6B6B);}
+.wc-act.del:hover{color:#e07060;}
+.wall-empty{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--muted);text-align:center;padding:24px 0;font-style:italic;}
+
 /* PROFILE HEADER */
 .profile-header{background:linear-gradient(155deg,rgba(255,255,255,0.05),rgba(255,255,255,0.012));border:1px solid rgba(255,255,255,0.09);border-radius:16px;padding:24px;margin-bottom:32px;display:flex;gap:24px;align-items:start;-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);position:relative;overflow:hidden;}
 .profile-header::before{content:'';position:absolute;top:0;left:0;right:0;height:1.5px;background:linear-gradient(90deg,transparent,rgba(124,155,255,0.6),transparent);opacity:.6;}
@@ -81,8 +115,11 @@
 {% block content %}
   <a href="/profile" class="back-link">← Back to My Profile</a>
 
+  <!-- COVER BANNER -->
+  <div class="pv-cover" style="{{ banner_style(profile_user.banner_url) }}"></div>
+
   <!-- PROFILE HEADER -->
-  <div class="profile-header">
+  <div class="profile-header pv-under">
     <div class="profile-avatar" style="overflow:hidden;">
       {% if profile_user.avatar_url %}
         <img src="{{ profile_user.avatar_url }}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;">
@@ -247,6 +284,21 @@
     </div>
   </div>
   {% endif %}
+
+  {% if profile_user.role != 'admin' %}
+  <!-- PROFILE WALL -->
+  <div class="pv-wall">
+    <div class="pv-wall-head">
+      <h3>Wall</h3>
+      <span class="cnt" id="wall-count">{{ wall_comments|length }} comment{% if wall_comments|length != 1 %}s{% endif %}</span>
+    </div>
+    <div class="wall-form">
+      <textarea class="wall-input" id="wall-input" rows="1" placeholder="Leave a comment on {{ profile_user.first_name }}'s wall…" onkeydown="wallKey(event)"></textarea>
+      <button class="wall-post" id="wall-post" onclick="postWall()">Post</button>
+    </div>
+    <div class="wall-list" id="wall-list"></div>
+  </div>
+  {% endif %}
 {% endblock %}
 
 {% block extra_script %}
@@ -268,5 +320,90 @@ document.querySelectorAll('.rating-btn').forEach(function(btn) {
     btn.classList.add('selected');
   });
 });
+
+/* ── PROFILE WALL ── */
+var PROFILE_ID = {{ profile_user.id }};
+var WALL = {{ wall_comments | tojson }};
+
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function escA(s){return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');}
+
+function wallCommentHtml(c){
+  var av = c.author_avatar ? '<img src="'+escA(c.author_avatar)+'" alt="">' : esc(c.author_initials);
+  var actions = '<button class="wc-act like'+(c.liked?' liked':'')+'" onclick="likeWall('+c.id+',this)">'+
+      '<svg width="12" height="12" viewBox="0 0 24 24" fill="'+(c.liked?'currentColor':'none')+'" stroke="currentColor" stroke-width="2"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>'+
+      '<span class="lc">'+(c.likes||0)+'</span></button>';
+  if(!c.can_delete){
+    actions += '<button class="wc-act" onclick="reportWall('+c.id+')">Report</button>';
+  }else{
+    actions += '<button class="wc-act del" onclick="deleteWall('+c.id+',this)">Delete</button>';
+  }
+  return '<div class="wc" id="wc-'+c.id+'">'+
+    '<a class="wc-av" href="/user/'+c.author_id+'">'+av+'</a>'+
+    '<div class="wc-main">'+
+      '<div class="wc-top"><a class="wc-name" href="/user/'+c.author_id+'">'+esc(c.author_name)+'</a><span class="wc-time">'+esc(c.time)+'</span></div>'+
+      '<div class="wc-body">'+esc(c.body)+'</div>'+
+      '<div class="wc-actions">'+actions+'</div>'+
+    '</div></div>';
+}
+
+function renderWall(){
+  var list=document.getElementById('wall-list');
+  if(!WALL.length){list.innerHTML='<div class="wall-empty">No comments yet. Be the first to say hi.</div>';return;}
+  list.innerHTML=WALL.map(wallCommentHtml).join('');
+}
+function updateWallCount(){
+  var el=document.getElementById('wall-count');
+  el.textContent=WALL.length+' comment'+(WALL.length===1?'':'s');
+}
+
+function wallKey(e){ if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();postWall();} }
+
+async function postWall(){
+  var input=document.getElementById('wall-input');
+  var body=input.value.trim();
+  if(!body)return;
+  var btn=document.getElementById('wall-post');
+  btn.disabled=true;
+  try{
+    var r=await fetch('/user/'+PROFILE_ID+'/wall',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({body:body})});
+    var d=await r.json();
+    if(d.id){WALL.unshift(d);input.value='';input.style.height='auto';renderWall();updateWallCount();}
+    else{showToast(d.error||'Could not post.','error');}
+  }catch(e){showToast('Network error.','error');}
+  btn.disabled=false;
+}
+
+async function likeWall(id,el){
+  try{
+    var r=await fetch('/wall/'+id+'/like',{method:'POST'});
+    var d=await r.json();
+    el.classList.toggle('liked',d.liked);
+    el.querySelector('.lc').textContent=d.likes;
+    el.querySelector('svg').setAttribute('fill',d.liked?'currentColor':'none');
+    var c=WALL.find(function(x){return x.id===id;}); if(c){c.liked=d.liked;c.likes=d.likes;}
+  }catch(e){}
+}
+
+async function deleteWall(id,el){
+  if(!await pbConfirm({title:'Delete this comment?',message:'This removes it from the wall.',confirmText:'Delete',danger:true}))return;
+  try{
+    var r=await fetch('/wall/'+id+'/delete',{method:'POST'});
+    var d=await r.json();
+    if(d.ok){var node=document.getElementById('wc-'+id);if(node)node.remove();WALL=WALL.filter(function(x){return x.id!==id;});updateWallCount();if(!WALL.length)renderWall();}
+    else{showToast(d.error||'Could not delete.','error');}
+  }catch(e){showToast('Network error.','error');}
+}
+
+async function reportWall(id){
+  if(!await pbConfirm({title:'Report this comment?',message:'Our team will review it.',confirmText:'Report',danger:true}))return;
+  try{
+    var r=await fetch('/wall/'+id+'/report',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({reason:'Inappropriate'})});
+    var d=await r.json();
+    showToast(d.ok?'Reported. Thank you.':(d.error||'Could not report.'), d.ok?'success':'error');
+  }catch(e){showToast('Network error.','error');}
+}
+
+if(document.getElementById('wall-list')){renderWall();}
 </script>
 {% endblock %}

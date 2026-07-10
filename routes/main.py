@@ -12,7 +12,7 @@ from models import (
     User, Project, ProjectMember, Application, Feedback, Endorsement,
     UserBadge, Badge, Report, Chat, AdminMessage, UserInterest, UserSkill, UserCourse,
     ProjectMessage, ProjectVote, CommunityPost, CommunityComment, CommunityLike,
-    Notification
+    Notification, ProfileComment, ProfileCommentLike
 )
 from services.recommendation_service import get_recommended_projects
 from services.badge_service import check_and_award_badges
@@ -50,6 +50,54 @@ def _save_user_avatar(user, avatar_file):
     return user.avatar_url
 
 
+# ── PROFILE BANNERS ───────────────────────────────────────────────────────────
+ALLOWED_BANNER_EXTENSIONS = {"jpg", "jpeg", "png", "webp"}
+MAX_BANNER_BYTES = 4 * 1024 * 1024  # 4 MB
+
+# Preset cover gradients (banner_url is stored as "preset:<key>")
+BANNER_PRESETS = [
+    {"key": "aurora", "css": "linear-gradient(120deg,#7C9BFF 0%,#A78BFF 52%,#FF6B6B 100%)"},
+    {"key": "dusk",   "css": "linear-gradient(120deg,#141d3a 0%,#3a2b56 100%)"},
+    {"key": "mint",   "css": "linear-gradient(120deg,#3AD17A 0%,#7C9BFF 100%)"},
+    {"key": "ember",  "css": "linear-gradient(120deg,#FF6B6B 0%,#A78BFF 100%)"},
+    {"key": "steel",  "css": "linear-gradient(120deg,#0A1128 0%,#2b3a66 100%)"},
+    {"key": "sky",    "css": "linear-gradient(120deg,#B7CCFF 0%,#7C9BFF 60%,#4A5BA8 100%)"},
+]
+BANNER_CSS = {p["key"]: p["css"] for p in BANNER_PRESETS}
+DEFAULT_BANNER_CSS = "linear-gradient(120deg,#141d3a 0%,#0a1024 100%)"
+
+
+def banner_style(banner_url):
+    """Inline CSS 'background' declaration for a user's profile banner."""
+    if banner_url and banner_url.startswith("preset:"):
+        return "background:" + BANNER_CSS.get(banner_url.split(":", 1)[1], DEFAULT_BANNER_CSS) + ";"
+    if banner_url:
+        return ("background-image:url('" + banner_url + "');"
+                "background-size:cover;background-position:center;")
+    return "background:" + DEFAULT_BANNER_CSS + ";"
+
+
+def _save_user_banner(user, banner_file):
+    """Persist an uploaded banner image and set user.banner_url. Raises ValueError."""
+    if not banner_file or not banner_file.filename:
+        return None
+    if ("." not in banner_file.filename
+            or banner_file.filename.rsplit(".", 1)[1].lower() not in ALLOWED_BANNER_EXTENSIONS):
+        raise ValueError("Invalid file type. Please upload a JPG, PNG, or WebP image.")
+    banner_file.seek(0, 2)
+    size = banner_file.tell()
+    banner_file.seek(0)
+    if size > MAX_BANNER_BYTES:
+        raise ValueError("Banner must be under 4 MB.")
+    ext = banner_file.filename.rsplit(".", 1)[1].lower()
+    filename = secure_filename(f"banner_{user.id}.{ext}")
+    data = banner_file.read()
+    url = storage.save(data, filename, category="banners")
+    cache_bust = int(datetime.now(timezone.utc).timestamp())
+    user.banner_url = f"{url}?v={cache_bust}"
+    return user.banner_url
+
+
 def create_notification(user_id, message, link=None, type=None):
     """Create a notification for a user. Call db.session.commit() after."""
     if not user_id or not message:
@@ -59,6 +107,27 @@ def create_notification(user_id, message, link=None, type=None):
 
 
 main_bp = Blueprint("main", __name__)
+
+
+@main_bp.app_context_processor
+def _inject_profile_helpers():
+    """Make banner_style() and the preset list available to every template."""
+    return {"banner_style": banner_style, "BANNER_PRESETS": BANNER_PRESETS}
+
+
+def _wall_comment_json(c):
+    return {
+        "id":              c.id,
+        "body":            c.body,
+        "author_id":       c.author_id,
+        "author_name":     c.author.get_full_name(),
+        "author_avatar":   c.author.avatar_url or "",
+        "author_initials": (c.author.first_name[0] + c.author.last_name[0]).upper(),
+        "time":            c.created_at.strftime("%b %d, %H:%M"),
+        "likes":           c.like_count(),
+        "liked":           c.liked_by(current_user.id),
+        "can_delete":      c.author_id == current_user.id or c.profile_id == current_user.id or current_user.role == "admin",
+    }
 
 
 # ── HEALTHCHECK ───────────────────────────────────────────────────────────────
@@ -641,6 +710,12 @@ def user_profile(user_id):
             ).all()
         ]
 
+    wall = (ProfileComment.query
+            .filter_by(profile_id=profile_user.id)
+            .order_by(ProfileComment.created_at.desc())
+            .limit(100).all())
+    wall_comments = [_wall_comment_json(c) for c in wall]
+
     return render_template(
         "user/profile_view.html",
         profile_user=profile_user,
@@ -649,6 +724,7 @@ def user_profile(user_id):
         can_leave_review=can_leave_review,
         can_endorse=can_endorse,
         already_endorsed_skills=already_endorsed_skills,
+        wall_comments=wall_comments,
     )
 
 
@@ -878,11 +954,128 @@ def edit_profile():
             if course:
                 db.session.add(UserCourse(user_id=user.id, course=course))
 
+        # Handle banner (preset key or uploaded image)
+        banner_preset = request.form.get("banner_preset", "").strip()
+        banner_file = request.files.get("banner")
+        try:
+            if banner_file and banner_file.filename:
+                _save_user_banner(user, banner_file)
+            elif banner_preset and banner_preset in BANNER_CSS:
+                user.banner_url = f"preset:{banner_preset}"
+        except ValueError as exc:
+            flash(str(exc), "error")
+            return redirect(url_for("main.edit_profile"))
+
         db.session.commit()
         flash("Profile updated successfully!", "success")
         return redirect(url_for("main.profile"))
 
     return render_template("user/edit_profile.html", user=user)
+
+
+# ── FIRST-RUN ONBOARDING (pick avatar + banner) ───────────────────────────────
+@main_bp.route("/welcome", methods=["GET", "POST"])
+@login_required
+def welcome():
+    user = db.session.get(User, current_user.id)
+
+    if request.method == "POST":
+        if request.form.get("action") == "skip":
+            user.onboarded = True
+            db.session.commit()
+            return redirect(url_for("main.dashboard"))
+
+        try:
+            avatar_file = request.files.get("avatar")
+            if avatar_file and avatar_file.filename:
+                _save_user_avatar(user, avatar_file)
+
+            banner_file = request.files.get("banner")
+            banner_preset = request.form.get("banner_preset", "").strip()
+            if banner_file and banner_file.filename:
+                _save_user_banner(user, banner_file)
+            elif banner_preset and banner_preset in BANNER_CSS:
+                user.banner_url = f"preset:{banner_preset}"
+        except ValueError as exc:
+            flash(str(exc), "error")
+            return redirect(url_for("main.welcome"))
+
+        user.onboarded = True
+        db.session.commit()
+        flash("You're all set — welcome to ProjectBuddy!", "success")
+        return redirect(url_for("main.dashboard"))
+
+    return render_template("user/welcome.html", user=user)
+
+
+# ── PROFILE WALL (public comments) ────────────────────────────────────────────
+@main_bp.route("/user/<int:user_id>/wall", methods=["POST"])
+@login_required
+def post_wall_comment(user_id):
+    profile_user = User.query.get_or_404(user_id)
+    payload = request.get_json(silent=True) or {}
+    body = (payload.get("body") or request.form.get("body") or "").strip()
+    if not body:
+        return jsonify({"error": "Comment cannot be empty."}), 400
+    if len(body) > 1000:
+        return jsonify({"error": "Too long (max 1000 chars)."}), 400
+
+    c = ProfileComment(profile_id=profile_user.id, author_id=current_user.id, body=body)
+    db.session.add(c)
+    if profile_user.id != current_user.id:
+        create_notification(
+            profile_user.id,
+            f"{current_user.get_full_name()} left a comment on your profile.",
+            link=f"/user/{profile_user.id}",
+        )
+    db.session.commit()
+    return jsonify(_wall_comment_json(c))
+
+
+@main_bp.route("/wall/<int:comment_id>/like", methods=["POST"])
+@login_required
+def like_wall_comment(comment_id):
+    ProfileComment.query.get_or_404(comment_id)
+    existing = ProfileCommentLike.query.filter_by(comment_id=comment_id, user_id=current_user.id).first()
+    if existing:
+        db.session.delete(existing)
+        liked = False
+    else:
+        db.session.add(ProfileCommentLike(comment_id=comment_id, user_id=current_user.id))
+        liked = True
+    db.session.commit()
+    return jsonify({"liked": liked,
+                    "likes": ProfileCommentLike.query.filter_by(comment_id=comment_id).count()})
+
+
+@main_bp.route("/wall/<int:comment_id>/delete", methods=["POST"])
+@login_required
+def delete_wall_comment(comment_id):
+    c = ProfileComment.query.get_or_404(comment_id)
+    if not (c.author_id == current_user.id or c.profile_id == current_user.id
+            or current_user.role == "admin"):
+        return jsonify({"error": "Not authorized."}), 403
+    db.session.delete(c)
+    db.session.commit()
+    return jsonify({"ok": True})
+
+
+@main_bp.route("/wall/<int:comment_id>/report", methods=["POST"])
+@login_required
+def report_wall_comment(comment_id):
+    c = ProfileComment.query.get_or_404(comment_id)
+    if c.author_id == current_user.id:
+        return jsonify({"error": "You can't report your own comment."}), 400
+    payload = request.get_json(silent=True) or {}
+    reason = (payload.get("reason") or "Inappropriate profile comment").strip()
+    db.session.add(Report(
+        reporter_id=current_user.id,
+        target_user_id=c.author_id,
+        reason="profile_comment",
+        description=f"Comment #{c.id}: {c.body[:300]}\n\nReason: {reason}",
+    ))
+    db.session.commit()
+    return jsonify({"ok": True})
 
 
 # ── REPORT ISSUE ──────────────────────────────────────────────────────────────

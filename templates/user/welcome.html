@@ -1,0 +1,125 @@
+{% extends 'base_app.html' %}
+{% block title %}ProjectBuddy — Welcome{% endblock %}
+
+{% block extra_style %}
+<style nonce="{{ csp_nonce }}">
+.wl-wrap{max-width:640px;margin:0 auto;padding:40px 20px 60px;}
+.wl-eyebrow{font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.22em;text-transform:uppercase;color:var(--accent);margin-bottom:12px;}
+.wl-title{font-family:'DM Serif Display',serif;font-size:2.1rem;letter-spacing:-0.02em;margin-bottom:8px;line-height:1.1;}
+.wl-title em{font-style:italic;color:var(--accent);}
+.wl-sub{color:var(--soft);font-size:0.9rem;line-height:1.6;margin-bottom:28px;}
+
+.wl-card{background:var(--bg2);border:1px solid var(--border);border-radius:16px;overflow:hidden;}
+/* live profile-header preview */
+.wl-preview{position:relative;height:150px;background:linear-gradient(120deg,#141d3a 0%,#0a1024 100%);}
+.wl-preview-av{position:absolute;left:24px;bottom:-30px;width:92px;height:92px;border-radius:50%;border:4px solid var(--bg2);overflow:hidden;background:linear-gradient(135deg,var(--accent),#4A5BA8);display:flex;align-items:center;justify-content:center;font-family:'DM Serif Display',serif;font-size:2rem;color:#fff;}
+.wl-preview-av img{width:100%;height:100%;object-fit:cover;}
+.wl-body{padding:44px 24px 26px;}
+
+.wl-section{margin-bottom:26px;}
+.wl-label{font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);margin-bottom:12px;}
+.wl-choose{display:inline-flex;align-items:center;gap:8px;padding:9px 16px;border-radius:var(--r);border:1px solid var(--border);background:var(--card);color:var(--soft);font-family:'DM Mono',monospace;font-size:0.66rem;letter-spacing:0.06em;text-transform:uppercase;cursor:pointer;transition:all 0.2s;}
+.wl-choose:hover{border-color:rgba(124,155,255,0.4);color:var(--text);background:var(--card-h);}
+
+.wl-presets{display:grid;grid-template-columns:repeat(auto-fit,minmax(84px,1fr));gap:10px;margin-bottom:12px;}
+.wl-swatch{height:52px;border-radius:10px;border:2px solid transparent;cursor:pointer;transition:transform 0.15s,border-color 0.15s;position:relative;}
+.wl-swatch:hover{transform:translateY(-2px);}
+.wl-swatch.active{border-color:#fff;box-shadow:0 0 0 2px var(--accent);}
+.wl-swatch.active::after{content:'✓';position:absolute;top:4px;right:6px;color:#fff;font-size:0.7rem;text-shadow:0 1px 2px rgba(0,0,0,0.5);}
+
+.wl-actions{display:flex;align-items:center;gap:12px;margin-top:8px;}
+.wl-continue{flex:1;padding:13px;border-radius:var(--r);border:none;background:linear-gradient(110deg,var(--accent) 0%,var(--violet,#A78BFF) 45%,var(--coral,#FF6B6B) 100%);color:#fff;font-family:'DM Mono',monospace;font-size:0.72rem;letter-spacing:0.1em;text-transform:uppercase;font-weight:600;cursor:pointer;transition:all 0.2s;}
+.wl-continue:hover{box-shadow:0 0 0 1px rgba(124,155,255,0.5),0 4px 20px rgba(124,155,255,0.25);}
+.wl-skip{background:none;border:none;color:var(--muted);font-family:'DM Mono',monospace;font-size:0.66rem;letter-spacing:0.06em;text-transform:uppercase;cursor:pointer;padding:10px;transition:color 0.2s;}
+.wl-skip:hover{color:var(--soft);}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="wl-wrap">
+  <div class="wl-eyebrow">Step 1 — make it yours</div>
+  <h1 class="wl-title">Welcome, <em>{{ user.first_name }}</em>.</h1>
+  <p class="wl-sub">Add a photo and a cover so teammates recognize you. You can always change these later — or skip for now.</p>
+
+  <form method="POST" action="{{ url_for('main.welcome') }}" enctype="multipart/form-data" id="wl-form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="wl-card">
+      <div class="wl-preview" id="wl-preview">
+        <div class="wl-preview-av" id="wl-av">
+          {% if user.avatar_url %}<img src="{{ user.avatar_url }}" alt="" id="wl-av-img">
+          {% else %}{{ user.first_name[0] }}{{ user.last_name[0] }}{% endif %}
+        </div>
+      </div>
+      <div class="wl-body">
+        <div class="wl-section">
+          <div class="wl-label">Profile photo</div>
+          <label class="wl-choose">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            Choose photo
+            <input type="file" name="avatar" accept="image/*" style="display:none;" id="wl-avatar-input">
+          </label>
+        </div>
+
+        <div class="wl-section">
+          <div class="wl-label">Cover banner</div>
+          <div class="wl-presets" id="wl-presets">
+            {% for p in BANNER_PRESETS %}
+            <div class="wl-swatch" data-key="{{ p.key }}" data-css="{{ p.css }}" style="background:{{ p.css }};" title="{{ p.key }}"></div>
+            {% endfor %}
+          </div>
+          <label class="wl-choose">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            Upload your own
+            <input type="file" name="banner" accept="image/*" style="display:none;" id="wl-banner-input">
+          </label>
+          <input type="hidden" name="banner_preset" id="wl-banner-preset" value="">
+        </div>
+
+        <div class="wl-actions">
+          <button type="submit" class="wl-continue">Continue</button>
+          <button type="submit" name="action" value="skip" class="wl-skip">Skip for now</button>
+        </div>
+      </div>
+    </div>
+  </form>
+</div>
+{% endblock %}
+
+{% block extra_script %}
+<script nonce="{{ csp_nonce }}">
+(function(){
+  var preview = document.getElementById('wl-preview');
+  var avBox   = document.getElementById('wl-av');
+
+  // avatar upload → live preview
+  document.getElementById('wl-avatar-input').addEventListener('change', function(e){
+    var f = e.target.files[0]; if(!f) return;
+    var r = new FileReader();
+    r.onload = function(){ avBox.innerHTML = '<img src="'+r.result+'" alt="">'; };
+    r.readAsDataURL(f);
+  });
+
+  // preset swatch → set banner background + hidden field
+  document.getElementById('wl-presets').addEventListener('click', function(e){
+    var sw = e.target.closest('.wl-swatch'); if(!sw) return;
+    document.querySelectorAll('.wl-swatch').forEach(function(s){ s.classList.remove('active'); });
+    sw.classList.add('active');
+    preview.style.background = sw.getAttribute('data-css');
+    document.getElementById('wl-banner-preset').value = sw.getAttribute('data-key');
+    document.getElementById('wl-banner-input').value = '';   // uploaded image takes priority otherwise
+  });
+
+  // banner upload → live preview (clears preset selection)
+  document.getElementById('wl-banner-input').addEventListener('change', function(e){
+    var f = e.target.files[0]; if(!f) return;
+    var r = new FileReader();
+    r.onload = function(){
+      preview.style.background = "#0a1024 center/cover url('"+r.result+"')";
+      document.querySelectorAll('.wl-swatch').forEach(function(s){ s.classList.remove('active'); });
+      document.getElementById('wl-banner-preset').value = '';
+    };
+    r.readAsDataURL(f);
+  });
+})();
+</script>
+{% endblock %}
