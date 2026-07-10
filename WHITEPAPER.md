@@ -3,7 +3,7 @@
 **Author:** Safak Surmeli  
 **Institution:** International University of Sarajevo (IUS)  
 **Date:** July 2026  
-**Version:** 2.0  
+**Version:** 2.1  
 **Classification:** Public  
 **License:** MIT  
 **Contact:** surmeliisafak@gmail.com
@@ -14,7 +14,9 @@
 
 University students routinely form project teams through unstructured channels — WhatsApp groups, hallway conversations, or random assignment — with no visibility into a potential partner's skills, reliability, or track record. The result is predictable: uneven contribution, missed deadlines, and grades that reflect team dysfunction rather than individual capability.
 
-ProjectBuddy is an open-source, web-based platform designed to address the persistent challenges of team formation, project coordination, and peer assessment in higher education environments. Built on a modern Python/Flask technology stack with real-time communication capabilities, ProjectBuddy integrates AI-powered assistance (SSM-1.0), WebRTC voice collaboration, skill-based recommendation algorithms, and a gamified badge system to foster meaningful student collaboration. Unlike general-purpose tools such as Trello, Slack, or GitHub Projects, ProjectBuddy integrates the complete student collaboration lifecycle into a single, cohesive environment: from team discovery and formation, through real-time communication and file sharing, to peer feedback, skill endorsement, and AI-powered assistance.
+ProjectBuddy is an open-source, web-based platform designed to address the persistent challenges of team formation, project coordination, and peer assessment in higher education environments. Built on a modern Python/Flask technology stack with real-time communication capabilities, ProjectBuddy integrates AI-powered assistance (SSM-1.0), full WebRTC live collaboration (voice, video, and screen sharing), a **trained machine-learning recommender**, and a gamified badge system to foster meaningful student collaboration. Unlike general-purpose tools such as Trello, Slack, or GitHub Projects, ProjectBuddy integrates the complete student collaboration lifecycle into a single, cohesive environment: from team discovery and formation, through real-time communication and in-chat file sharing, to peer feedback, skill endorsement, and public profile pages.
+
+Version 2.1 extends the platform along three axes: (1) **live collaboration rooms** that layer video, screen sharing, and a shared live-synced notepad on top of the existing voice mesh; (2) a **learned recommendation engine** — a logistic-regression model with an LSA (Latent Semantic Analysis) embedding tower, trained on the platform's own interaction signals and benchmarked leakage-free against a rule-based baseline, with a public model card; and (3) a **social and identity layer** — an expanded 120-tag interdisciplinary interest taxonomy, first-run profile onboarding (avatar and cover banner), public profile walls, and in-chat file attachments.
 
 The platform has been developed and deployed at the International University of Sarajevo, serving as both a functional tool and a research contribution to the field of Computer-Supported Collaborative Learning (CSCL).
 
@@ -42,15 +44,16 @@ The platform has been developed and deployed at the International University of 
 4. [Core Features and Implementation](#4-core-features-and-implementation)
    - 4.1 [User Management and Authentication](#41-user-management-and-authentication)
    - 4.2 [Project Lifecycle Management](#42-project-lifecycle-management)
-   - 4.3 [Skill-Based Recommendation Engine](#43-skill-based-recommendation-engine)
+   - 4.3 [Recommendation Engine](#43-recommendation-engine)
    - 4.4 [Community Learning Feed](#44-community-learning-feed)
-   - 4.5 [Study Groups and Voice Chat](#45-study-groups-and-voice-chat)
+   - 4.5 [Study Groups and Live Collaboration Rooms](#45-study-groups-and-live-collaboration-rooms)
    - 4.6 [SSM-1.0 AI Assistant](#46-ssm-10-ai-assistant)
    - 4.7 [Gamification and Badge System](#47-gamification-and-badge-system)
    - 4.8 [Administrative Dashboard](#48-administrative-dashboard)
+   - 4.9 [Profiles, Onboarding, and the Social Layer](#49-profiles-onboarding-and-the-social-layer)
 5. [Real-Time Communication Infrastructure](#5-real-time-communication-infrastructure)
    - 5.1 [WebSocket Architecture](#51-websocket-architecture)
-   - 5.2 [WebRTC Voice Implementation](#52-webrtc-voice-implementation)
+   - 5.2 [WebRTC Media Implementation (Voice, Video, Screen)](#52-webrtc-media-implementation-voice-video-screen)
    - 5.3 [Scalability with Redis Message Queue](#53-scalability-with-redis-message-queue)
 6. [Deployment and Operations](#6-deployment-and-operations)
    - 6.1 [Production Configuration](#61-production-configuration)
@@ -195,22 +198,23 @@ The technology stack was selected to balance developer productivity, ecosystem m
 | File Storage | boto3 (AWS S3) | 1.x | Abstracted behind LocalStorage/S3Storage interface for portability |
 | AI (Primary) | Groq API (LLaMA 3.3 70B) | — | Free-tier LLM inference, OpenAI-compatible API format |
 | AI (Secondary) | Anthropic API (Claude) | — | Fallback provider for high-quality responses |
-| Voice (WebRTC) | Browser WebRTC + SocketIO signaling | — | Peer-to-peer audio with TURN relay support (Xirsys) |
+| Machine Learning | scikit-learn + NumPy + joblib | 1.6 / 2.0 / 1.5 | Trained recommender (logistic regression) and LSA embedding model; lightweight, no GPU/torch dependency, deploys anywhere |
+| Live Collab (WebRTC) | Browser WebRTC + SocketIO signaling | — | Peer-to-peer audio, video, and screen sharing over one transceiver set, with TURN relay support (Xirsys) |
 | Email | Brevo HTTP API | — | Transactional email, bypasses cloud SMTP restrictions |
 | Deployment | Gunicorn + eventlet worker | — | Production WSGI server with async worker class for WebSocket support |
 | Hosting | Render / Heroku | — | PaaS deployment via Procfile, managed PostgreSQL, Redis |
 
 ### 3.3 Data Model
 
-The data model comprises 25 SQLAlchemy models organized into five functional domains. All models use the modern SQLAlchemy 2.0 `mapped_column` / `Mapped[type]` declarative syntax with full type annotations.
+The data model comprises 28 SQLAlchemy models organized into five functional domains. All models use the modern SQLAlchemy 2.0 `mapped_column` / `Mapped[type]` declarative syntax with full type annotations.
 
 | Domain | Models | Key Relationships |
 |--------|--------|-------------------|
-| **User Identity** | User, UserInterest, UserSkill, UserCourse | User has many interests, skills, and courses; supports student/instructor/admin roles |
+| **User Identity & Social** | User, UserInterest, UserSkill, UserCourse, ProfileComment, ProfileCommentLike | User has many interests, skills, and courses; student/instructor/admin roles; users carry an avatar and cover banner and an `onboarded` flag; public profile walls (comments + likes) let any member post on any profile |
 | **Project Lifecycle** | Project, ProjectTag, ProjectSkill, ProjectMember, Application, ProjectMessage, ProjectVote | Project owned by User; members join via Application; votes enable community ranking |
 | **Assessment** | Feedback, Endorsement, Badge, UserBadge | Feedback links giver/receiver/project with rating constraint (1–5); endorsements require shared project completion |
-| **Communication** | Chat, ChatMessage, StudyGroup, StudyGroupMember, StudyGroupMessage, SharedFile, ChatbotSession | Admin support chat; group chat with file sharing; AI chatbot session persistence |
-| **Moderation** | Report, AdminMessage, Notification, PasswordReset | Report targets user or project; admin can warn/ban/dismiss; notifications link to originating action |
+| **Communication** | Chat, ChatMessage, StudyGroup, StudyGroupMember, StudyGroupMessage, StudyGroupNote, SharedFile, ChatbotSession | Admin support chat; group chat with in-message file attachments and a live-synced shared note; AI chatbot session persistence |
+| **Moderation** | Report, AdminMessage, Notification, PasswordReset | Report targets user or project (including profile-wall comments); admin can warn/ban/dismiss; notifications link to originating action |
 
 ### 3.4 Application Factory Pattern
 
@@ -219,7 +223,7 @@ ProjectBuddy uses the Flask application factory pattern (`create_app()`) to ensu
 1. **Configuration Loading:** From environment-specific classes (DevelopmentConfig, ProductionConfig, TestingConfig).
 2. **Proxy Fix:** Werkzeug ProxyFix middleware installation for correct header handling behind reverse proxies (Render, Heroku).
 3. **Extension Initialization:** SQLAlchemy, Migrate, LoginManager, Limiter, CSRFProtect, SocketIO (with Redis message queue when available).
-4. **Blueprint Registration:** 9 route modules plus SocketIO voice event handlers.
+4. **Blueprint Registration:** 9 route modules plus SocketIO handlers for voice/video signaling, shared-note sync, and participant state relay.
 5. **Security Middleware:** CSP nonce generation per request, comprehensive security headers on every response, cache-control policies per path.
 6. **Error Handlers:** Custom 404/500 pages, graceful CSRF failure handling, rate-limit exceeded flash messages.
 7. **Startup Tasks (OS Thread):** Schema migration, badge seeding, admin sync, avatar backfill, mock data seeding — run in a genuine OS thread to avoid eventlet hub conflicts.
@@ -297,31 +301,34 @@ Projects in ProjectBuddy follow a well-defined state machine with three states:
 - Application workflow includes applicant messaging, owner review (accept/reject), and automatic notifications.
 - Community engagement through upvote/downvote system with unique constraint (one vote per user per project).
 
-### 4.3 Skill-Based Recommendation Engine
+### 4.3 Recommendation Engine
 
-The recommendation engine (`services/recommendation_service.py`) implements a content-based filtering algorithm that matches student interest profiles against project topic tags. The algorithm operates in three phases:
+ProjectBuddy ranks open projects for each student by predicted fit. The engine (`services/recommendation_service.py`, `services/ml/`) is a **two-model system**: a trained machine-learning recommender that serves whenever a model artifact is present, and a transparent rule-based scorer that acts as an automatic fallback. This design lets the platform ship a learned model without ever being unable to make a recommendation.
 
-**Phase 1 — Interest Expansion:**
-Each user's selected interest tags are expanded through a curated mapping dictionary (`INTEREST_TO_TOPIC_MAP`) that associates narrow interests with broader topic categories. Examples:
+**Rule-based baseline (fallback).**
+A content-based filter expands each user's interest tags through a curated `INTEREST_TO_TOPIC_MAP` (e.g. `"python" → {backend, data, ai / ml}`), filters out projects the user owns/joined/applied to, and scores each open project by the cardinality of the intersection between the user's expanded interests and the project's normalized tags. Simple, transparent, and vocabulary-bridging.
 
-| User Interest | Expanded Topics |
-|--------------|-----------------|
-| `"python"` | `{"backend", "data", "ai / ml"}` |
-| `"machine learning"` | `{"ai / ml", "data", "research"}` |
-| `"react"` | `{"frontend"}` |
-| `"cybersecurity"` | `{"security", "backend"}` |
-| `"ui/ux design"` | `{"design", "frontend"}` |
-| `"cloud computing"` | `{"cloud", "backend"}` |
+**Learned recommender (primary).**
+The ML path (`services/ml/`) treats matching as supervised learning-to-rank over `(user, project)` pairs:
 
-This expansion increases recall by bridging vocabulary gaps between how students describe their interests and how project owners tag their projects.
+- **Labels from real signals.** Positive examples are genuine "this user fit this project" observations — active project memberships and submitted applications. Negatives are sampled non-interaction pairs (≈3× positives). No synthetic labels are used.
+- **Feature engineering.** Fourteen features per pair: interest-topic overlap and Jaccard, skill overlap and Jaccard, course match, profile richness counts, project popularity (member count), recency, community vote score, and a **semantic-similarity** feature (below).
+- **Semantic embedding tower.** Rather than a heavyweight transformer, ProjectBuddy builds its own embeddings with **LSA (TF-IDF + Truncated SVD)** — a dual-encoder ("two-tower") retriever that maps a user's text (bio, interests, skills, courses) and a project's text (title, description, tags, skills) into one shared latent space; match strength is their cosine similarity. LSA is a deliberate engineering choice: it captures semantic relatedness ("machine learning" ≈ "neural networks") without a GPU or a torch dependency, and deploys on commodity hosting.
+- **Model.** A `StandardScaler` + `LogisticRegression` (class-balanced, `liblinear`) pipeline, preceded by a `VarianceThreshold` so degenerate constant features never destabilize the solver. The fitted pipeline is persisted with `joblib`.
 
-**Phase 2 — Candidate Filtering:**
-The algorithm filters out projects where the user is already the owner, an active member, or has a pending application. Only projects with "open" status are considered.
+**Leakage-free evaluation.**
+Every approach is scored with the same out-of-fold 5-fold cross-validation. On the current dataset:
 
-**Phase 3 — Scoring and Ranking:**
-For each remaining candidate project, the algorithm computes the intersection cardinality between the user's expanded interest set and the project's normalized tag set. Projects are ranked by `(match_count DESC, created_at DESC)`, prioritizing relevance while using recency as a tiebreaker.
+| Approach | ROC-AUC |
+|----------|---------|
+| Rule-based overlap (baseline) | 0.89 |
+| Semantic embeddings only (retriever) | 0.58 |
+| **Full hybrid (overlap + embeddings) — shipped** | **0.89** |
 
-This approach is intentionally simple and transparent. It avoids collaborative filtering or machine learning, which would require usage data that a new platform does not have. The static mapping can be extended as the platform grows.
+The results are reported honestly, including on a public **model card** (`/ml/recommender`): on this small corpus the embedding tower overlaps with the hand-crafted features and does not add aggregate lift, though it provides cold-start coverage (it can rank projects that share *no* exact tags with a user). This is a transparent negative result rather than an inflated claim — the ROC-AUC of 0.89 on 26 positive examples is a fragile estimate whose confidence interval widens with such little data, and the whitepaper states this plainly.
+
+**Serving and retraining.**
+The dashboard's "Recommended for you" ranks by the model's predicted fit percentage. A Flask CLI command (`flask train-recommender`) rebuilds the embedding space and retrains the model on current data, so the system improves automatically as the community grows — the intended trajectory for a data-scarce cold start.
 
 ### 4.4 Community Learning Feed
 
@@ -334,15 +341,16 @@ The community module provides a social learning feed modeled after educational d
 - Both posts and comments can be deleted by their authors or by administrators, supporting content moderation.
 - Filenames are sanitized and randomized to prevent collisions and path traversal.
 
-### 4.5 Study Groups and Voice Chat
+### 4.5 Study Groups and Live Collaboration Rooms
 
-Study groups provide persistent, topic-organized collaboration spaces with three core capabilities:
+Study groups provide persistent, topic-organized collaboration spaces. Each group room combines asynchronous messaging with a synchronous "live room" that layers voice, video, screen sharing, and shared notes on demand:
 
-1. **Text-Based Group Messaging:** Polling-based with 3-second intervals, last 60 messages loaded on entry. Messages are limited to 2000 characters.
-2. **File Sharing:** 25 MB limit, 40+ supported file formats (documents, images, code files, archives, media). Files stored with UUID-based filenames through the storage abstraction layer.
-3. **Peer-to-Peer WebRTC Voice Chat:** Full-mesh topology with SocketIO signaling (detailed in Section 5).
+1. **Text-Based Group Messaging with In-Chat Files:** Polling-based with 3-second intervals; the last 60 messages load on entry (2000-character limit). Files are attached directly to messages rather than through a separate upload flow — images render inline in the stream, other files appear as download cards. A read-only "Files" tab auto-collects every attachment shared in chat (25 MB limit, 40+ formats, UUID-named through the storage abstraction).
+2. **Discord-style Live Room:** Joining voice turns the room into a call stage — a grid of equal participant tiles (video fills the tile, or a profile-photo/letter avatar when the camera is off), a floating control bar (mic, camera, screen share, notes, chat, leave), speaking indicators, and a slide-in chat drawer. Camera and screen share ride the existing peer connections via a pre-allocated video transceiver, so they start without renegotiation. A lightweight relay event broadcasts each participant's mute/camera/screen-share state so peers render the correct tile chrome.
+3. **Shared Live Notes:** A per-group collaborative notepad synced over SocketIO with a 500 ms debounce and persisted server-side (`StudyGroupNote`), so a team can take notes together while on a call.
+4. **Peer-to-Peer WebRTC Transport:** Full-mesh topology with SocketIO signaling (detailed in Section 5).
 
-Groups can be public or private, and the creator automatically joins as the group admin. Live voice presence indicators show how many users are currently in voice for each group.
+Groups can be public or private, and the creator automatically joins as the group admin. Live presence indicators show how many users are currently in voice for each group.
 
 ### 4.6 SSM-1.0 AI Assistant
 
@@ -395,6 +403,15 @@ The admin module provides a dedicated interface for platform governance:
 - **Direct Messaging:** Admin-to-user communication channel for warnings, guidance, and follow-up on reported issues.
 - **Project Removal:** Ability to remove fraudulent or misleading project listings, with cascading deletion of associated tags, members, and applications.
 
+### 4.9 Profiles, Onboarding, and the Social Layer
+
+Because ProjectBuddy serves a whole university rather than a single department, identity and expression are first-class:
+
+- **Interdisciplinary interest taxonomy.** Interests are drawn from a single source of truth (`services/interests.py`): **120 tags across 13 fields** — Software & CS, AI & Data, Engineering, Mathematics, Natural Sciences, Health & Medicine, Psychology & Social Sciences, Business & Economics, Law & Policy, Arts & Design, Humanities & Languages, Media & Communication, and Education. A psychology, law, or design student finds themselves as readily as a CS major. Both registration and profile editing render the same categorized, searchable picker (users still select exactly five).
+- **First-run onboarding.** After registration, a skippable `/welcome` step lets students pick a profile photo and a cover banner — either an uploaded image or one of several preset gradients — with a live preview. An `onboarded` flag routes new users through this once.
+- **Public profile walls.** Every non-admin profile carries a wall where any member can leave a comment; comments support likes (a toggle) and can be deleted by the profile owner, the author, or an admin, and reported by anyone. Owners receive an in-app notification on new comments.
+- **Cover banners** render across a user's own profile and public profile pages via a shared `banner_style()` helper that resolves either an uploaded image URL or a `preset:<key>` gradient token.
+
 ---
 
 ## 5. Real-Time Communication Infrastructure
@@ -406,9 +423,9 @@ ProjectBuddy's real-time layer is built on Flask-SocketIO with the eventlet asyn
 **Eventlet Hub Constraint:**
 A critical architectural decision is the use of genuine OS threads (via `eventlet.patcher.original('threading').Thread`) for background tasks such as the deadline scheduler and database startup routines. This is necessary because eventlet's hub-based scheduling raises "do not call blocking functions from the mainloop" when `hub.switch()` is invoked from the hub's own greenlet. By using unpatched OS threads, these tasks execute completely outside eventlet's cooperative scheduling, avoiding deadlocks while maintaining access to the Flask application context.
 
-### 5.2 WebRTC Voice Implementation
+### 5.2 WebRTC Media Implementation (Voice, Video, Screen)
 
-The voice chat system implements a full-mesh peer-to-peer WebRTC topology with server-side signaling. The implementation follows a five-phase connection lifecycle:
+The live-room system implements a full-mesh peer-to-peer WebRTC topology with server-side signaling, carrying audio, camera video, and screen share. The implementation follows a five-phase connection lifecycle:
 
 1. **Phase 1 — Room Join:** Client emits `join_voice` with `group_id`. Server joins the SocketIO room, retrieves the existing participant list, and sends it to the new joiner via `voice_existing_participants`.
 
@@ -419,6 +436,9 @@ The voice chat system implements a full-mesh peer-to-peer WebRTC topology with s
 4. **Phase 4 — ICE Candidate Exchange:** ICE (Interactive Connectivity Establishment) candidates are relayed between peers to negotiate the optimal network path. With TURN configured, this ensures connectivity even behind symmetric NATs and restrictive firewalls.
 
 5. **Phase 5 — Teardown:** On `leave_voice` or `disconnect`, the participant is removed from the room state and all remaining peers are notified via `voice_user_left`.
+
+**Media Tracks (Audio, Video, Screen Share):**
+Audio is added on join. To support camera and screen sharing without costly SDP renegotiation, each peer connection pre-allocates a single `sendrecv` video transceiver at creation time; toggling the camera or screen calls `RTCRtpSender.replaceTrack()` on that slot, and turning it off replaces the track with `null`. Screen capture uses `getDisplayMedia()`; camera uses `getUserMedia({video})`. Because camera↔screen is the same transceiver, switching between them is a track swap, not a new negotiation. A dedicated `voice_state` signaling event relays each participant's mute/camera/screen-share state to the room so peers can render the correct tile chrome (muted-mic pill, "presenting" badge) without inspecting media directly. Browser media APIs require a secure context, so the feature is HTTPS-only in production.
 
 **Voice Room State Storage:**
 - **Redis (production):** Stored with 24-hour TTL, shared across multiple Gunicorn workers.
@@ -632,19 +652,21 @@ We evaluate ProjectBuddy against the seven CSCL affordances framework proposed b
 
 2. **Polling-Based Group Chat:** Study group messages use HTTP polling (3-second intervals) rather than WebSocket push. While sufficient for the current scale, this creates unnecessary server load and latency compared to SocketIO-based message delivery.
 
-3. **Single-Server Recommendation Engine:** The recommendation algorithm queries all open projects on each request (O(n) projects). For very large deployments, this would need indexing or caching.
+3. **Single-Server Recommendation Engine:** The recommender scores all open projects on each request (O(n) projects). For very large deployments, this would need indexing, caching, or an approximate-nearest-neighbour index over the embedding space.
 
-4. **No Automated Testing:** The current codebase lacks a comprehensive test suite. Unit tests for business logic and integration tests for API endpoints are high-priority technical debt.
+4. **Recommender Data Scarcity:** The learned recommender is trained on a small number of interaction pairs (memberships and applications). Its reported ROC-AUC, while measured leakage-free, rests on few positive examples and is therefore a fragile estimate; the semantic embedding tower adds no aggregate lift at this corpus size. Model quality is expected to improve substantially only as interaction data accumulates and the model is retrained. This is disclosed transparently on the public model card rather than obscured.
 
-5. **CSP `unsafe-inline`:** The nonce infrastructure exists but is not fully utilized due to inline event handlers in templates. Removing `unsafe-inline` requires a frontend refactor.
+5. **No Automated Testing:** The current codebase lacks a comprehensive test suite. Unit tests for business logic and integration tests for API endpoints are high-priority technical debt.
 
-6. **Limited Accessibility:** While the UI is responsive, it has not undergone formal WCAG 2.1 accessibility auditing.
+6. **CSP `unsafe-inline`:** The nonce infrastructure exists but is not fully utilized due to inline event handlers in templates. Removing `unsafe-inline` requires a frontend refactor.
 
-7. **AI Response Quality:** The free-tier Groq/LLaMA models may produce lower-quality responses compared to commercial alternatives. The keyword-based fallback provides minimal utility.
+7. **Limited Accessibility:** While the UI is responsive, it has not undergone formal WCAG 2.1 accessibility auditing.
 
-8. **No Email Verification:** Users can register with any email address without confirming ownership.
+8. **AI Response Quality:** The free-tier Groq/LLaMA models may produce lower-quality responses compared to commercial alternatives. The keyword-based fallback provides minimal utility.
 
-9. **Single-Institution Design:** The platform assumes a single university context. Multi-institution support would require tenant isolation.
+9. **No Email Verification:** Users can register with any email address without confirming ownership.
+
+10. **Single-Institution Design:** The platform assumes a single university context. Multi-institution support would require tenant isolation.
 
 ### 9.2 Planned Improvements
 
@@ -652,7 +674,7 @@ We evaluate ProjectBuddy against the seven CSCL affordances framework proposed b
 
 2. **SocketIO-Based Group Messaging:** Replace polling-based study group chat with real-time SocketIO event delivery, reducing latency and server load while enabling typing indicators and read receipts.
 
-3. **Machine Learning Recommendations:** Enhance the recommendation engine with collaborative filtering based on historical team formation patterns, project completion rates, and feedback scores. Explore embedding-based similarity using project descriptions and user profiles.
+3. **Deeper Recommender Modelling:** The trained recommender (Section 4.3) ships in v2.1 with a logistic-regression + LSA-embedding hybrid. As interaction volume grows, planned work includes contrastive fine-tuning of the embedding towers on real interaction pairs, transformer-based embeddings (served via a lightweight ONNX runtime to avoid a torch dependency), and collaborative-filtering signals from completion rates and feedback scores.
 
 4. **Contribution Analytics Dashboard:** Implement per-project activity dashboards showing individual member contributions (messages sent, files shared, time in voice chat) to support instructor oversight and fair assessment.
 
@@ -665,6 +687,8 @@ We evaluate ProjectBuddy against the seven CSCL affordances framework proposed b
 8. **WCAG 2.1 AA Compliance:** Conduct a formal accessibility audit and remediate identified issues including keyboard navigation, screen reader compatibility, and color contrast ratios.
 
 9. **Mobile Application:** Develop a React Native or Flutter companion application for native push notifications, offline access, and optimized voice chat on mobile networks.
+
+10. **AI-Powered Exam Preparation:** Let students upload course material (PDF/notes) and have SSM-1.0 generate practice quizzes (multiple-choice and open-ended) with scoring and explanations, plus an oral-practice mode that uses the existing live-room voice channel for spoken-answer drills.
 
 10. **LTI Integration:** Implement Learning Tools Interoperability (LTI 1.3) to enable seamless embedding within institutional LMS platforms (Moodle, Canvas) and automated grade passback.
 
