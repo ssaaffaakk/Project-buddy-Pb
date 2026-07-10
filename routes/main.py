@@ -979,6 +979,17 @@ def edit_profile():
     return render_template("user/edit_profile.html", user=user)
 
 
+# ── LANGUAGE SWITCH ───────────────────────────────────────────────────────────
+@main_bp.route("/set-lang/<lang>")
+def set_language(lang):
+    """Persist the chosen UI language in the session and return where we came from."""
+    from flask import session
+    from services.i18n import LANGUAGES
+    if lang in LANGUAGES:
+        session["lang"] = lang
+    return redirect(request.referrer or url_for("main.dashboard"))
+
+
 # ── ML MODEL CARD (recommender metrics) ───────────────────────────────────────
 @main_bp.route("/ml/recommender")
 @login_required

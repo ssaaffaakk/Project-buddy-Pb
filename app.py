@@ -412,6 +412,18 @@ def _fix_broken_passwords() -> None:
 def _register_context_processors(app: Flask) -> None:
     """Inject variables available in every template."""
 
+    # i18n: expose _() for translation plus locale metadata in every template.
+    from services.i18n import translate, get_locale, LANGUAGES
+    app.jinja_env.globals["_"] = translate
+
+    @app.context_processor
+    def inject_i18n():
+        return {
+            "_": translate,
+            "current_locale": get_locale(),
+            "LANGUAGES": LANGUAGES,
+        }
+
     @app.context_processor
     def inject_csp_nonce():
         """Make the per-request CSP nonce available as {{ csp_nonce }}."""

@@ -130,7 +130,10 @@
     // Theme toggle button label
     var themeBtn = document.getElementById('themeToggle');
     if (themeBtn) {
-      themeBtn.textContent = document.documentElement.classList.contains('light-mode') ? 'Dark' : 'Light';
+      var isLight = document.documentElement.classList.contains('light-mode');
+      var label = isLight ? (themeBtn.dataset.dark || 'Dark') : (themeBtn.dataset.light || 'Light');
+      if (themeBtn.lastChild) { themeBtn.lastChild.textContent = ' ' + label; }
+      else { themeBtn.textContent = label; }
     }
 
     // Cursor glow
