@@ -663,6 +663,11 @@ footer p{font-family:'DM Mono',monospace;font-size:.6rem;letter-spacing:.04em;co
 .ml-row .bar{flex:1;height:8px;border-radius:4px;background:var(--bg3);overflow:hidden;}
 .ml-row .bar i{display:block;height:100%;border-radius:4px;background:linear-gradient(90deg,var(--gold),var(--violet));}
 .ml-row .pct{font-family:'DM Mono',monospace;font-size:.62rem;color:var(--gold);width:38px;text-align:right;flex-shrink:0;}
+/* light-mode treatment for the ML "two towers" showcase card (dark surfaces don't flip via vars) */
+html.lm .ml-vis{background:rgba(255,255,255,.72);box-shadow:0 20px 55px rgba(40,50,110,.13);}
+html.lm .ml-tower{background:rgba(40,50,110,.045);}
+html.lm .ml-chip{background:rgba(40,50,110,.05);}
+html.lm .ml-row .bar{background:rgba(40,50,110,.08);}
 @media(max-width:768px){.ml-s{padding:60px 20px;}}
 @media(max-width:768px){.feat-s{padding:64px 20px;}.feat-trio{grid-template-columns:1fr;}}
 
@@ -691,8 +696,8 @@ html.lm .mob-nav{background:rgba(247,245,241,.99);}
 .mob-nav a:hover{color:var(--gold);}
 @media(max-width:768px){nav{padding:13px 20px;top:26px;}nav.sc{padding:11px 20px;}.n-links,.btn-gs{display:none;}.n-ham{display:flex;}}
 </style>
-<link rel="stylesheet" href="/static/css/mobile.css?v=2">
-<link rel="stylesheet" href="/static/css/pb-theme.css?v=3">
+<link rel="stylesheet" href="/static/css/mobile.css?v=4">
+<link rel="stylesheet" href="/static/css/pb-theme.css?v=4">
 <script src="/static/js/pb-theme.js?v=2" defer></script>
 </head>
 <body>

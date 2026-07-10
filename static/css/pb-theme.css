@@ -31,6 +31,27 @@ svg {
   min-height: 0;
 }
 
+/* Flex items default to min-width:auto, so long unwrappable content
+   (topic pills, header buttons) forces .chat-wrap wider than the viewport */
+.chat-wrap {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.chat-wrap .room-header,
+.chat-wrap .room-body,
+.chat-wrap .chat-area,
+.chat-wrap .messages,
+.chat-wrap .room-left,
+.chat-wrap .room-right {
+  min-width: 0;
+}
+
+.chat-wrap .msg-bubble,
+.chat-wrap .msg-text {
+  overflow-wrap: anywhere;
+}
+
 @supports (height: 100dvh) {
   .chat-wrap,
   .chat-container {
@@ -254,6 +275,17 @@ svg {
     font-size: 1rem !important;
   }
 
+  .room-topic {
+    white-space: normal !important;
+    flex-shrink: 1 !important;
+  }
+
+  .date-divider span {
+    white-space: normal !important;
+    text-align: center !important;
+    max-width: 85% !important;
+  }
+
   .messages {
     padding: 14px 12px !important;
   }
@@ -351,6 +383,27 @@ svg {
 
   .card {
     padding: 24px 18px !important;
+  }
+
+  /* Profile header + stats bar (profile.html) */
+  .ph {
+    padding-left: 20px !important;
+    padding-right: 20px !important;
+  }
+
+  .stats-bar {
+    flex-wrap: wrap !important;
+  }
+
+  .stats-bar .sbi {
+    flex: 1 1 50% !important;
+    padding: 14px 16px !important;
+    border-bottom: 1px solid var(--border, rgba(255, 255, 255, 0.085)) !important;
+  }
+
+  /* Sidebar logo clears the fixed hamburger button when the drawer is open */
+  .sidebar.open .logo {
+    padding-left: 52px !important;
   }
 
   /* Privacy & static content pages */
