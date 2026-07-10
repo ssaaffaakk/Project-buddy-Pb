@@ -1,9 +1,12 @@
-# ProjectBuddy: A Reputation-Driven Platform for University Project Collaboration
+# ProjectBuddy: AI-Enhanced Collaborative Project Management Platform for Higher Education
 
 **Author:** Safak Surmeli  
-**Date:** June 2026  
-**Version:** 1.0  
+**Institution:** International University of Sarajevo (IUS)  
+**Date:** July 2026  
+**Version:** 2.0  
+**Classification:** Public  
 **License:** MIT  
+**Contact:** surmeliisafak@gmail.com
 
 ---
 
@@ -11,36 +14,75 @@
 
 University students routinely form project teams through unstructured channels — WhatsApp groups, hallway conversations, or random assignment — with no visibility into a potential partner's skills, reliability, or track record. The result is predictable: uneven contribution, missed deadlines, and grades that reflect team dysfunction rather than individual capability.
 
-ProjectBuddy is a web platform that replaces this ad-hoc process with structured team formation, skill-based matching, and a persistent reputation system. Students post project listings with required skills and deadlines, apply to join teams that match their interests, and — after completion — rate teammates and endorse specific skills. Every interaction leaves a verifiable trail: ratings, endorsements, and badges that future teammates and instructors can inspect.
+ProjectBuddy is an open-source, web-based platform designed to address the persistent challenges of team formation, project coordination, and peer assessment in higher education environments. Built on a modern Python/Flask technology stack with real-time communication capabilities, ProjectBuddy integrates AI-powered assistance (SSM-1.0), WebRTC voice collaboration, skill-based recommendation algorithms, and a gamified badge system to foster meaningful student collaboration. Unlike general-purpose tools such as Trello, Slack, or GitHub Projects, ProjectBuddy integrates the complete student collaboration lifecycle into a single, cohesive environment: from team discovery and formation, through real-time communication and file sharing, to peer feedback, skill endorsement, and AI-powered assistance.
 
-This paper describes the problem space, the platform's design and architecture, and evaluates the system against its stated goals.
+The platform has been developed and deployed at the International University of Sarajevo, serving as both a functional tool and a research contribution to the field of Computer-Supported Collaborative Learning (CSCL).
+
+**Live Platform:** [https://project-buddy-pb.onrender.com](https://project-buddy-pb.onrender.com)  
+**Source Code:** [github.com/ssaaffaakk/Project-buddy-Pb](https://github.com/ssaaffaakk/Project-buddy-Pb)
 
 ---
 
 ## Table of Contents
 
 1. [Introduction](#1-introduction)
-2. [Problem Statement](#2-problem-statement)
-3. [Related Work](#3-related-work)
-4. [System Design](#4-system-design)
-5. [Architecture](#5-architecture)
-6. [Key Algorithms and Services](#6-key-algorithms-and-services)
-7. [Security Architecture](#7-security-architecture)
-8. [Case Study](#8-case-study)
-9. [Evaluation](#9-evaluation)
-10. [Limitations and Future Work](#10-limitations-and-future-work)
-11. [Conclusion](#11-conclusion)
-12. [References](#12-references)
+   - 1.1 [Problem Statement](#11-problem-statement)
+   - 1.2 [Objectives and Scope](#12-objectives-and-scope)
+   - 1.3 [Target Audience](#13-target-audience)
+2. [Literature Review and Related Work](#2-literature-review-and-related-work)
+   - 2.1 [Computer-Supported Collaborative Learning](#21-computer-supported-collaborative-learning-cscl)
+   - 2.2 [Existing Platforms and Gap Analysis](#22-existing-platforms-and-gap-analysis)
+   - 2.3 [AI in Educational Technology](#23-ai-in-educational-technology)
+3. [System Architecture and Design](#3-system-architecture-and-design)
+   - 3.1 [Architectural Overview](#31-architectural-overview)
+   - 3.2 [Technology Stack](#32-technology-stack)
+   - 3.3 [Data Model](#33-data-model)
+   - 3.4 [Application Factory Pattern](#34-application-factory-pattern)
+   - 3.5 [Security Architecture](#35-security-architecture)
+4. [Core Features and Implementation](#4-core-features-and-implementation)
+   - 4.1 [User Management and Authentication](#41-user-management-and-authentication)
+   - 4.2 [Project Lifecycle Management](#42-project-lifecycle-management)
+   - 4.3 [Skill-Based Recommendation Engine](#43-skill-based-recommendation-engine)
+   - 4.4 [Community Learning Feed](#44-community-learning-feed)
+   - 4.5 [Study Groups and Voice Chat](#45-study-groups-and-voice-chat)
+   - 4.6 [SSM-1.0 AI Assistant](#46-ssm-10-ai-assistant)
+   - 4.7 [Gamification and Badge System](#47-gamification-and-badge-system)
+   - 4.8 [Administrative Dashboard](#48-administrative-dashboard)
+5. [Real-Time Communication Infrastructure](#5-real-time-communication-infrastructure)
+   - 5.1 [WebSocket Architecture](#51-websocket-architecture)
+   - 5.2 [WebRTC Voice Implementation](#52-webrtc-voice-implementation)
+   - 5.3 [Scalability with Redis Message Queue](#53-scalability-with-redis-message-queue)
+6. [Deployment and Operations](#6-deployment-and-operations)
+   - 6.1 [Production Configuration](#61-production-configuration)
+   - 6.2 [Cloud Storage Abstraction](#62-cloud-storage-abstraction)
+   - 6.3 [Background Task Scheduling](#63-background-task-scheduling)
+7. [Case Study: Origin and Motivation](#7-case-study-origin-and-motivation)
+   - 7.1 [Why I Built This](#71-why-i-built-this)
+   - 7.2 [Design Decisions Driven by the Problem](#72-design-decisions-driven-by-the-problem)
+   - 7.3 [Implementation Timeline](#73-implementation-timeline)
+8. [Evaluation and Discussion](#8-evaluation-and-discussion)
+   - 8.1 [Functional Assessment (CSCL Framework)](#81-functional-assessment-cscl-framework)
+   - 8.2 [Functional Completeness](#82-functional-completeness)
+   - 8.3 [Security Assessment](#83-security-assessment)
+   - 8.4 [Architectural Quality](#84-architectural-quality)
+   - 8.5 [Scalability Considerations](#85-scalability-considerations)
+9. [Limitations and Future Work](#9-limitations-and-future-work)
+   - 9.1 [Current Limitations](#91-current-limitations)
+   - 9.2 [Planned Improvements](#92-planned-improvements)
+10. [Conclusion](#10-conclusion)
+11. [References](#11-references)
 
 ---
 
 ## 1. Introduction
 
-Collaborative project work is a cornerstone of university education. Courses in computer science, engineering, business, and the sciences routinely assign team-based deliverables — capstone projects, lab reports, design challenges — that require students to coordinate across skill sets and schedules. The pedagogical rationale is sound: real-world work is collaborative, and students benefit from practicing communication, task division, and conflict resolution in a structured environment.
+The landscape of higher education has undergone a fundamental transformation in the 21st century. Collaborative project-based learning has emerged as a cornerstone pedagogical approach across computer science, engineering, and interdisciplinary programs worldwide. Research consistently demonstrates that students engaged in well-structured collaborative projects develop superior technical competencies, enhanced communication skills, and stronger professional networks compared to those in traditional lecture-based paradigms (Dillenbourg, 1999; Stahl et al., 2006).
 
-The *mechanism* for forming these teams, however, has not kept pace with the complexity of the work. At most universities, team formation still relies on informal channels: a message in a class WhatsApp group ("anyone want to team up?"), a post on a course forum, or — in the worst case — random instructor assignment. None of these methods give students meaningful information about a potential partner's technical skills, work habits, or reliability.
+However, the practical implementation of collaborative learning at scale presents persistent challenges that existing educational technology has failed to adequately address. Students struggle to find compatible teammates, project coordination often devolves into fragmented communication across multiple platforms, and meaningful peer assessment remains difficult to facilitate and verify.
 
-ProjectBuddy was built to solve this problem. It provides:
+The *mechanism* for forming these teams has not kept pace with the complexity of the work. At most universities, team formation still relies on informal channels: a message in a class WhatsApp group ("anyone want to team up?"), a post on a course forum, or — in the worst case — random instructor assignment. None of these methods give students meaningful information about a potential partner's technical skills, work habits, or reliability.
+
+ProjectBuddy was conceived and developed to address these systemic gaps. It is an open-source, web-based collaborative project management platform purpose-built for the higher education context. It provides:
 
 - **Structured project listings** with required skills, topic tags, team size caps, and deadlines.
 - **Interest-based matching** that surfaces relevant projects to each student automatically.
@@ -48,281 +90,410 @@ ProjectBuddy was built to solve this problem. It provides:
 - **Built-in collaboration tools** — real-time team chat, study groups, WebRTC voice rooms, and an AI assistant — so teams can work without fragmenting across external platforms.
 - **Administrative oversight** — moderation, reporting, analytics, and live support chat for platform governance.
 
-The platform is live at [https://project-buddy-pb.onrender.com](https://project-buddy-pb.onrender.com) and the source code is publicly available under the MIT license.
+### 1.1 Problem Statement
 
----
+Through direct observation and student feedback at the International University of Sarajevo (IUS), we identified five critical pain points in collaborative academic projects:
 
-## 2. Problem Statement
+1. **The Information Asymmetry Problem (Team Formation Friction):** When a student posts "looking for a partner for the database project" in a group chat, they are making a selection decision with almost zero relevant information. They cannot see what projects the respondent has completed, whether previous teammates rated them highly, which technical skills they possess, or whether they have a pattern of meeting or missing deadlines. Students rely on informal social networks to find project partners, creating information asymmetry where well-connected students form optimal teams while others are left with suboptimal matches or no team at all. A student who consistently underdelivers can simply move to a new group chat and start fresh — there is no persistent record of past performance.
 
-### 2.1 The Information Asymmetry Problem
+2. **The Accountability Gap (Absence of Structured Feedback):** Even when teams form successfully, there is typically no structured mechanism for post-project accountability. Instructors see a final deliverable but cannot easily determine who contributed what. Most project courses lack mechanisms for intra-team peer assessment. Free-riding is difficult to detect, and high-performing team members receive no recognition for their disproportionate contributions. Peer evaluation forms, when they exist, are one-time paper exercises disconnected from future team formation.
 
-When a student posts "looking for a partner for the database project" in a group chat, they are making a selection decision with almost zero relevant information. They cannot see:
+3. **Platform Fragmentation:** A typical student project requires WhatsApp for messaging, Google Drive for documents, GitHub for code, email for formal communication, and Zoom/Discord for voice calls. This fragmentation leads to lost context, duplicated effort, coordination overhead, and means that no single platform captures a holistic view of a student's collaborative activity.
 
-- What projects the respondent has completed before.
-- Whether previous teammates rated them highly or poorly.
-- Which specific technical skills they possess and at what level.
-- Whether they have a pattern of meeting or missing deadlines.
+4. **Skill Visibility Gap:** Students have no standardized way to showcase project-validated skills to future teammates or instructors. Academic transcripts capture grades but not competencies.
 
-This information asymmetry is the root cause of most team dysfunction. A student who consistently underdelivers can simply move to a new group chat and start fresh — there is no persistent record of past performance.
+5. **The Commitment Overload Problem (Limited Instructor Oversight):** Without enforcement, high-performing students are often recruited into too many simultaneous projects, leading to burnout and declining quality. Conversely, less visible students struggle to find any team at all. Faculty supervising 20+ project teams simultaneously lack tooling to monitor team health, identify struggling groups, and intervene proactively.
 
-### 2.2 The Accountability Gap
+### 1.2 Objectives and Scope
 
-Even when teams form successfully, there is typically no structured mechanism for post-project accountability. Instructors see a final deliverable but cannot easily determine who contributed what. Peer evaluation forms, when they exist, are one-time paper exercises disconnected from future team formation.
+ProjectBuddy aims to deliver a unified platform that addresses each of the identified pain points through the following design objectives:
 
-### 2.3 The Fragmentation Problem
+- **O1 — Intelligent Team Formation:** Implement a skill-and-interest-based recommendation engine that surfaces compatible project opportunities to students, reducing the team formation search cost.
+- **O2 — Unified Collaboration Environment:** Provide text chat, voice communication, file sharing, and project management within a single platform, eliminating the need for third-party tool fragmentation.
+- **O3 — Structured Peer Assessment:** Enable post-project peer feedback with quantitative ratings (1–5) and qualitative comments, constrained by actual project membership to ensure assessment authenticity.
+- **O4 — Skill Endorsement and Gamification:** Allow teammates to endorse specific skills after project completion, with an automated badge system that rewards sustained contribution.
+- **O5 — AI-Powered Assistance:** Integrate an AI assistant (SSM-1.0) that provides contextual help for project planning, skill development, and platform navigation.
+- **O6 — Administrative Tooling:** Equip instructors and administrators with dashboards for monitoring platform activity, managing reports, and overseeing AI chatbot interactions.
 
-A typical university project team uses:
-- WhatsApp or Telegram for general communication
-- Google Docs or Notion for documentation
-- GitHub for code
-- Email for instructor communication
-- Zoom or Discord for voice calls
+### 1.3 Target Audience
 
-This fragmentation creates overhead, makes it harder for instructors to monitor progress, and means that no single platform captures a holistic view of a student's collaborative activity.
+ProjectBuddy serves three distinct user roles, each with tailored functionality:
 
-### 2.4 The Commitment Overload Problem
-
-Without enforcement, high-performing students are often recruited into too many simultaneous projects, leading to burnout and declining quality. Conversely, less visible students struggle to find any team at all.
-
----
-
-## 3. Related Work
-
-| Platform | Strengths | Gaps |
-|----------|-----------|------|
-| **GitHub** | Code hosting, pull requests, contribution graphs | No team-matching, no peer ratings, not designed for academic workflows |
-| **LinkedIn** | Professional profiles, skill endorsements | Not academic-focused, no project matching, endorsements are unverified |
-| **Piazza / Ed Discussion** | Course Q&A, instructor integration | No team formation, no reputation system, read-only interaction model |
-| **Discord / Slack** | Real-time communication, channels | No structured listings, no matching, no accountability layer |
-| **TeamUp (academic tools)** | Some offer random assignment or preference-based matching | Typically instructor-controlled, no student-facing reputation, no post-project feedback loop |
-
-ProjectBuddy occupies a gap in this landscape: it combines the *listing and matching* functionality of a job board with the *reputation and accountability* mechanisms of a professional network, purpose-built for the academic project lifecycle.
-
----
-
-## 4. System Design
-
-### 4.1 Core Entities
-
-The data model comprises 25 SQLAlchemy 2.0 models organised around five domains:
-
-**Identity and Reputation**
-- `User` — account with role (student / instructor / admin), profile, skills, interests, and courses.
-- `Feedback` — per-project peer rating (1–5 scale, enforced by database-level `CheckConstraint`).
-- `Endorsement` — skill-specific endorsement, gated by shared project completion.
-- `Badge` / `UserBadge` — achievement milestones (e.g., "First Step" for completing a first project, "Expert" for receiving 10 endorsements).
-
-**Project Lifecycle**
-- `Project` — listing with title, description, required skills, topic tags, team size, course, deadline, and status (open → closed → completed).
-- `ProjectMember` — team membership with soft-delete (removed flag + timestamp) for audit trail.
-- `Application` — join request with status (pending / accepted / rejected) and optional message.
-- `ProjectVote` — community upvote/downvote on project listings.
-
-**Communication**
-- `ProjectMessage` — per-project team chat.
-- `Chat` / `ChatMessage` — user-to-admin support channel.
-- `StudyGroup` / `StudyGroupMember` / `StudyGroupMessage` — topic-based study rooms with real-time chat and voice.
-- `CommunityPost` / `CommunityComment` / `CommunityLike` — social feed for ideas, updates, and questions.
-- `Notification` — in-app notification feed for applications, comments, mentions, and moderation events.
-
-**AI and Assistance**
-- `ChatbotSession` — per-user conversation history for the built-in AI assistant (last 20 turns retained).
-
-**Security and Administration**
-- `PasswordReset` — token-based password recovery with configurable expiry.
-- `Report` — user/project reports with moderation status and resolution tracking.
-
-### 4.2 User Roles and Permissions
-
-| Role | Capabilities |
-|------|-------------|
-| **Student** | Browse/apply to projects (max 3 active), post to community, join study groups, give/receive feedback, earn badges |
-| **Instructor** | All student capabilities + post projects, manage team members, give instructor-weighted feedback |
-| **Admin** | Full platform access: user management (warn, ban, activate), report handling, live support chat, analytics, chatbot log inspection |
+| Role | Description | Key Capabilities |
+|------|-------------|-----------------|
+| **Student** | Undergraduate and graduate students enrolled in project-based courses | Browse/apply to projects (max 3 active), post to community, join study groups, give/receive feedback, earn badges, use AI assistant |
+| **Instructor** | Faculty members supervising project courses (auto-assigned via faculty email domain) | All student capabilities plus instructor-level project ratings, manage team members, and enhanced visibility |
+| **Administrator** | Platform administrators with full moderation authority | User management (warn/ban/activate), report adjudication, project removal, AI chat log monitoring, platform statistics, live support chat |
 
 Role assignment is automatic: registration with a faculty-domain email address grants the instructor role; all others default to student. Admin accounts are provisioned via environment configuration.
 
-### 4.3 Key Workflows
+---
 
-**Team Formation Flow:**
-1. Owner posts a project with title, description, 5 topic tags, required skills, team size, course, and deadline.
-2. The recommendation engine surfaces the project to students whose interest tags overlap with the project's topic tags (see Section 6.1).
-3. Interested students apply with an optional message.
-4. Owner reviews applications and accepts or rejects each one.
-5. On acceptance, the applicant becomes a `ProjectMember`. If the team reaches capacity, the listing auto-closes.
-6. A hard cap of 3 active projects per student prevents commitment overload.
+## 2. Literature Review and Related Work
 
-**Reputation Flow:**
-1. Owner marks the project as completed (or the deadline checker auto-completes it after the deadline passes).
-2. Teammates rate and review each other via peer feedback (1–5 scale + optional comment).
-3. Teammates endorse specific skills of their collaborators — but only skills the receiver has listed, and only after sharing a completed project.
-4. Badges are awarded automatically when milestones are reached (1 completed project, 5 completed projects, 10 endorsements received).
-5. All feedback, endorsements, and badges appear on the user's public profile, visible to anyone considering them for a future project.
+### 2.1 Computer-Supported Collaborative Learning (CSCL)
+
+Computer-Supported Collaborative Learning (CSCL) is a research paradigm that investigates how technology can facilitate group learning processes. Stahl, Koschmann, and Suthers (2006) define CSCL as the study of "how people can learn together with the help of computers," emphasizing that the unit of analysis is the group, not the individual. This distinction is fundamental to ProjectBuddy's design philosophy: every feature is evaluated against its impact on group dynamics, not merely individual productivity.
+
+Dillenbourg (1999) established that effective collaborative learning requires four conditions: (1) a shared goal, (2) division of labor, (3) joint problem-solving, and (4) mutual knowledge construction. ProjectBuddy operationalizes each condition through its project lifecycle model: shared goals are defined at project creation, labor is divided through team role assignment, joint problem-solving is facilitated by real-time communication channels, and mutual knowledge construction is captured through skill endorsements and peer feedback.
+
+More recently, Jeong and Hmelo-Silver (2016) proposed a framework for CSCL technology design that emphasizes seven affordances: (1) joint task performance, (2) communication, (3) resource sharing, (4) group awareness, (5) regulation, (6) engagement, and (7) assessment. ProjectBuddy's feature set maps directly to these affordances, as detailed in Section 8.1.
+
+### 2.2 Existing Platforms and Gap Analysis
+
+Several categories of software tools are currently used in academic collaborative settings. We conducted a comparative analysis to identify the specific gaps that motivated ProjectBuddy's development:
+
+| Platform Category | Examples | Strengths | Gaps for Academia |
+|-------------------|----------|-----------|-------------------|
+| **Project Management** | Trello, Asana, Jira | Task tracking, kanban boards, deadline management | No team matching, no peer assessment, no academic role model, no voice chat |
+| **Communication** | Slack, Discord, MS Teams | Real-time messaging, voice/video, channels | No project lifecycle, no skill tracking, no recommendation engine, no gamification |
+| **Version Control** | GitHub, GitLab | Code collaboration, issue tracking, contribution graphs | Code-centric (excludes non-CS disciplines), no peer feedback system, steep learning curve |
+| **LMS Platforms** | Moodle, Canvas, Blackboard | Course management, grading, content delivery | Weak collaboration features, no real-time communication, no AI assistance, monolithic architecture |
+| **Social Academic** | ResearchGate, LinkedIn | Research networking, skill endorsements | Post-graduation focus, no project-level collaboration, no real-time features, endorsements are unverified |
+| **Academic Q&A** | Piazza, Ed Discussion | Course Q&A, instructor integration | No team formation, no reputation system, read-only interaction model |
+| **Academic Matching** | TeamUp (academic tools) | Some offer random/preference-based matching | Typically instructor-controlled, no student-facing reputation, no post-project feedback loop |
+
+The analysis reveals that no existing platform provides a unified solution that combines intelligent team formation, real-time multi-modal communication, structured peer assessment, skill endorsement, AI assistance, and administrative oversight within a single, purpose-built educational environment. ProjectBuddy occupies this unique intersection — it combines the *listing and matching* functionality of a job board with the *reputation and accountability* mechanisms of a professional network, purpose-built for the academic project lifecycle.
+
+### 2.3 AI in Educational Technology
+
+The integration of Large Language Models (LLMs) into educational platforms represents a rapidly evolving frontier. Recent work by Kasneci et al. (2023) surveys the opportunities and challenges of ChatGPT in education, noting that AI assistants can provide personalized scaffolding, reduce instructor workload for routine queries, and make domain expertise more accessible. However, they caution against uncritical deployment without safeguards for accuracy and academic integrity.
+
+ProjectBuddy's AI component (SSM-1.0) is designed with these considerations in mind. Rather than replacing human interaction, SSM-1.0 serves as a supplementary resource for project planning advice, skill development recommendations, and platform guidance. Its conversation history is persisted and visible to administrators, maintaining transparency and accountability. The multi-provider architecture (Groq/LLaMA, Anthropic, with keyword-based fallback) ensures service continuity while controlling costs.
 
 ---
 
-## 5. Architecture
+## 3. System Architecture and Design
 
-### 5.1 Technology Stack
+### 3.1 Architectural Overview
 
-| Layer | Technology |
-|-------|-----------|
-| Backend | Python 3.9, Flask 3.1 |
-| ORM | SQLAlchemy 2.0 (Mapped types) |
-| Database | SQLite (development) / PostgreSQL (production) |
-| Migrations | Flask-Migrate (Alembic) |
-| Real-time | Flask-SocketIO + eventlet (WebSocket) |
-| Voice | WebRTC peer-to-peer with SocketIO signaling |
-| Authentication | Flask-Login, GitHub OAuth (HMAC-signed state) |
-| Email | Brevo HTTP API (transactional) |
-| AI | Groq API (Llama 3) → Anthropic API (Claude) → built-in keyword fallback |
-| File Storage | Local disk (dev) / AWS S3 (prod) with optional CloudFront CDN |
-| Scheduling | OS-thread-based scheduler (1-hour interval) for deadline auto-completion |
-| Rate Limiting | Flask-Limiter with Redis backend (prod) / in-memory (dev) |
-| Deployment | Render (hosting), PostgreSQL (managed DB), Redis (rate limiting + SocketIO + voice state) |
+ProjectBuddy follows a modular monolithic architecture organized around the Flask application factory pattern. While microservices architectures are prevalent in industry, we deliberately chose a monolithic approach for several reasons: (1) reduced operational complexity for a university-hosted deployment, (2) simpler debugging and development workflow, (3) atomic database transactions across features, and (4) the application's scale (thousands of users, not millions) does not require horizontal service decomposition.
 
-### 5.2 Application Factory Pattern
+The architecture is organized into four logical layers:
 
-The application uses Flask's factory pattern (`create_app()`) to support multiple configurations (development, testing, production) from a single codebase. Extensions are initialised without binding to a specific app instance, enabling clean test isolation.
+1. **Presentation Layer:** Jinja2 server-rendered HTML templates with responsive CSS, vanilla JavaScript, and Socket.IO client for real-time updates.
+2. **Application Layer:** Flask blueprints (9 modules) implementing RESTful API endpoints and server-side rendering routes, with cross-cutting concerns (authentication, rate limiting, CSRF protection) handled by middleware and decorators.
+3. **Service Layer:** Business logic encapsulated in dedicated service modules (recommendation engine, badge system, deadline checker, file storage abstraction).
+4. **Data Layer:** SQLAlchemy 2.0 ORM with 25 mapped models, PostgreSQL in production, SQLite for development, managed through Alembic migrations.
 
-### 5.3 Blueprint Organisation
+### 3.2 Technology Stack
 
-Business logic is split across 11 Flask Blueprints, each responsible for a single domain:
+The technology stack was selected to balance developer productivity, ecosystem maturity, deployment simplicity, and long-term maintainability:
 
-| Blueprint | URL Prefix | Responsibility |
-|-----------|-----------|---------------|
-| `auth` | `/auth` | Registration, login, GitHub OAuth, password reset |
-| `main` | `/` | Dashboard, profiles, avatar upload |
-| `projects` | `/projects` | CRUD, applications, feedback, endorsements |
-| `users` | `/users` | Search, public profiles |
-| `chat` | `/chat` | User-admin support |
-| `community` | `/community` | Social feed, media upload, comments, likes |
-| `study_groups` | `/study-groups` | Groups, real-time chat, file sharing |
-| `voice` | (SocketIO) | WebRTC signaling |
-| `chatbot` | `/chatbot` | AI assistant |
-| `admin` | `/admin` | Moderation, analytics |
-| `email` | (internal) | Transactional email |
+| Layer | Technology | Version | Rationale |
+|-------|-----------|---------|-----------|
+| Web Framework | Flask | 3.1 | Lightweight, extensible, large ecosystem, well-suited for modular applications |
+| ORM | SQLAlchemy | 2.0 | Industry-standard Python ORM with modern `mapped_column` syntax and type annotations |
+| Database (Prod) | PostgreSQL | 15+ | ACID-compliant, robust JSON support, excellent concurrency handling |
+| Database (Dev) | SQLite | 3.x | Zero-configuration, file-based, ideal for local development iteration |
+| Real-Time | Flask-SocketIO + eventlet | 5.x | WebSocket abstraction with fallback, async worker integration |
+| Message Queue | Redis | 7.x | Cross-worker event broadcast, rate-limit storage, voice room state |
+| Authentication | Flask-Login | 0.6 | Session-based auth with remember-me, mature and battle-tested |
+| Migrations | Flask-Migrate (Alembic) | 4.x | Versioned schema migrations, rollback capability |
+| Rate Limiting | Flask-Limiter | 3.x | Per-route rate limiting with Redis backend for multi-worker support |
+| CSRF Protection | Flask-WTF | 1.x | Token-based CSRF with configurable timeout |
+| File Storage | boto3 (AWS S3) | 1.x | Abstracted behind LocalStorage/S3Storage interface for portability |
+| AI (Primary) | Groq API (LLaMA 3.3 70B) | — | Free-tier LLM inference, OpenAI-compatible API format |
+| AI (Secondary) | Anthropic API (Claude) | — | Fallback provider for high-quality responses |
+| Voice (WebRTC) | Browser WebRTC + SocketIO signaling | — | Peer-to-peer audio with TURN relay support (Xirsys) |
+| Email | Brevo HTTP API | — | Transactional email, bypasses cloud SMTP restrictions |
+| Deployment | Gunicorn + eventlet worker | — | Production WSGI server with async worker class for WebSocket support |
+| Hosting | Render / Heroku | — | PaaS deployment via Procfile, managed PostgreSQL, Redis |
 
-### 5.4 Real-Time Communication
+### 3.3 Data Model
 
-Flask-SocketIO provides WebSocket-based real-time messaging for:
-- Project team chat
-- Study group chat
-- Admin support chat
-- WebRTC voice signaling
+The data model comprises 25 SQLAlchemy models organized into five functional domains. All models use the modern SQLAlchemy 2.0 `mapped_column` / `Mapped[type]` declarative syntax with full type annotations.
 
-In production, a Redis message queue ensures events are broadcast across multiple Gunicorn workers. Voice room state (which users are in which room) is stored in Redis with a 24-hour TTL, falling back to an in-process dictionary in development.
+| Domain | Models | Key Relationships |
+|--------|--------|-------------------|
+| **User Identity** | User, UserInterest, UserSkill, UserCourse | User has many interests, skills, and courses; supports student/instructor/admin roles |
+| **Project Lifecycle** | Project, ProjectTag, ProjectSkill, ProjectMember, Application, ProjectMessage, ProjectVote | Project owned by User; members join via Application; votes enable community ranking |
+| **Assessment** | Feedback, Endorsement, Badge, UserBadge | Feedback links giver/receiver/project with rating constraint (1–5); endorsements require shared project completion |
+| **Communication** | Chat, ChatMessage, StudyGroup, StudyGroupMember, StudyGroupMessage, SharedFile, ChatbotSession | Admin support chat; group chat with file sharing; AI chatbot session persistence |
+| **Moderation** | Report, AdminMessage, Notification, PasswordReset | Report targets user or project; admin can warn/ban/dismiss; notifications link to originating action |
 
-### 5.5 Eventlet Considerations
+### 3.4 Application Factory Pattern
 
-The application uses `eventlet` as its async I/O layer for SocketIO compatibility. This introduces a specific constraint: `eventlet.sleep()` and any hub-dependent call cannot be made from the main greenlet before the hub loop starts. The deadline scheduler and startup tasks (schema migration, badge seeding, admin sync, mock data) therefore run on genuine OS threads obtained via `eventlet.patcher.original('threading')`, completely outside eventlet's hub.
+ProjectBuddy uses the Flask application factory pattern (`create_app()`) to ensure testability, configuration flexibility, and clean extension initialization. The factory performs the following operations in sequence:
+
+1. **Configuration Loading:** From environment-specific classes (DevelopmentConfig, ProductionConfig, TestingConfig).
+2. **Proxy Fix:** Werkzeug ProxyFix middleware installation for correct header handling behind reverse proxies (Render, Heroku).
+3. **Extension Initialization:** SQLAlchemy, Migrate, LoginManager, Limiter, CSRFProtect, SocketIO (with Redis message queue when available).
+4. **Blueprint Registration:** 9 route modules plus SocketIO voice event handlers.
+5. **Security Middleware:** CSP nonce generation per request, comprehensive security headers on every response, cache-control policies per path.
+6. **Error Handlers:** Custom 404/500 pages, graceful CSRF failure handling, rate-limit exceeded flash messages.
+7. **Startup Tasks (OS Thread):** Schema migration, badge seeding, admin sync, avatar backfill, mock data seeding — run in a genuine OS thread to avoid eventlet hub conflicts.
+8. **Background Scheduler:** Hourly deadline checker running in a genuine OS thread (not eventlet greenlet).
+
+### 3.5 Security Architecture
+
+Security is implemented as a defense-in-depth strategy with multiple overlapping controls. Every HTTP response includes a comprehensive set of security headers:
+
+| Security Control | Implementation | Threat Mitigated |
+|-----------------|----------------|------------------|
+| **Content Security Policy** | `default-src 'self'`; script/style restricted to `'self'` + specific CDNs; `frame-ancestors 'none'`; per-request nonce via `secrets.token_urlsafe(16)` | XSS, code injection, clickjacking |
+| **CSRF Protection** | Flask-WTF token with 1-hour expiry; CSRF error returns flash + redirect (not raw 400) | Cross-Site Request Forgery |
+| **Rate Limiting** | Global: 200/day, 50/hour; Login: 20/min, 100/hour; Register: 10/hour; Admin login: 10/min, 30/hour; Chatbot: 20/min, 200/day | Brute force, credential stuffing, API abuse |
+| **Password Security** | PBKDF2-SHA256 hashing via Werkzeug; min 8 chars + digit + special character | Credential theft, rainbow table attacks |
+| **Session Security** | HttpOnly, Secure, SameSite=Lax cookies; 8-hour session lifetime; `__Host-` prefix in production | Session hijacking, cookie theft |
+| **HSTS** | `max-age=63072000; includeSubDomains; preload` (production only) | SSL stripping, downgrade attacks |
+| **OAuth CSRF** | HMAC-SHA256 signed timestamp state parameter (no session dependency); 10-minute window; `hmac.compare_digest` for constant-time comparison | OAuth state tampering, timing attacks |
+| **Permissions Policy** | `camera=(), microphone=(self), geolocation=(), payment=(), usb=()` | Unauthorized browser API access |
+| **COOP/CORP** | `Cross-Origin-Opener-Policy: same-origin`; `Cross-Origin-Resource-Policy: same-origin` | Cross-origin window attacks, resource embedding |
+| **File Upload Validation** | Extension whitelist + Content-Type header check + magic-byte sniffing (JPEG, PNG, WebP, GIF) + size limit (50 MB); filenames sanitized with `secure_filename` + randomized with `secrets.token_hex` | Malicious file upload, MIME confusion, path traversal |
+| **Information Disclosure** | Generic error messages, no email enumeration on password reset, server fingerprint header removed | User enumeration, fingerprinting |
+| **SQL Injection** | SQLAlchemy ORM parameterizes all queries | SQL injection |
+| **XSS** | Jinja2 auto-escapes all template variables by default | Cross-site scripting |
+
+**Known CSP caveat:** The Content-Security-Policy header includes `'unsafe-inline'` for both scripts and styles because the frontend uses inline event handlers (`onclick=`) and inline style attributes. The CSP nonce infrastructure is in place, and removing `unsafe-inline` is a planned future improvement requiring a frontend refactor.
 
 ---
 
-## 6. Key Algorithms and Services
+## 4. Core Features and Implementation
 
-### 6.1 Recommendation Engine
+### 4.1 User Management and Authentication
 
-The recommendation service matches students to projects through interest-tag expansion and set intersection:
+ProjectBuddy supports two authentication pathways: traditional email/password registration and GitHub OAuth 2.0 single sign-on.
 
-1. **Tag Normalisation:** All tags are lowercased and whitespace-trimmed for consistent comparison.
+**Registration Flow:**
+- Requires first name, last name, email, department, password (with confirmation), and exactly 5 interest tags from a predefined taxonomy.
+- Interest tags serve dual purposes: (1) populating the user's interest profile for the recommendation engine, and (2) providing an initial signal for team compatibility matching.
+- Password policies enforce a minimum of 8 characters with at least one digit and one special character (`!@#$%^&*`).
+- Automatic role assignment: faculty domain emails receive instructor role; all others default to student.
 
-2. **Interest Expansion:** Each user interest tag is expanded into a set of related topic categories via a static mapping. For example, `"python"` expands to `{"backend", "data", "ai / ml"}`, and `"cybersecurity"` expands to `{"security", "backend"}`.
+**GitHub OAuth Flow:**
+- Uses HMAC-signed timestamp-based state tokens rather than session-stored state, eliminating a class of bugs related to cross-site redirect cookie loss.
+- State token includes a 10-minute expiry window and is verified using constant-time comparison (`hmac.compare_digest`) to prevent timing attacks.
+- On first OAuth login, a new user account is created from GitHub profile data (name, email, avatar). GitHub users have no password — a random 64-char hex string is stored that will never match any real password because `check_password()` verifies against a PBKDF2 hash.
 
-3. **Candidate Filtering:** Projects where the user is already an owner, member, or applicant are excluded.
+**Password Reset Flow:**
+- A 256-character random token is generated, stored in the database with a creation timestamp, and sent to the user's email via the Brevo transactional email API.
+- Tokens expire after a configurable period (default: 1 hour).
+- The reset endpoint does not reveal whether an email exists in the system, preventing enumeration attacks.
+- Old tokens are deleted before issuing new ones to prevent accumulation.
 
-4. **Scoring:** For each remaining open project, the algorithm computes the size of the intersection between the user's expanded interest set and the project's normalised topic tags. Projects with zero overlap are discarded.
+### 4.2 Project Lifecycle Management
 
-5. **Ranking:** Results are sorted by match count (descending), then by creation date (newest first) as a tiebreaker.
+Projects in ProjectBuddy follow a well-defined state machine with three states:
+
+```
+   [OPEN] ──── team full / owner closes ────> [CLOSED]
+     │                                           │
+     │         owner marks complete               │
+     └──────── or deadline passes ──────────> [COMPLETED]
+                                                  │
+                                                  └── Enables: feedback, endorsements, badges
+                                                      Disables: modifications, new applications
+```
+
+**Transition Rules:**
+- **Open → Closed:** Triggered automatically when the team reaches capacity, or manually by the project owner.
+- **Open/Closed → Completed:** Triggered manually by the project owner, or automatically by the background deadline checker when the deadline passes.
+- **Completed:** Terminal state. Enables peer feedback and skill endorsement; disables project modification and new applications.
+
+**Business Rules:**
+- Each project creation requires exactly 5 topic tags, a team size specification, and an optional deadline.
+- Hard limit of 3 concurrent active project memberships per student, preventing overcommitment.
+- Application workflow includes applicant messaging, owner review (accept/reject), and automatic notifications.
+- Community engagement through upvote/downvote system with unique constraint (one vote per user per project).
+
+### 4.3 Skill-Based Recommendation Engine
+
+The recommendation engine (`services/recommendation_service.py`) implements a content-based filtering algorithm that matches student interest profiles against project topic tags. The algorithm operates in three phases:
+
+**Phase 1 — Interest Expansion:**
+Each user's selected interest tags are expanded through a curated mapping dictionary (`INTEREST_TO_TOPIC_MAP`) that associates narrow interests with broader topic categories. Examples:
+
+| User Interest | Expanded Topics |
+|--------------|-----------------|
+| `"python"` | `{"backend", "data", "ai / ml"}` |
+| `"machine learning"` | `{"ai / ml", "data", "research"}` |
+| `"react"` | `{"frontend"}` |
+| `"cybersecurity"` | `{"security", "backend"}` |
+| `"ui/ux design"` | `{"design", "frontend"}` |
+| `"cloud computing"` | `{"cloud", "backend"}` |
+
+This expansion increases recall by bridging vocabulary gaps between how students describe their interests and how project owners tag their projects.
+
+**Phase 2 — Candidate Filtering:**
+The algorithm filters out projects where the user is already the owner, an active member, or has a pending application. Only projects with "open" status are considered.
+
+**Phase 3 — Scoring and Ranking:**
+For each remaining candidate project, the algorithm computes the intersection cardinality between the user's expanded interest set and the project's normalized tag set. Projects are ranked by `(match_count DESC, created_at DESC)`, prioritizing relevance while using recency as a tiebreaker.
 
 This approach is intentionally simple and transparent. It avoids collaborative filtering or machine learning, which would require usage data that a new platform does not have. The static mapping can be extended as the platform grows.
 
-### 6.2 Badge Service
+### 4.4 Community Learning Feed
 
-Badges are awarded through an event-driven check triggered after two events: project completion and skill endorsement. The service evaluates three rules:
+The community module provides a social learning feed modeled after educational discourse platforms:
 
-| Badge | Condition |
-|-------|-----------|
-| First Step | ≥ 1 completed project |
-| Veteran | ≥ 5 completed projects |
-| Expert | ≥ 10 endorsements received |
+- Students can publish posts with optional media attachments (images: JPG, PNG, WebP, GIF; videos: MP4, WebM, MOV) up to 50 MB.
+- The upload pipeline implements **four-layer validation:** extension whitelist, Content-Type header verification, magic-byte signature sniffing (for images), and file size enforcement.
+- Posts support a comment thread with @mention notifications. When a user comments on another user's post, the post author receives an in-app notification with a preview snippet.
+- A like/unlike toggle provides lightweight engagement signaling.
+- Both posts and comments can be deleted by their authors or by administrators, supporting content moderation.
+- Filenames are sanitized and randomized to prevent collisions and path traversal.
 
-The check is idempotent — it queries current counts and only awards badges the user does not already have. This design allows new badge rules to be added without migrating historical data.
+### 4.5 Study Groups and Voice Chat
 
-### 6.3 Deadline Checker
+Study groups provide persistent, topic-organized collaboration spaces with three core capabilities:
 
-An OS-thread-based scheduler runs every hour and automatically marks projects as completed if their deadline has passed. This prevents stale listings from cluttering the platform and ensures that post-completion workflows (feedback, endorsements, badges) can proceed even if the project owner forgets to manually close the project.
+1. **Text-Based Group Messaging:** Polling-based with 3-second intervals, last 60 messages loaded on entry. Messages are limited to 2000 characters.
+2. **File Sharing:** 25 MB limit, 40+ supported file formats (documents, images, code files, archives, media). Files stored with UUID-based filenames through the storage abstraction layer.
+3. **Peer-to-Peer WebRTC Voice Chat:** Full-mesh topology with SocketIO signaling (detailed in Section 5).
 
-### 6.4 AI Chatbot
+Groups can be public or private, and the creator automatically joins as the group admin. Live voice presence indicators show how many users are currently in voice for each group.
 
-The chatbot provides in-platform assistance with a three-tier provider fallback:
-1. **Groq API** (Llama 3, free tier) — primary provider.
-2. **Anthropic API** (Claude) — secondary if Groq key is not configured.
-3. **Keyword-based mock responses** — built-in fallback requiring no external API.
+### 4.6 SSM-1.0 AI Assistant
 
-Conversation history (last 20 turns) is persisted per user and included in API calls for contextual responses. Rate limiting (20 requests/minute, 200/day) prevents abuse.
+SSM-1.0 is ProjectBuddy's integrated AI assistant, available both as a web-based chatbot within the platform and as a standalone CLI development tool.
 
-### 6.5 File Storage Abstraction
+**Web Chatbot — Multi-Provider Architecture:**
 
-A storage service abstracts local disk and AWS S3 behind a common interface (`save`, `delete`, `download_url`). In development, files are saved to `static/uploads/`; in production, they are uploaded to S3 with optional CloudFront CDN URLs. The abstraction is initialised once at module import time as a singleton.
+| Provider | Model | Tier | Characteristics |
+|----------|-------|------|-----------------|
+| **Groq (Primary)** | LLaMA 3.3 70B Versatile | Free | Fast inference, OpenAI-compatible API, ~14,400 req/day free tier |
+| **Anthropic (Fallback)** | Claude 3 Haiku | Paid | High-quality responses, Anthropic Messages API format |
+| **Built-in (Offline)** | Keyword matching | Free | Category-based response templates (project, team, deadline, skill, flask, git), zero API dependency |
 
----
+The provider selector checks for API keys in order (Groq → Anthropic → built-in) and uses the first available provider. Each user's conversation history is persisted in the database (last 20 messages retained per user) and included in subsequent API calls to maintain conversational context.
 
-## 7. Security Architecture
+**System Prompt:** SSM-1.0 is instructed to help with project planning, finding teammates, managing deadlines, skill development, and general study advice. Responses are kept under 150 words unless more detail is requested.
 
-Security is implemented as defense-in-depth across multiple layers:
+**Rate Limiting:** 20 requests/minute, 200/day per user. Input validated for length (max 1000 characters) and emptiness.
 
-### 7.1 Authentication
+**Standalone CLI Agent (`ssm_agent.py`):**
+- Implements a ReAct-style (Reasoning + Acting) agent loop over a local Ollama model.
+- Tool registry supports: `read_file`, `write_file`, `run_shell`, `get_datetime`, `search_web`.
+- Agent parses tool calls from model output as JSON, executes them, feeds results back for iterative reasoning.
+- Maximum 10 tool-call rounds per user message to prevent infinite loops.
+- Auto-detects available Ollama models, preferring LLaMA variants.
 
-- **Passwords:** Hashed with `pbkdf2:sha256` via Werkzeug. Registration enforces minimum 8 characters, at least one digit, and at least one special character.
-- **Sessions:** `HttpOnly`, `SameSite=Lax`, 8-hour lifetime. Production uses `Secure` flag. Cookie names use the `__Host-` prefix in environments where it is supported (requires HTTPS, no Domain attribute).
-- **GitHub OAuth:** State parameter is HMAC-SHA256 signed with a timestamp, verified with `hmac.compare_digest` — constant-time comparison to prevent timing attacks. No session dependency, so it survives cross-site redirects reliably.
-- **Password Reset:** Token-based with configurable expiry (default 24 hours). Old tokens are deleted before issuing new ones to prevent accumulation.
+### 4.7 Gamification and Badge System
 
-### 7.2 Authorization
+ProjectBuddy implements a badge-based gamification system (`services/badge_service.py`) designed to incentivize sustained engagement and recognize achievement milestones:
 
-- `@login_required` on all authenticated routes.
-- `@admin_required` decorator on all admin routes — checks both authentication and role.
-- Project operations (update, close, complete, accept/reject applications) verify ownership.
-- Endorsements require a shared completed project — preventing drive-by endorsement spam.
+| Badge | Condition | Design Rationale |
+|-------|-----------|------------------|
+| **First Step** | Complete 1 project | Lower the activation barrier; reward initial participation |
+| **Veteran** | Complete 5 projects | Recognize sustained commitment across multiple teams |
+| **Expert** | Receive 10 skill endorsements | Validate peer-recognized expertise; require social proof |
 
-### 7.3 Input Validation and Output Safety
+**Award Mechanics:**
+- Badges are automatically evaluated after two trigger events: project completion (for First Step and Veteran) and skill endorsement (for Expert).
+- The evaluation is idempotent: if a badge has already been awarded, the check short-circuits without database modification.
+- Endorsements are constrained to users who have completed at least one project together, ensuring that endorsements reflect genuine collaborative experience rather than social reciprocity.
+- All feedback, endorsements, and badges appear on the user's public profile, visible to anyone considering them for a future project.
 
-- **CSRF:** Global protection via Flask-WTF with 1-hour token validity. Failures redirect with a user-friendly flash message rather than a raw 400 error.
-- **Content Security Policy:** Per-request nonce generated with `secrets.token_urlsafe(16)`. Script and style sources restricted to `'self'` and specific CDNs. `object-src 'none'`, `base-uri 'self'`, `frame-ancestors 'none'`.
-- **File Uploads:** Four-layer validation — extension whitelist, Content-Type header check, magic-byte sniffing (JPEG, PNG, WebP, GIF headers), and size cap (50 MB). Filenames are sanitised with `werkzeug.utils.secure_filename` and randomised with `secrets.token_hex`.
+### 4.8 Administrative Dashboard
 
-### 7.4 Transport and Headers
+The admin module provides a dedicated interface for platform governance:
 
-- **HSTS:** `max-age=63072000; includeSubDomains; preload` in production.
-- **X-Content-Type-Options:** `nosniff`
-- **X-Frame-Options:** `SAMEORIGIN`
-- **Referrer-Policy:** `strict-origin-when-cross-origin`
-- **Permissions-Policy:** Camera, geolocation, payment, and USB disabled. Microphone allowed for WebRTC voice.
-- **Cross-Origin-Opener-Policy:** `same-origin`
-- **Cross-Origin-Resource-Policy:** `same-origin`
-- Server fingerprint header removed on every response.
-
-### 7.5 Rate Limiting
-
-- Global defaults: 200 requests/day, 50/hour per IP.
-- Login: 20/minute, 100/hour.
-- Admin login: 10/minute, 30/hour.
-- Registration: 10/hour.
-- Chatbot: 20/minute, 200/day.
-- Production uses Redis as the rate-limit backend for consistency across multiple workers.
-
-### 7.6 Privacy
-
-- User search does not expose email addresses.
-- Public profiles are login-gated — no unauthenticated scraping.
-- Password reset responses do not reveal whether an email exists in the system ("If an account exists with that email...").
+- **Report Adjudication:** Three-action workflow: **warn** (sends a warning AdminMessage to the target user), **ban** (disables login via `is_banned` flag), or **dismiss** (closes the report as invalid). Reports follow a strict `pending → resolved/warned/dismissed` state machine.
+- **Platform Statistics:** Real-time aggregate metrics: total users, projects, applications, reports, and badges. Accessible via both the dashboard UI and a JSON API endpoint (`/admin/stats`).
+- **AI Chat Monitoring:** Full read access to all users' chatbot conversation histories, organized by user. Enables quality assurance of AI responses and detection of potential misuse patterns.
+- **Direct Messaging:** Admin-to-user communication channel for warnings, guidance, and follow-up on reported issues.
+- **Project Removal:** Ability to remove fraudulent or misleading project listings, with cascading deletion of associated tags, members, and applications.
 
 ---
 
-## 8. Case Study
+## 5. Real-Time Communication Infrastructure
 
-### 8.1 Why I Built This
+### 5.1 WebSocket Architecture
+
+ProjectBuddy's real-time layer is built on Flask-SocketIO with the eventlet async mode. The eventlet worker class patches Python's standard library to provide cooperative multitasking within a single OS process, allowing thousands of concurrent WebSocket connections without the thread-per-connection overhead of traditional WSGI servers.
+
+**Eventlet Hub Constraint:**
+A critical architectural decision is the use of genuine OS threads (via `eventlet.patcher.original('threading').Thread`) for background tasks such as the deadline scheduler and database startup routines. This is necessary because eventlet's hub-based scheduling raises "do not call blocking functions from the mainloop" when `hub.switch()` is invoked from the hub's own greenlet. By using unpatched OS threads, these tasks execute completely outside eventlet's cooperative scheduling, avoiding deadlocks while maintaining access to the Flask application context.
+
+### 5.2 WebRTC Voice Implementation
+
+The voice chat system implements a full-mesh peer-to-peer WebRTC topology with server-side signaling. The implementation follows a five-phase connection lifecycle:
+
+1. **Phase 1 — Room Join:** Client emits `join_voice` with `group_id`. Server joins the SocketIO room, retrieves the existing participant list, and sends it to the new joiner via `voice_existing_participants`.
+
+2. **Phase 2 — Offer Exchange:** Existing participants receive `voice_user_joined` and initiate WebRTC offers. SDP offers are relayed through the server to the target peer identified by socket ID.
+
+3. **Phase 3 — Answer Exchange:** The new joiner generates SDP answers and relays them back through the server. At this point, both peers have exchanged session descriptions.
+
+4. **Phase 4 — ICE Candidate Exchange:** ICE (Interactive Connectivity Establishment) candidates are relayed between peers to negotiate the optimal network path. With TURN configured, this ensures connectivity even behind symmetric NATs and restrictive firewalls.
+
+5. **Phase 5 — Teardown:** On `leave_voice` or `disconnect`, the participant is removed from the room state and all remaining peers are notified via `voice_user_left`.
+
+**Voice Room State Storage:**
+- **Redis (production):** Stored with 24-hour TTL, shared across multiple Gunicorn workers.
+- **In-process dict (development):** Fallback for single-worker environments.
+
+**ICE Server Configuration (Three Tiers):**
+
+| Tier | Provider | Credentials | Use Case |
+|------|----------|-------------|----------|
+| 1 | **Xirsys API** | Fresh time-limited TURN credentials via API | Production (recommended) |
+| 2 | **Static TURN** | Environment variables (TURN_URLS, TURN_USERNAME, TURN_CREDENTIAL) | Production (Metered, Twilio, Coturn) |
+| 3 | **Google STUN** | None required | Development / same-LAN only |
+
+The system logs a warning if no TURN relay is configured, as STUN alone is insufficient for production use behind NAT/firewalls.
+
+### 5.3 Scalability with Redis Message Queue
+
+In production, Gunicorn runs multiple eventlet worker processes to utilize multi-core hardware. This creates a challenge: SocketIO events emitted in one worker process must reach clients connected to other workers. ProjectBuddy solves this by configuring Flask-SocketIO with a Redis message queue (`message_queue=redis_url`), enabling cross-worker event broadcast.
+
+Redis also serves as the backend for Flask-Limiter's rate limiting storage, ensuring that rate limits are enforced consistently across all worker processes. In development (single worker), the system gracefully degrades to in-process storage for both SocketIO events and rate limits.
+
+---
+
+## 6. Deployment and Operations
+
+### 6.1 Production Configuration
+
+ProjectBuddy uses a three-tier configuration hierarchy: base `Config`, `DevelopmentConfig`, and `ProductionConfig`. The production configuration enforces several critical settings:
+
+| Setting | Development | Production |
+|---------|------------|------------|
+| `DEBUG` | `True` | `False` |
+| `SESSION_COOKIE_SECURE` | `False` | `True` |
+| `SEED_MOCK_DATA` | `True` | `False` |
+| `HSTS` | Disabled | 2-year max-age with preload |
+| `CORS` | `*` (all origins) | Restricted to deployment URL |
+| `Cookie Name` | `session` | `pb-session` |
+| `CSP nonce` | Generated | Generated |
+| `Werkzeug unsafe` | Allowed | Blocked |
+
+The deployment pipeline uses a Procfile-based configuration compatible with Render and Heroku. The WSGI entrypoint (`wsgi.py`) initializes the application with `ProductionConfig` and runs under Gunicorn with the eventlet worker class.
+
+The platform handles cold starts gracefully — the first request after inactivity takes approximately 30 seconds as the Render instance spins up, applies migrations, seeds default data, and starts the scheduler.
+
+### 6.2 Cloud Storage Abstraction
+
+File storage is abstracted behind a pluggable interface (`services/file_storage.py`) with two implementations:
+
+**LocalStorage:**
+- Saves files to `static/uploads/<category>/` on the local filesystem.
+- Returns relative URLs suitable for direct serving by the web server.
+- Used in development and single-server deployments.
+
+**S3Storage:**
+- Uploads files to an AWS S3 bucket (or S3-compatible service via custom endpoint URL).
+- Supports CloudFront CDN URL rewriting for optimized delivery.
+- Generates pre-signed download URLs with configurable expiry for access-controlled file retrieval.
+- Content-Type automatically detected via MIME type guessing.
+
+The storage backend is selected at module import time based on the presence of the `AWS_S3_BUCKET` environment variable, with automatic fallback to local storage if S3 initialization fails. This design ensures zero-configuration development while supporting production cloud storage without code changes.
+
+### 6.3 Background Task Scheduling
+
+ProjectBuddy runs a single background task: the deadline checker, which executes hourly to identify overdue projects and automatically transition them to the "completed" state.
+
+**Implementation Details:**
+- Uses a genuine OS thread (not an eventlet greenlet) to avoid the "blocking from mainloop" hub conflict.
+- Uses `eventlet.patcher.original('time').sleep` for real OS-level sleep, completely outside eventlet's scheduling.
+- In Flask's debug mode with the Werkzeug reloader, the scheduler is conditionally started only in the child process (detected via `WERKZEUG_RUN_MAIN`) to prevent duplicate scheduler instances from competing over database access.
+
+---
+
+## 7. Case Study: Origin and Motivation
+
+### 7.1 Why I Built This
 
 > Last semester, a project I worked on got rejected. Not because of my work — but because my partner didn't deliver. The semester before that, I couldn't find a partner at all, and my professor refused to accept a solo submission.
 >
@@ -340,7 +511,7 @@ Security is implemented as defense-in-depth across multiple layers:
 >
 > I build things because I run into problems and refuse to accept that they can't be solved.
 
-### 8.2 Design Decisions Driven by the Problem
+### 7.2 Design Decisions Driven by the Problem
 
 Each major feature maps directly to a pain point observed in real university project work:
 
@@ -355,9 +526,9 @@ Each major feature maps directly to a pain point observed in real university pro
 | "There's no incentive to be a good teammate" | Badge system rewarding completion and endorsements |
 | "Abusive or inactive users face no consequences" | Admin moderation: warnings, bans, report queue |
 
-### 8.3 Implementation Timeline
+### 7.3 Implementation Timeline
 
-The platform was built as a solo project over the course of one academic semester. Key milestones:
+The platform was built as a solo project over the course of one academic semester:
 
 1. **Weeks 1–2:** Problem analysis, requirements gathering, data model design.
 2. **Weeks 3–5:** Core backend — user auth, project CRUD, application workflow, database schema.
@@ -366,64 +537,66 @@ The platform was built as a solo project over the course of one academic semeste
 5. **Weeks 11–12:** Community feed, study groups, AI chatbot, admin panel.
 6. **Weeks 13–14:** Security hardening (CSP, CSRF, rate limiting, file upload validation), deployment to Render, documentation.
 
-### 8.4 Deployment
-
-The production deployment runs on Render's free tier:
-- **Web service:** Gunicorn with eventlet workers, behind Render's reverse proxy.
-- **Database:** Managed PostgreSQL instance.
-- **Redis:** Used for rate limiting, SocketIO message queue, and voice room state.
-- **File storage:** AWS S3 with optional CloudFront CDN.
-- **Email:** Brevo HTTP API for transactional email (bypasses cloud SMTP restrictions).
-
-The platform handles cold starts gracefully — the first request after inactivity takes approximately 30 seconds as the Render instance spins up, applies migrations, seeds default data, and starts the scheduler.
-
 ---
 
-## 9. Evaluation
+## 8. Evaluation and Discussion
 
-### 9.1 Functional Completeness
+### 8.1 Functional Assessment (CSCL Framework)
 
-The platform was evaluated against its original requirements:
+We evaluate ProjectBuddy against the seven CSCL affordances framework proposed by Jeong and Hmelo-Silver (2016):
+
+| CSCL Affordance | ProjectBuddy Implementation | Coverage |
+|-----------------|----------------------------|----------|
+| **Joint Task Performance** | Project lifecycle management with shared membership, role assignment, and state transitions | Full |
+| **Communication** | Text messaging (study groups), WebRTC voice chat, admin messaging, AI chatbot | Full |
+| **Resource Sharing** | File upload/download in study groups (40+ formats, 25 MB limit), community media posts (50 MB) | Full |
+| **Group Awareness** | Live voice presence indicators, member lists, application status tracking, notification system | Partial |
+| **Regulation** | Deadline enforcement (automatic), project membership limits (max 3), rate limiting | Partial |
+| **Engagement** | Badge gamification, skill endorsements, community likes/comments, project voting | Full |
+| **Assessment** | Peer feedback (1–5 rating + comment), skill endorsements, instructor ratings | Full |
+
+**Group Awareness** is rated "Partial" because while the platform provides real-time voice presence and member status, it does not yet implement task progress dashboards or contribution analytics. **Regulation** is "Partial" because while deadlines and membership limits are enforced, the platform does not yet support instructor-defined milestones or automated progress gates.
+
+### 8.2 Functional Completeness
 
 | Requirement | Status | Notes |
 |------------|--------|-------|
-| Post projects with skills, tags, deadline | Complete | 5 topic tags required, skills optional |
-| Browse and filter open projects | Complete | Filterable list + recommendation engine |
-| Apply to join projects | Complete | With ownership, membership, and cap checks |
-| Accept/reject applications | Complete | Owner-only, with auto-close on team full |
-| Rate teammates after completion | Complete | 1–5 scale with DB-level constraint |
-| Endorse specific skills | Complete | Gated by shared completed project |
-| Badge system | Complete | 3 badges with idempotent award logic |
-| Real-time team chat | Complete | SocketIO-based, per-project |
-| Voice rooms | Complete | WebRTC peer-to-peer with SocketIO signaling |
-| Community feed with media | Complete | Image/video upload with 4-layer validation |
-| Study groups | Complete | Public/private, chat, file sharing |
-| AI assistant | Complete | 3-tier provider fallback |
-| Admin moderation | Complete | Warnings, bans, reports, analytics |
-| Auto-complete past deadline | Complete | Hourly scheduler on OS thread |
-| Max 3 active projects | Complete | Enforced on both create and apply |
-| Email notifications | Complete | Password reset, application events |
-| GitHub OAuth | Complete | HMAC-signed state, no session dependency |
+| Post projects with skills, tags, deadline | **Complete** | 5 topic tags required, skills optional |
+| Browse and filter open projects | **Complete** | Filterable list + recommendation engine |
+| Apply to join projects | **Complete** | With ownership, membership, and cap checks |
+| Accept/reject applications | **Complete** | Owner-only, with auto-close on team full |
+| Rate teammates after completion | **Complete** | 1–5 scale with DB-level `CheckConstraint` |
+| Endorse specific skills | **Complete** | Gated by shared completed project |
+| Badge system | **Complete** | 3 badges with idempotent award logic |
+| Real-time team chat | **Complete** | SocketIO-based, per-project |
+| Voice rooms | **Complete** | WebRTC peer-to-peer with SocketIO signaling |
+| Community feed with media | **Complete** | Image/video upload with 4-layer validation |
+| Study groups | **Complete** | Public/private, chat, file sharing |
+| AI assistant | **Complete** | 3-tier provider fallback |
+| Admin moderation | **Complete** | Warnings, bans, reports, analytics |
+| Auto-complete past deadline | **Complete** | Hourly scheduler on OS thread |
+| Max 3 active projects | **Complete** | Enforced on both create and apply |
+| Email notifications | **Complete** | Password reset, application events |
+| GitHub OAuth | **Complete** | HMAC-signed state, no session dependency |
 
-### 9.2 Security Assessment
+### 8.3 Security Assessment
 
-| Security Control | Implementation Quality |
-|-----------------|----------------------|
-| Password hashing | Strong — `pbkdf2:sha256` with Werkzeug defaults |
-| Session management | Strong — HttpOnly, SameSite, short lifetime, Secure in prod |
-| CSRF protection | Strong — global Flask-WTF, graceful failure handling |
-| OAuth state | Strong — HMAC-signed, time-bounded, constant-time comparison |
-| Rate limiting | Strong — per-route limits, Redis-backed in production |
-| CSP | Moderate — nonces generated but `unsafe-inline` still present for legacy compatibility |
-| File uploads | Strong — extension + Content-Type + magic bytes + size cap |
-| SQL injection | Strong — SQLAlchemy ORM parameterises all queries |
-| XSS | Strong — Jinja2 auto-escapes all template variables by default |
-| Access control | Strong — decorator-based with ownership verification |
-| Information disclosure | Strong — generic error messages, no email enumeration |
+| Security Control | Implementation Quality | Notes |
+|-----------------|----------------------|-------|
+| Password hashing | **Strong** | `pbkdf2:sha256` with Werkzeug defaults |
+| Session management | **Strong** | HttpOnly, SameSite, short lifetime, Secure in prod |
+| CSRF protection | **Strong** | Global Flask-WTF, graceful failure handling |
+| OAuth state | **Strong** | HMAC-signed, time-bounded, constant-time comparison |
+| Rate limiting | **Strong** | Per-route limits, Redis-backed in production |
+| CSP | **Moderate** | Nonces generated but `unsafe-inline` still present for legacy compatibility |
+| File uploads | **Strong** | Extension + Content-Type + magic bytes + size cap |
+| SQL injection | **Strong** | SQLAlchemy ORM parameterizes all queries |
+| XSS | **Strong** | Jinja2 auto-escapes all template variables by default |
+| Access control | **Strong** | Decorator-based with ownership verification |
+| Information disclosure | **Strong** | Generic error messages, no email enumeration |
+| Privacy | **Strong** | Email addresses hidden, profiles login-gated |
 
-**Known CSP caveat:** The Content-Security-Policy header includes `'unsafe-inline'` for both scripts and styles because the frontend uses inline event handlers (`onclick=`) and inline style attributes. The CSP nonce infrastructure is in place, and removing `unsafe-inline` is a planned future improvement requiring a frontend refactor.
-
-### 9.3 Architectural Quality
+### 8.4 Architectural Quality
 
 **Strengths:**
 - Clean separation of concerns via Blueprints and a dedicated services layer.
@@ -433,13 +606,12 @@ The platform was evaluated against its original requirements:
 - Storage abstraction allows seamless local/S3 switching without code changes.
 - Graceful degradation — chatbot falls back through three providers; storage falls back from S3 to local disk; rate limiting falls back from Redis to memory.
 
-**Areas for improvement:**
-- No automated test suite. The application was manually tested during development, but unit and integration tests would improve confidence in future changes.
-- The recommendation algorithm is tag-based and does not learn from user behavior. Collaborative filtering could improve recommendations as usage data accumulates.
-- No API documentation (OpenAPI / Swagger). The JSON API endpoints are undocumented beyond code comments.
+**Areas for Improvement:**
+- No automated test suite — the application was manually tested, but unit and integration tests would improve confidence in future changes.
+- No API documentation (OpenAPI / Swagger) — the JSON API endpoints are undocumented beyond code comments.
 - No WebSocket authentication beyond `current_user.is_authenticated` — a malicious client could potentially forge SocketIO events if they obtain a valid session cookie.
 
-### 9.4 Scalability Considerations
+### 8.5 Scalability Considerations
 
 | Dimension | Current State | Scaling Path |
 |-----------|--------------|-------------|
@@ -447,69 +619,108 @@ The platform was evaluated against its original requirements:
 | Real-time | Redis message queue for multi-worker SocketIO | Horizontally scalable with additional workers |
 | File storage | S3 with CloudFront | Already cloud-native; scales independently |
 | Rate limiting | Redis-backed | Shared state across workers |
-| Voice | WebRTC P2P (mesh topology) | Works for small groups (2–6); larger groups would need an SFU |
-| Recommendation | Full table scan of open projects | Acceptable for hundreds of projects; would need indexing or caching for thousands |
-
-### 9.5 Comparison with Initial Goals
-
-The platform was built to ensure "no student ever loses marks because of a partner mismatch again." Evaluating against this mission:
-
-1. **Visibility:** Achieved. Every user has a public profile showing projects, ratings, endorsements, and badges. A student evaluating a potential partner can see their track record before committing.
-
-2. **Accountability:** Achieved. Peer feedback after project completion creates a persistent record. Poor performance is visible; good performance is rewarded with endorsements and badges.
-
-3. **Fair matching:** Partially achieved. The recommendation engine surfaces relevant projects, and the 3-project cap prevents overcommitment. However, the system does not yet detect or prevent free-riding *during* a project — it only captures post-completion assessments.
-
-4. **Reduced fragmentation:** Achieved. Chat, voice, file sharing, and project management are consolidated in one platform.
-
-5. **Administrative oversight:** Achieved. The admin panel provides user management, report handling, analytics, and live support.
+| Voice | WebRTC P2P (mesh topology) | Works for small groups (2–6); larger groups need an SFU |
+| Recommendation | Full table scan of open projects | Acceptable for hundreds; needs indexing/caching for thousands |
 
 ---
 
-## 10. Limitations and Future Work
+## 9. Limitations and Future Work
 
-### 10.1 Current Limitations
+### 9.1 Current Limitations
 
-- **No automated tests.** The codebase lacks unit and integration tests. Manual testing was performed during development, but regression detection depends on developer vigilance.
-- **CSP `unsafe-inline`.** The nonce infrastructure exists but is not fully utilised due to inline event handlers in templates.
-- **Recommendation simplicity.** Tag-based matching with a static expansion map. Does not account for schedule compatibility, past collaboration history, or geographic proximity.
-- **Voice room scalability.** WebRTC mesh topology works for small groups but degrades with more than 5–6 participants. A Selective Forwarding Unit (SFU) would be needed for larger rooms.
-- **No email verification.** Users can register with any email address without confirming ownership.
-- **Single-institution design.** The platform assumes a single university context. Multi-institution support would require tenant isolation.
+1. **Full-Mesh Voice Topology:** The peer-to-peer WebRTC mesh topology has O(n²) connection complexity, making it unsuitable for rooms with more than 6–8 participants. A selective forwarding unit (SFU) architecture would be needed for larger rooms.
 
-### 10.2 Planned Improvements
+2. **Polling-Based Group Chat:** Study group messages use HTTP polling (3-second intervals) rather than WebSocket push. While sufficient for the current scale, this creates unnecessary server load and latency compared to SocketIO-based message delivery.
 
-- **Automated test suite** — pytest with fixtures for each Blueprint, covering happy paths and edge cases.
-- **CSP hardening** — refactor inline handlers to external scripts with nonce attributes, remove `unsafe-inline`.
-- **Email verification** — confirmation link on registration to prevent impersonation.
-- **Collaborative filtering** — learn from which projects users apply to and complete, supplementing the tag-based engine.
-- **Mid-project check-ins** — periodic teammate pulse surveys during active projects to surface issues before completion.
-- **Instructor dashboard** — per-course view of team formation, progress, and peer feedback for course supervisors.
-- **Mobile-responsive redesign** — the current UI is functional on mobile but not optimised for touch interactions.
-- **API documentation** — OpenAPI specification for all JSON endpoints.
+3. **Single-Server Recommendation Engine:** The recommendation algorithm queries all open projects on each request (O(n) projects). For very large deployments, this would need indexing or caching.
+
+4. **No Automated Testing:** The current codebase lacks a comprehensive test suite. Unit tests for business logic and integration tests for API endpoints are high-priority technical debt.
+
+5. **CSP `unsafe-inline`:** The nonce infrastructure exists but is not fully utilized due to inline event handlers in templates. Removing `unsafe-inline` requires a frontend refactor.
+
+6. **Limited Accessibility:** While the UI is responsive, it has not undergone formal WCAG 2.1 accessibility auditing.
+
+7. **AI Response Quality:** The free-tier Groq/LLaMA models may produce lower-quality responses compared to commercial alternatives. The keyword-based fallback provides minimal utility.
+
+8. **No Email Verification:** Users can register with any email address without confirming ownership.
+
+9. **Single-Institution Design:** The platform assumes a single university context. Multi-institution support would require tenant isolation.
+
+### 9.2 Planned Improvements
+
+1. **SFU-Based Voice Architecture:** Migrate from full-mesh WebRTC to a Selective Forwarding Unit (e.g., mediasoup or Janus) to support voice rooms with 20+ concurrent participants while reducing client-side bandwidth requirements.
+
+2. **SocketIO-Based Group Messaging:** Replace polling-based study group chat with real-time SocketIO event delivery, reducing latency and server load while enabling typing indicators and read receipts.
+
+3. **Machine Learning Recommendations:** Enhance the recommendation engine with collaborative filtering based on historical team formation patterns, project completion rates, and feedback scores. Explore embedding-based similarity using project descriptions and user profiles.
+
+4. **Contribution Analytics Dashboard:** Implement per-project activity dashboards showing individual member contributions (messages sent, files shared, time in voice chat) to support instructor oversight and fair assessment.
+
+5. **Comprehensive Test Suite:** Develop unit tests (pytest) for all service modules, integration tests for API endpoints, and end-to-end tests (Selenium/Playwright) for critical user flows. Target 80%+ code coverage.
+
+6. **CSP Hardening:** Refactor inline event handlers to external scripts with nonce attributes, remove `unsafe-inline` from CSP.
+
+7. **Email Verification:** Confirmation link on registration to prevent impersonation.
+
+8. **WCAG 2.1 AA Compliance:** Conduct a formal accessibility audit and remediate identified issues including keyboard navigation, screen reader compatibility, and color contrast ratios.
+
+9. **Mobile Application:** Develop a React Native or Flutter companion application for native push notifications, offline access, and optimized voice chat on mobile networks.
+
+10. **LTI Integration:** Implement Learning Tools Interoperability (LTI 1.3) to enable seamless embedding within institutional LMS platforms (Moodle, Canvas) and automated grade passback.
+
+11. **Multi-Language Support:** Internationalize the platform with i18n support, starting with English, Turkish, and Bosnian as the primary languages of the IUS student population.
+
+12. **API Documentation:** OpenAPI/Swagger specification for all JSON endpoints.
+
+13. **Mid-Project Check-Ins:** Periodic teammate pulse surveys during active projects to surface issues before completion.
+
+14. **Instructor Dashboard:** Per-course view of team formation, progress, and peer feedback for course supervisors.
 
 ---
 
-## 11. Conclusion
+## 10. Conclusion
 
-ProjectBuddy demonstrates that the university team-formation problem can be addressed with relatively straightforward technology — a Flask web application, a relational database, and a tag-based matching algorithm — when the design is anchored in the actual pain points students experience.
+This white paper has presented ProjectBuddy, an open-source web-based platform that addresses the fundamental challenges of collaborative project-based learning in higher education. By integrating intelligent team formation, real-time multi-modal communication, structured peer assessment, skill endorsement, AI-powered assistance, and administrative tooling into a single cohesive environment, ProjectBuddy represents a significant contribution to the Computer-Supported Collaborative Learning (CSCL) technology landscape.
 
-The platform's core contribution is not any single feature but the *combination* of structured listings, gated reputation mechanisms, and consolidated collaboration tools into a single system. A project listing alone is a job board; peer feedback alone is a survey; chat alone is Discord. The value emerges from connecting these elements into a lifecycle: post → match → form → collaborate → complete → review → carry reputation forward.
+The platform's technical architecture demonstrates that modern web technologies — Flask, SQLAlchemy 2.0, WebRTC, Redis, and large language models — can be composed into a robust, secure, and maintainable system suitable for university-scale deployment. The defense-in-depth security approach, with its comprehensive header suite, rate limiting, CSRF protection, and multi-layer file validation, establishes a security baseline appropriate for handling student data in an educational context.
 
-The system is not perfect. It lacks automated tests, its recommendation engine is simplistic, and its CSP could be tighter. These are engineering debts, not design failures — they reflect the constraints of a solo developer building a working platform in one semester. The architecture is modular enough that each limitation has a clear remediation path.
+The platform's core contribution is not any single feature but the *combination* of structured listings, gated reputation mechanisms, and consolidated collaboration tools into a single system. A project listing alone is a job board; peer feedback alone is a survey; chat alone is Discord. The value emerges from connecting these elements into a lifecycle: **post → match → form → collaborate → complete → review → carry reputation forward**.
 
 The broader lesson is that tools shape behavior. When team formation is invisible and unaccountable, students optimize for convenience — picking whoever responds first. When it is visible and reputation-bearing, they optimize for quality — picking teammates with a demonstrated track record. ProjectBuddy provides the infrastructure for the second mode.
 
+ProjectBuddy is deployed and actively used at the International University of Sarajevo, where it continues to evolve based on student and faculty feedback. The codebase is maintained as an open-source project, inviting contributions from the educational technology community. We believe that purpose-built collaboration platforms, informed by CSCL research and implemented with production-grade engineering practices, can meaningfully improve the collaborative learning experience for students worldwide.
+
 ---
 
-## 12. References
+## 11. References
 
-1. Oakley, B., Felder, R.M., Brent, R., & Elhajj, I. (2004). "Turning Student Groups into Effective Teams." *Journal of Student Centered Learning*, 2(1), 9–34.
-2. Aggarwal, P., & O'Brien, C.L. (2008). "Social Loafing on Group Projects: Structural Antecedents and Effect on Student Satisfaction." *Journal of Marketing Education*, 30(3), 255–264.
-3. Flask Documentation. https://flask.palletsprojects.com/
-4. SQLAlchemy 2.0 Documentation. https://docs.sqlalchemy.org/en/20/
-5. WebRTC API. https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API
-6. OWASP Secure Coding Practices. https://owasp.org/www-project-secure-coding-practices-quick-reference-guide/
+[1] Dillenbourg, P. (1999). *Collaborative Learning: Cognitive and Computational Approaches.* Elsevier Science. ISBN: 978-0-08-043073-7.
+
+[2] Stahl, G., Koschmann, T., & Suthers, D. (2006). Computer-supported collaborative learning: An historical perspective. In R. K. Sawyer (Ed.), *Cambridge Handbook of the Learning Sciences* (pp. 409–426). Cambridge University Press.
+
+[3] Jeong, H., & Hmelo-Silver, C. E. (2016). Seven affordances of computer-supported collaborative learning: How to support collaborative learning? How can technologies help? *Educational Psychologist, 51*(2), 247–265. doi:10.1080/00461520.2016.1158654.
+
+[4] Kasneci, E., Sessler, K., Kuchemann, S., et al. (2023). ChatGPT for good? On opportunities and challenges of large language models for education. *Learning and Individual Differences, 103*, 102274. doi:10.1016/j.lindif.2023.102274.
+
+[5] Oakley, B., Felder, R.M., Brent, R., & Elhajj, I. (2004). Turning Student Groups into Effective Teams. *Journal of Student Centered Learning, 2*(1), 9–34.
+
+[6] Aggarwal, P., & O'Brien, C.L. (2008). Social Loafing on Group Projects: Structural Antecedents and Effect on Student Satisfaction. *Journal of Marketing Education, 30*(3), 255–264.
+
+[7] Yew, E. H. J., & Goh, K. (2016). Problem-based learning: An overview of its process and impact on learning. *Health Professions Education, 2*(2), 75–79. doi:10.1016/j.hpe.2016.01.004.
+
+[8] OWASP Foundation. (2021). *OWASP Top 10 — 2021.* Available at: https://owasp.org/www-project-top-ten/.
+
+[9] Grinberg, M. (2018). *Flask Web Development: Developing Web Applications with Python* (2nd ed.). O'Reilly Media. ISBN: 978-1-491-99173-2.
+
+[10] Bayer, M. (2023). SQLAlchemy 2.0 Documentation: Mapped Column Declarations. Available at: https://docs.sqlalchemy.org/en/20/.
+
+[11] Mozilla Developer Network. (2024). WebRTC API Reference. Available at: https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API.
+
+[12] Flask-SocketIO Documentation. (2024). Flask-SocketIO: Socket.IO integration for Flask applications. Available at: https://flask-socketio.readthedocs.io/.
+
+[13] OWASP Foundation. (2021). *Secure Coding Practices Quick Reference Guide.* Available at: https://owasp.org/www-project-secure-coding-practices-quick-reference-guide/.
+
+[14] Flask Documentation. Available at: https://flask.palletsprojects.com/.
 
 ---
 
