@@ -367,6 +367,23 @@ html.lm .fpbar-lbl span{color:#8090C0;}
 /* fcard-info (below mock) — white card, normal dark vars work */
 html.lm .fcard-num{color:var(--gold);opacity:.55;}
 html.lm .fcard-desc{color:var(--soft);}
+
+/* Live collab showcase — white-glass card like .fcard, mock stays dark */
+html.lm .collab-hero{
+  background:rgba(255,255,255,.84);
+  border-color:rgba(40,50,110,.16);
+  box-shadow:0 6px 44px rgba(19,22,42,.09),0 1px 0 rgba(255,255,255,.9) inset;
+}
+html.lm .collab-hero:hover{border-color:rgba(70,88,200,.32);}
+/* mock area stays explicitly dark — simulates the dark app UI */
+html.lm .collab-mock{background:#0A0E24;border-bottom-color:rgba(40,50,110,.1);}
+html.lm .cs-share{background:#0A1126;}
+html.lm .cn-ln.h{color:#7C9BFF;}
+html.lm .cn-caret{background:#7C9BFF;}
+html.lm .cn-editing{color:#8090C0;}
+/* info area now sits on white — heading matches sibling .fcard-name */
+html.lm .collab-name{color:var(--text);}
+html.lm .collab-name em{color:var(--gold);}
 .db-sb{border-right:1px solid rgba(255,255,255,.06);padding:22px 14px;display:flex;flex-direction:column;gap:5px;position:relative;}
 .db-logo{font-family:'DM Serif Display',serif;font-size:.98rem;color:#F5F2EC;padding:4px 10px 16px;}
 .db-logo em{color:var(--gold);font-style:italic;}
