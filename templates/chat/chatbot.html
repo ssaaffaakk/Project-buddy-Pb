@@ -36,6 +36,8 @@ html,body{height:100%;overflow:hidden;}
 .bubble.ai{background:var(--card);border:1px solid var(--border);border-top-color:rgba(255,255,255,0.08);color:var(--soft);border-radius:0 var(--r) var(--r) var(--r);backdrop-filter:blur(8px);}
 .bubble.user{background:var(--accent-dim);border:1px solid rgba(124,155,255,0.15);color:var(--text);border-radius:var(--r) 0 var(--r) var(--r);}
 
+.typewriting::after{content:'▍';color:var(--accent);animation:caretBlink 0.9s step-end infinite;margin-left:1px;}
+@keyframes caretBlink{50%{opacity:0;}}
 .typing{display:flex;gap:4px;align-items:center;padding:12px 15px;}
 .typing span{width:6px;height:6px;border-radius:50%;background:var(--muted);animation:bounce 1.2s infinite;}
 .typing span:nth-child(2){animation-delay:0.2s;}
@@ -154,10 +156,33 @@ function addMsg(role, text){
     ? '<div class="bubble-av ai">S</div>'
     : '<div class="bubble-av user">'+(USER_AVATAR?'<img src="'+USER_AVATAR+'" alt="">':USER_INITIALS)+'</div>';
 
-  row.innerHTML = avHtml + '<div class="bubble '+role+'">'+escHtml(text)+'</div>';
+  row.innerHTML = avHtml + '<div class="bubble '+role+'"></div>';
+  var bubble = row.querySelector('.bubble');
   feed.appendChild(row);
+
+  var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if(role === 'ai' && !reduced){
+    typeOut(bubble, text);
+  } else {
+    bubble.innerHTML = escHtml(text);
+  }
   scrollBottom(true);
   return row;
+}
+
+/* Typewriter reveal for SSM-1.0 replies */
+function typeOut(el, text){
+  el.style.whiteSpace = 'pre-wrap';
+  el.classList.add('typewriting');
+  var i = 0;
+  var step = Math.max(1, Math.ceil(text.length / 110)); /* whole reply lands in ~1.8s */
+  (function tick(){
+    i = Math.min(text.length, i + step);
+    el.textContent = text.slice(0, i);
+    scrollBottom(false);
+    if(i < text.length){ setTimeout(tick, 16); }
+    else { el.classList.remove('typewriting'); }
+  })();
 }
 
 function addTyping(){

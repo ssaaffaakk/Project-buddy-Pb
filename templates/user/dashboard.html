@@ -83,6 +83,9 @@
 .rec-card:nth-child(5){animation-delay:.28s;}.rec-card:nth-child(6){animation-delay:.34s;}
 .rec-match{background:var(--coral-lo);color:var(--coral-hi);border-color:rgba(255,107,107,0.22);}
 .topbar h1{background:linear-gradient(110deg,var(--text) 30%,var(--accent) 70%,var(--coral));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
+.greet-eyebrow{display:inline-flex;align-items:center;gap:8px;font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--accent);margin-bottom:10px;padding:4px 12px 4px 8px;border-radius:99px;border:1px solid rgba(124,155,255,0.22);background:rgba(124,155,255,0.07);}
+.greet-dot{width:6px;height:6px;border-radius:50%;background:var(--accent);box-shadow:0 0 6px var(--accent);animation:greetPulse 2s ease-in-out infinite;}
+@keyframes greetPulse{0%,100%{opacity:1;}50%{opacity:.25;}}
 @media(max-width:1000px){.stats-row{grid-template-columns:repeat(2,1fr);}.stat-card:nth-child(1){grid-column:span 2;}}
 @media(max-width:600px){.stats-row{grid-template-columns:1fr;}.stat-card:nth-child(1){grid-column:span 1;}}
 </style>
@@ -110,6 +113,7 @@
 
   <div class="topbar">
     <div>
+      <div class="greet-eyebrow"><span class="greet-dot"></span><span id="greet-text">Welcome back</span></div>
       <h1>{{ user.first_name }} {{ user.last_name }}</h1>
       <p>{{ active_projects|length }} active · {{ pending_apps|length }} pending applications · {{ completed_count }} completed</p>
     </div>
@@ -216,4 +220,37 @@
       <p class="empty">Complete projects to earn badges.</p>
     {% endif %}
   </div>
+{% endblock %}
+
+{% block extra_script %}
+<script nonce="{{ csp_nonce }}">
+/* Time-of-day greeting */
+(function(){
+  var h = new Date().getHours();
+  var g = h < 6 ? 'Burning the midnight oil' : h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening';
+  document.getElementById('greet-text').textContent = g;
+})();
+
+/* Odometer count-up on stat values (ported from landing page) */
+(function(){
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  document.querySelectorAll('.stat-value').forEach(function(el){
+    var raw = el.textContent.trim();
+    var num = parseFloat(raw);
+    if (isNaN(num) || num === 0) return;
+    var dec = (raw.split('.')[1] || '').length;
+    var start = null, dur = 1300;
+    el.textContent = (0).toFixed(dec);
+    function step(ts){
+      if (!start) start = ts;
+      var p = Math.min((ts - start) / dur, 1);
+      var e = 1 - Math.pow(1 - p, 4);
+      el.textContent = (num * e).toFixed(dec);
+      if (p < 1) requestAnimationFrame(step);
+      else el.textContent = raw;
+    }
+    requestAnimationFrame(step);
+  });
+})();
+</script>
 {% endblock %}
