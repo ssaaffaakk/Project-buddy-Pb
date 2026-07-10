@@ -63,9 +63,9 @@ input[type="text"]:focus{outline:none;border-color:rgba(124,155,255,0.4);box-sha
       </div>
     </div>
     {% if chat.admin_id %}
-      <div class="assigned-chip on">Assigned to Admin</div>
+      <div class="assigned-chip on">{{ _('Assigned to Admin') }}</div>
     {% else %}
-      <div class="assigned-chip">Waiting for Admin Response</div>
+      <div class="assigned-chip">{{ _('Waiting for Admin Response') }}</div>
     {% endif %}
   </div>
 
@@ -86,29 +86,29 @@ input[type="text"]:focus{outline:none;border-color:rgba(124,155,255,0.4);box-sha
         <div class="empty-chat-icon">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
         </div>
-        <p>No messages yet.<br>Start the conversation — an admin will reply here.</p>
+        <p>{{ _('No messages yet.') }}<br>{{ _('Start the conversation — an admin will reply here.') }}</p>
       </div>
     {% endif %}
   </div>
 
   {% if chat.status == 'open' %}
   <div class="chat-input-area fx-up">
-    <input type="text" id="message-input" placeholder="Type your message..." autocomplete="off">
+    <input type="text" id="message-input" placeholder="{{ _('Type your message...') }}" autocomplete="off">
     <button class="btn btn-send" id="send-btn">
-      Send
+      {{ _('Send') }}
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
     </button>
     {% if chat.user_id == current_user.id %}
       <form method="POST" action="{{ url_for('chat.finish_chat', chat_id=chat.id) }}" style="display:inline;" id="finish-form">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <button type="submit" class="btn btn-finish">Finish Chat</button>
+        <button type="submit" class="btn btn-finish">{{ _('Finish Chat') }}</button>
       </form>
     {% endif %}
   </div>
   {% else %}
   <div class="status-bar">
-    <div class="status-text">Chat is closed</div>
-    <a href="{{ url_for('main.admin_dashboard') if current_user.is_admin() else url_for('main.dashboard') }}" class="btn btn-back" style="margin:0">Back</a>
+    <div class="status-text">{{ _('Chat is closed') }}</div>
+    <a href="{{ url_for('main.admin_dashboard') if current_user.is_admin() else url_for('main.dashboard') }}" class="btn btn-back" style="margin:0">{{ _('Back') }}</a>
   </div>
   {% endif %}
 {% endblock %}
@@ -130,7 +130,7 @@ const finishForm = document.getElementById('finish-form');
 if (finishForm) {
   finishForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-    if (await pbConfirm({title:'Close this chat?', message:'The conversation will be marked as finished and no more messages can be sent.', confirmText:'Finish Chat', danger:true})) {
+    if (await pbConfirm({title:'{{ _('Close this chat?') }}', message:'{{ _('The conversation will be marked as finished and no more messages can be sent.') }}', confirmText:'{{ _('Finish Chat') }}', danger:true})) {
       finishForm.submit();
     }
   });
@@ -178,10 +178,10 @@ if (sendBtn && messageInput) {
         messagesContainer.appendChild(messageEl);
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
       } else {
-        showToast(data.error || 'Failed to send message', 'error');
+        showToast(data.error || '{{ _('Failed to send message') }}', 'error');
       }
     } catch (error) {
-      showToast('Could not reach the server. Check your connection.', 'error');
+      showToast('{{ _('Could not reach the server. Check your connection.') }}', 'error');
     } finally {
       sendBtn.disabled = false;
       messageInput.focus();

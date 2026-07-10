@@ -58,53 +58,53 @@
 <div class="mc-wrap">
   {% if metrics %}
   <div class="mc-eyebrow">
-    Machine learning · Model card
-    {% if available %}<span class="mc-live"><span class="dot"></span>serving live</span>{% endif %}
+    {{ _('Machine learning · Model card') }}
+    {% if available %}<span class="mc-live"><span class="dot"></span>{{ _('serving live') }}</span>{% endif %}
   </div>
-  <h1 class="mc-title">Teammate <em>recommender</em></h1>
-  <p class="mc-sub">A model trained on ProjectBuddy's own signals — who joined and applied to which projects — to rank open projects by predicted fit. I benchmarked three approaches with the same leakage-free {{ metrics.cv_folds }}-fold cross-validation: a rule-based baseline, a semantic-embedding retriever, and the hybrid that ships.</p>
+  <h1 class="mc-title">{{ _('Teammate') }} <em>{{ _('recommender') }}</em></h1>
+  <p class="mc-sub">{{ _("A model trained on ProjectBuddy's own signals — who joined and applied to which projects — to rank open projects by predicted fit. I benchmarked three approaches with the same leakage-free {folds}-fold cross-validation: a rule-based baseline, a semantic-embedding retriever, and the hybrid that ships.").format(folds=metrics.cv_folds) }}</p>
 
   <div class="mc-metrics">
     <div class="mc-metric hero">
       <div class="k">ROC-AUC</div>
       <div class="v">{{ metrics.roc_auc }}</div>
-      <div class="note">1.0 = perfect · 0.5 = random</div>
+      <div class="note">{{ _('1.0 = perfect · 0.5 = random') }}</div>
     </div>
     <div class="mc-metric">
       <div class="k">PR-AUC</div>
       <div class="v">{{ metrics.pr_auc }}</div>
-      <div class="note">random {{ metrics.random_pr_auc }} ({{ (metrics.pr_auc / metrics.random_pr_auc) | round(1) }}× lift)</div>
+      <div class="note">{{ _('random') }} {{ metrics.random_pr_auc }} ({{ (metrics.pr_auc / metrics.random_pr_auc) | round(1) }}× {{ _('lift') }})</div>
     </div>
     <div class="mc-metric">
-      <div class="k">Training pairs</div>
+      <div class="k">{{ _('Training pairs') }}</div>
       <div class="v">{{ metrics.n_samples }}</div>
-      <div class="note">{{ metrics.n_positive }} pos · {{ metrics.n_negative }} neg</div>
+      <div class="note">{{ metrics.n_positive }} {{ _('pos') }} · {{ metrics.n_negative }} {{ _('neg') }}</div>
     </div>
     <div class="mc-metric">
-      <div class="k">Features</div>
+      <div class="k">{{ _('Features') }}</div>
       <div class="v">{{ metrics.n_features }}</div>
-      <div class="note">engineered per pair</div>
+      <div class="note">{{ _('engineered per pair') }}</div>
     </div>
   </div>
 
   {% if metrics.comparison %}
   <div class="mc-card">
-    <h2>The experiment — three approaches, same test</h2>
+    <h2>{{ _('The experiment — three approaches, same test') }}</h2>
     {% for c in metrics.comparison %}
     <div class="cmp{% if loop.last %} best{% endif %}">
-      <div class="cmp-name">{{ c.name }}{% if loop.last %} <span class="cmp-tag">shipped</span>{% endif %}</div>
+      <div class="cmp-name">{{ c.name }}{% if loop.last %} <span class="cmp-tag">{{ _('shipped') }}</span>{% endif %}</div>
       <div class="cmp-bar-wrap">
         <div class="cmp-bar" style="width:{{ ((c.roc_auc - 0.5) / 0.5 * 100) | round(1) }}%;"></div>
       </div>
       <div class="cmp-val">{{ c.roc_auc }}</div>
     </div>
     {% endfor %}
-    <p class="cmp-note">ROC-AUC (0.5 = random, 1.0 = perfect). On this small corpus the semantic embeddings overlap with the hand-crafted features, so the hybrid matches the baseline — an honest result. The embedding tower still adds value the metric doesn't show: it can rank projects that share <em>no</em> exact tags with a user (cold-start / semantic coverage).</p>
+    <p class="cmp-note">{{ _('ROC-AUC (0.5 = random, 1.0 = perfect). On this small corpus the semantic embeddings overlap with the hand-crafted features, so the hybrid matches the baseline — an honest result. The embedding tower still adds value the metric does not show: it can rank projects that share no exact tags with a user (cold-start / semantic coverage).') }}</p>
   </div>
   {% endif %}
 
   <div class="mc-card">
-    <h2>What the model learned</h2>
+    <h2>{{ _('What the model learned') }}</h2>
     {% set maxw = metrics.feature_weights | map(attribute='weight') | map('abs') | max %}
     {% for f in metrics.feature_weights %}
     <div class="fw">
@@ -123,20 +123,20 @@
   </div>
 
   <div class="mc-card">
-    <h2>Details</h2>
-    <div class="mc-row"><span class="lbl">Model</span><span class="val">{{ metrics.model }}</span></div>
-    {% if metrics.embedding %}<div class="mc-row"><span class="lbl">Embeddings</span><span class="val">{{ metrics.embedding.method }} · {{ metrics.embedding.docs }} docs → {{ metrics.embedding.dims }} dims</span></div>{% endif %}
-    <div class="mc-row"><span class="lbl">Positives from</span><span class="val">{{ metrics.positive_source.members }} memberships · {{ metrics.positive_source.applications }} applications</span></div>
-    <div class="mc-row"><span class="lbl">Users · projects</span><span class="val">{{ metrics.n_users }} · {{ metrics.n_projects }}</span></div>
-    <div class="mc-row"><span class="lbl">Evaluation</span><span class="val">{{ metrics.cv_folds }}-fold cross-validation (out-of-fold)</span></div>
-    <div class="mc-row"><span class="lbl">Trained</span><span class="val">{{ metrics.trained_at }}</span></div>
+    <h2>{{ _('Details') }}</h2>
+    <div class="mc-row"><span class="lbl">{{ _('Model') }}</span><span class="val">{{ metrics.model }}</span></div>
+    {% if metrics.embedding %}<div class="mc-row"><span class="lbl">{{ _('Embeddings') }}</span><span class="val">{{ metrics.embedding.method }} · {{ metrics.embedding.docs }} {{ _('docs') }} → {{ metrics.embedding.dims }} {{ _('dims') }}</span></div>{% endif %}
+    <div class="mc-row"><span class="lbl">{{ _('Positives from') }}</span><span class="val">{{ metrics.positive_source.members }} {{ _('memberships') }} · {{ metrics.positive_source.applications }} {{ _('applications') }}</span></div>
+    <div class="mc-row"><span class="lbl">{{ _('Users · projects') }}</span><span class="val">{{ metrics.n_users }} · {{ metrics.n_projects }}</span></div>
+    <div class="mc-row"><span class="lbl">{{ _('Evaluation') }}</span><span class="val">{{ _('{folds}-fold cross-validation (out-of-fold)').format(folds=metrics.cv_folds) }}</span></div>
+    <div class="mc-row"><span class="lbl">{{ _('Trained') }}</span><span class="val">{{ metrics.trained_at }}</span></div>
   </div>
 
   {% else %}
   <div class="mc-eyebrow">Machine learning · Model card</div>
-  <h1 class="mc-title">Teammate <em>recommender</em></h1>
+  <h1 class="mc-title">{{ _('Teammate') }} <em>{{ _('recommender') }}</em></h1>
   <div class="mc-empty">
-    No trained model yet. Run <code>flask train-recommender</code> to train on the current data.
+    {{ _('No trained model yet. Run') }} <code>flask train-recommender</code> {{ _('to train on the current data.') }}
   </div>
   {% endif %}
 </div>

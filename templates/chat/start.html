@@ -30,28 +30,28 @@
 
 {% block content %}
   <div class="page-header">
-    <h1 class="page-title">Start a Support Chat</h1>
-    <p class="page-sub">Tell us what you need help with</p>
+    <h1 class="page-title">{{ _('Start a Support Chat') }}</h1>
+    <p class="page-sub">{{ _('Tell us what you need help with') }}</p>
   </div>
 
   <div class="form-container">
     <form method="POST">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <div class="form-group">
-        <label class="form-label" for="subject">Subject</label>
-        <p class="form-description">What is this chat about? Mention the project, user, or issue type.</p>
-        <input id="subject" type="text" name="subject" placeholder="e.g. Project: AI Chatbot / User: John Doe" required autofocus>
+        <label class="form-label" for="subject">{{ _('Subject') }}</label>
+        <p class="form-description">{{ _('What is this chat about? Mention the project, user, or issue type.') }}</p>
+        <input id="subject" type="text" name="subject" placeholder="{{ _('e.g. Project: AI Chatbot / User: John Doe') }}" required autofocus>
       </div>
 
       <div class="form-group">
-        <label class="form-label" for="message">First Message</label>
-        <p class="form-description">Include the key details so the admin immediately sees the problem.</p>
-        <textarea id="message" name="message" placeholder="Describe what happened, who is involved, and what you need help with." required></textarea>
+        <label class="form-label" for="message">{{ _('First Message') }}</label>
+        <p class="form-description">{{ _('Include the key details so the admin immediately sees the problem.') }}</p>
+        <textarea id="message" name="message" placeholder="{{ _('Describe what happened, who is involved, and what you need help with.') }}" required></textarea>
       </div>
 
       <div class="form-actions">
-        <button type="submit" class="btn btn-submit">Start Chat</button>
-        <a href="{{ url_for('main.admin_dashboard') if current_user.is_admin() else url_for('main.dashboard') }}" class="btn btn-back">Cancel</a>
+        <button type="submit" class="btn btn-submit">{{ _('Start Chat') }}</button>
+        <a href="{{ url_for('main.admin_dashboard') if current_user.is_admin() else url_for('main.dashboard') }}" class="btn btn-back">{{ _('Cancel') }}</a>
       </div>
     </form>
   </div>

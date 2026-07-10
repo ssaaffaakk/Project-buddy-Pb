@@ -92,19 +92,19 @@
         {% if user.role != 'admin' %}<div class="ph-tags">{% for i in user.interest_tags %}<span class="tag">{{ i.tag }}</span>{% endfor %}</div>{% endif %}
       </div>
       <div style="display:flex;gap:8px;align-items:center;">
-        <a href="/edit-profile" class="btn-ghost">Edit Profile</a>
-        {% if user.role != 'admin' %}<a href="/post-project-page" class="btn-gold">+ Post Project</a>{% endif %}
+        <a href="/edit-profile" class="btn-ghost">{{ _('Edit Profile') }}</a>
+        {% if user.role != 'admin' %}<a href="/post-project-page" class="btn-gold">+ {{ _('Post Project') }}</a>{% endif %}
       </div>
     </div>
   </div>
 
   {% if user.role != 'admin' %}
   <div class="stats-bar">
-    <div class="sbi"><div class="sbi-n">{{ completed_projects|length }}</div><div class="sbi-l">Completed</div></div>
-    <div class="sbi"><div class="sbi-n" style="color:var(--blue);">{{ active_projects|length }}</div><div class="sbi-l">Active</div></div>
-    <div class="sbi"><div class="sbi-n">{{ avg_rating if avg_rating else '—' }}</div><div class="sbi-l">Avg Rating</div></div>
-    <div class="sbi"><div class="sbi-n" style="color:var(--soft);">{{ endorsements|length }}</div><div class="sbi-l">Endorsements</div></div>
-    <div class="sbi"><div class="sbi-n" style="color:var(--soft);">{{ badges|length }}</div><div class="sbi-l">Badges</div></div>
+    <div class="sbi"><div class="sbi-n">{{ completed_projects|length }}</div><div class="sbi-l">{{ _('Completed') }}</div></div>
+    <div class="sbi"><div class="sbi-n" style="color:var(--blue);">{{ active_projects|length }}</div><div class="sbi-l">{{ _('Active') }}</div></div>
+    <div class="sbi"><div class="sbi-n">{{ avg_rating if avg_rating else '—' }}</div><div class="sbi-l">{{ _('Avg Rating') }}</div></div>
+    <div class="sbi"><div class="sbi-n" style="color:var(--soft);">{{ endorsements|length }}</div><div class="sbi-l">{{ _('Endorsements') }}</div></div>
+    <div class="sbi"><div class="sbi-n" style="color:var(--soft);">{{ badges|length }}</div><div class="sbi-l">{{ _('Badges') }}</div></div>
   </div>
   {% endif %}
 
@@ -112,59 +112,59 @@
     {% if user.role != 'admin' %}
     <div class="cl">
       <div class="sec">
-        <div class="sec-title">Skills</div>
+        <div class="sec-title">{{ _('Skills') }}</div>
         {% if user.skills %}{% for s in user.skills %}<span class="skill-chip">{{ s.skill }}</span>{% endfor %}
-        {% else %}<p class="empty">No skills added yet.</p>{% endif %}
+        {% else %}<p class="empty">{{ _('No skills added yet.') }}</p>{% endif %}
       </div>
 
       <div class="sec">
-        <div class="sec-title">Project History</div>
+        <div class="sec-title">{{ _('Project History') }}</div>
         {% for m in completed_projects %}
-        <div class="proj-row"><div class="proj-bar"></div><div class="proj-row-info"><div class="proj-row-title">{{ m.project.title }}</div><div class="proj-row-meta">{{ m.project.course or 'Personal' }} · Completed</div></div><div class="status status-done">Done</div></div>
+        <div class="proj-row"><div class="proj-bar"></div><div class="proj-row-info"><div class="proj-row-title">{{ m.project.title }}</div><div class="proj-row-meta">{{ m.project.course or _('Personal') }} · {{ _('Completed') }}</div></div><div class="status status-done">{{ _('Done') }}</div></div>
         {% endfor %}
         {% for m in active_projects %}
-        <div class="proj-row"><div class="proj-bar proj-bar-blue"></div><div class="proj-row-info"><div class="proj-row-title">{{ m.project.title }}</div><div class="proj-row-meta">{{ m.project.course or 'Personal' }} · In Progress</div></div><div class="status status-active">Active</div></div>
+        <div class="proj-row"><div class="proj-bar proj-bar-blue"></div><div class="proj-row-info"><div class="proj-row-title">{{ m.project.title }}</div><div class="proj-row-meta">{{ m.project.course or _('Personal') }} · {{ _('In Progress') }}</div></div><div class="status status-active">{{ _('Active') }}</div></div>
         {% endfor %}
-        {% if not completed_projects and not active_projects %}<p class="empty">No projects yet. <a href="/projects-page">Browse open projects →</a></p>{% endif %}
+        {% if not completed_projects and not active_projects %}<p class="empty">{{ _('No projects yet.') }} <a href="/projects-page">{{ _('Browse open projects →') }}</a></p>{% endif %}
       </div>
 
       <div class="sec">
-        <div class="sec-title">Feedback Received</div>
+        <div class="sec-title">{{ _('Feedback Received') }}</div>
         {% if feedbacks %}
           {% for fb in feedbacks %}
           <div class="fb-card">
             <div class="fb-head">
               <div class="fb-av">{{ fb.giver.first_name[0] if fb.giver else '?' }}</div>
-              <div><div class="fb-name">{{ fb.giver.first_name ~ ' ' ~ fb.giver.last_name if fb.giver else 'Unknown' }}</div><div style="font-family:'DM Mono',monospace;font-size:0.64rem;color:var(--muted);">{{ 'Instructor' if fb.is_instructor_rating else 'Peer' }}</div></div>
+              <div><div class="fb-name">{{ fb.giver.first_name ~ ' ' ~ fb.giver.last_name if fb.giver else 'Unknown' }}</div><div style="font-family:'DM Mono',monospace;font-size:0.64rem;color:var(--muted);">{{ _('Instructor') if fb.is_instructor_rating else _('Peer') }}</div></div>
               <div class="fb-date">{{ fb.created_at.strftime('%b %Y') if fb.created_at else '' }}</div>
             </div>
             <div class="fb-stars">{{ '&#9733;' * fb.rating }}{{ '&#9734;' * (5 - fb.rating) }}</div>
-            <div class="fb-text">{{ fb.comment or 'No comment left.' }}</div>
+            <div class="fb-text">{{ fb.comment or _('No comment left.') }}</div>
           </div>
           {% endfor %}
-        {% else %}<p class="empty">No feedback yet.</p>{% endif %}
+        {% else %}<p class="empty">{{ _('No feedback yet.') }}</p>{% endif %}
       </div>
     </div>
 
     <div class="cr">
       <div class="sec">
-        <div class="sec-title">Rating</div>
+        <div class="sec-title">{{ _('Rating') }}</div>
         <div class="rating-big">{{ avg_rating if avg_rating else '—' }}</div>
         <div class="rating-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
-        <div class="rating-sub">{{ feedbacks|length }} peer review(s)</div>
+        <div class="rating-sub">{{ feedbacks|length }} {{ _('peer review(s)') }}</div>
       </div>
 
       <div class="sec">
-        <div class="sec-title">Badges</div>
+        <div class="sec-title">{{ _('Badges') }}</div>
         {% if badges %}
           {% for b in badges %}
-          <div class="badge-card"><div class="badge-mark">*</div><div><div class="badge-card-name">{{ b.name }}</div><div class="badge-card-desc">{{ b.description }}</div></div><div class="badge-earned">Earned</div></div>
+          <div class="badge-card"><div class="badge-mark">*</div><div><div class="badge-card-name">{{ b.name }}</div><div class="badge-card-desc">{{ b.description }}</div></div><div class="badge-earned">{{ _('Earned') }}</div></div>
           {% endfor %}
-        {% else %}<p class="empty">Complete projects to earn badges.</p>{% endif %}
+        {% else %}<p class="empty">{{ _('Complete projects to earn badges.') }}</p>{% endif %}
       </div>
 
       <div class="sec">
-        <div class="sec-title">Endorsements</div>
+        <div class="sec-title">{{ _('Endorsements') }}</div>
         {% if endorsements %}
           {% set skill_map = {} %}
           {% for e in endorsements %}
@@ -181,24 +181,24 @@
               <div class="endorsement-sticker" style="--sc:{{ colors[ci] }};">
                 <div class="sticker-ribbon">{{ count }}×</div>
                 <div class="sticker-skill">{{ skill }}</div>
-                <div class="sticker-label">endorsed</div>
+                <div class="sticker-label">{{ _('endorsed') }}</div>
               </div>
             {% endfor %}
           </div>
         {% else %}
-          <p class="empty">No endorsements yet.</p>
+          <p class="empty">{{ _('No endorsements yet.') }}</p>
         {% endif %}
       </div>
 
       <div class="sec">
-        <div class="sec-title">Interests</div>
+        <div class="sec-title">{{ _('Interests') }}</div>
         {% if user.interest_tags %}{% for i in user.interest_tags %}<span class="interest-tag">{{ i.tag }}</span>{% endfor %}
-        {% else %}<p class="empty">No interest tags.</p>{% endif %}
+        {% else %}<p class="empty">{{ _('No interest tags.') }}</p>{% endif %}
       </div>
 
       {% if user.bio %}
       <div class="sec">
-        <div class="sec-title">About</div>
+        <div class="sec-title">{{ _('About') }}</div>
         <div style="font-size:0.84rem;color:var(--soft);line-height:1.75;">{{ user.bio }}</div>
       </div>
       {% endif %}

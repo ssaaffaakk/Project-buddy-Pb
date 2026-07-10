@@ -32,56 +32,56 @@ form{display:contents;}
   <div class="container">
     <div class="card">
       <div class="card-header">
-        <a href="/projects-page" class="back-link">← Back to Projects</a>
-        <div class="card-title">Apply to Project</div>
-        <div class="card-sub">Confirm your application</div>
+        <a href="/projects-page" class="back-link">← {{ _('Back to Projects') }}</a>
+        <div class="card-title">{{ _('Apply to Project') }}</div>
+        <div class="card-sub">{{ _('Confirm your application') }}</div>
       </div>
 
       <div class="project-info">
         <div class="info-row">
-          <div class="info-label">Project</div>
+          <div class="info-label">{{ _('Project') }}</div>
           <div class="info-value" style="color:var(--text);font-weight:500;">{{ project.title }}</div>
         </div>
         <div class="info-row">
-          <div class="info-label">Owner</div>
+          <div class="info-label">{{ _('Owner') }}</div>
           <div class="info-value">
             {% if project.owner %}
               <a href="/user/{{ project.owner.id }}" style="color:var(--accent);text-decoration:none;">
                 {{ project.owner.first_name }} {{ project.owner.last_name }}
               </a>
-            {% else %}Unknown{% endif %}
+            {% else %}{{ _('Unknown') }}{% endif %}
           </div>
         </div>
         <div class="info-row">
-          <div class="info-label">Description</div>
+          <div class="info-label">{{ _('Description') }}</div>
           <div class="info-value">{{ project.description[:200] }}{% if project.description|length > 200 %}...{% endif %}</div>
         </div>
         {% if project.course %}
         <div class="info-row">
-          <div class="info-label">Course</div>
+          <div class="info-label">{{ _('Course') }}</div>
           <div class="info-value">{{ project.course }}</div>
         </div>
         {% endif %}
         <div class="info-row">
-          <div class="info-label">Team</div>
+          <div class="info-label">{{ _('Team') }}</div>
           <div class="info-value">
-            {{ project.current_member_count() }} / {{ project.team_size }} members
+            {{ project.current_member_count() }} / {{ project.team_size }} {{ _('members') }}
             {% if project.is_full() %}
-              <span style="color:#e07060;font-family:'DM Mono',monospace;font-size:0.7rem;margin-left:8px;">Team Full</span>
+              <span style="color:#e07060;font-family:'DM Mono',monospace;font-size:0.7rem;margin-left:8px;">{{ _('Team Full') }}</span>
             {% else %}
-              <span style="color:#7ab890;font-family:'DM Mono',monospace;font-size:0.7rem;margin-left:8px;">{{ project.team_size - project.current_member_count() }} spot(s) left</span>
+              <span style="color:#7ab890;font-family:'DM Mono',monospace;font-size:0.7rem;margin-left:8px;">{{ project.team_size - project.current_member_count() }} {{ _('spot(s) left') }}</span>
             {% endif %}
           </div>
         </div>
         {% if project.deadline %}
         <div class="info-row">
-          <div class="info-label">Deadline</div>
+          <div class="info-label">{{ _('Deadline') }}</div>
           <div class="info-value">{{ project.deadline.strftime('%B %d, %Y') }}</div>
         </div>
         {% endif %}
         {% if project.topic_tags %}
         <div class="info-row">
-          <div class="info-label">Tags</div>
+          <div class="info-label">{{ _('Tags') }}</div>
           <div class="info-value" style="display:flex;flex-wrap:wrap;gap:5px;">
             {% for tag in project.topic_tags %}
               <span style="padding:2px 8px;background:var(--accent-dim);color:var(--accent);border-radius:3px;font-family:'DM Mono',monospace;font-size:0.62rem;">{{ tag.tag }}</span>
@@ -91,7 +91,7 @@ form{display:contents;}
         {% endif %}
         {% if project.required_skills %}
         <div class="info-row">
-          <div class="info-label">Skills</div>
+          <div class="info-label">{{ _('Skills') }}</div>
           <div class="info-value" style="display:flex;flex-wrap:wrap;gap:5px;">
             {% for skill in project.required_skills %}
               <span style="padding:2px 8px;background:var(--card);border:1px solid var(--border);color:var(--soft);border-radius:3px;font-family:'DM Mono',monospace;font-size:0.62rem;">{{ skill.skill }}</span>
@@ -104,8 +104,8 @@ form{display:contents;}
       <form method="POST">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="actions">
-          <a href="/projects-page" class="btn btn-secondary">Cancel</a>
-          <button type="submit" class="btn btn-primary">Submit Application</button>
+          <a href="/projects-page" class="btn btn-secondary">{{ _('Cancel') }}</a>
+          <button type="submit" class="btn btn-primary">{{ _('Submit Application') }}</button>
         </div>
       </form>
     </div>

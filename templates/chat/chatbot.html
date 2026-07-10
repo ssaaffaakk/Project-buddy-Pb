@@ -62,10 +62,10 @@ html,body{height:100%;overflow:hidden;}
       <div class="ai-avatar">S</div>
       <div>
         <div class="chat-header-title">SSM<em style="color:var(--accent);">-1.0</em></div>
-        <div class="chat-header-sub">ProjectBuddy's AI assistant · online</div>
+        <div class="chat-header-sub">{{ _("ProjectBuddy's AI assistant · online") }}</div>
       </div>
     </div>
-    <button class="btn-ghost" onclick="clearChat()">Clear history</button>
+    <button class="btn-ghost" onclick="clearChat()">{{ _('Clear history') }}</button>
   </div>
 
   <!-- MESSAGES -->
@@ -73,15 +73,15 @@ html,body{height:100%;overflow:hidden;}
     {% if not history %}
     <div class="welcome" id="welcome-screen">
       <div class="welcome-icon">S</div>
-      <h2>Hi {{ user.first_name }}! I'm <em style="color:var(--accent);">SSM-1.0.</em></h2>
-      <p>Ask me anything about project planning, finding teammates, managing deadlines, or learning new skills.</p>
+      <h2>{{ _('Hi') }} {{ user.first_name }}! {{ _("I'm") }} <em style="color:var(--accent);">SSM-1.0.</em></h2>
+      <p>{{ _('Ask me anything about project planning, finding teammates, managing deadlines, or learning new skills.') }}</p>
       <div class="prompt-chips">
-        <div class="chip" onclick="useChip(this)">How do I find good teammates?</div>
-        <div class="chip" onclick="useChip(this)">Tips for managing a project deadline</div>
-        <div class="chip" onclick="useChip(this)">How should I structure my team roles?</div>
-        <div class="chip" onclick="useChip(this)">What skills should a CS student have?</div>
-        <div class="chip" onclick="useChip(this)">How do I write a good project description?</div>
-        <div class="chip" onclick="useChip(this)">Help me plan a 4-week project sprint</div>
+        <div class="chip" onclick="useChip(this)">{{ _('How do I find good teammates?') }}</div>
+        <div class="chip" onclick="useChip(this)">{{ _('Tips for managing a project deadline') }}</div>
+        <div class="chip" onclick="useChip(this)">{{ _('How should I structure my team roles?') }}</div>
+        <div class="chip" onclick="useChip(this)">{{ _('What skills should a CS student have?') }}</div>
+        <div class="chip" onclick="useChip(this)">{{ _('How do I write a good project description?') }}</div>
+        <div class="chip" onclick="useChip(this)">{{ _('Help me plan a 4-week project sprint') }}</div>
       </div>
     </div>
     {% else %}
@@ -107,11 +107,11 @@ html,body{height:100%;overflow:hidden;}
   <!-- INPUT -->
   <div class="input-bar">
     <div class="input-wrap">
-      <textarea class="msg-input" id="msg-input" placeholder="Ask me anything about projects, teams, skills…"
+      <textarea class="msg-input" id="msg-input" placeholder="{{ _('Ask me anything about projects, teams, skills…') }}"
                 rows="1" onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
-      <button class="send-btn" id="send-btn" onclick="send()">Ask</button>
+      <button class="send-btn" id="send-btn" onclick="send()">{{ _('Ask') }}</button>
     </div>
-    <div class="input-hint">Enter to send · Shift+Enter for new line</div>
+    <div class="input-hint">{{ _('Enter to send · Shift+Enter for new line') }}</div>
   </div>
 {% endblock %}
 
@@ -221,10 +221,10 @@ async function send(){
     var d = await r.json();
     typing.remove();
     if(d.reply){ addMsg('ai', d.reply); }
-    else{ addMsg('ai', d.error || 'Something went wrong. Please try again.'); }
+    else{ addMsg('ai', d.error || '{{ _('Something went wrong. Please try again.') }}'); }
   }catch(e){
     typing.remove();
-    addMsg('ai', 'Could not reach the server. Please check your connection.');
+    addMsg('ai', '{{ _('Could not reach the server. Please check your connection.') }}');
   }
 
   btn.disabled = false;
@@ -232,7 +232,7 @@ async function send(){
 }
 
 async function clearChat(){
-  if(!await pbConfirm({title:'Clear conversation?', message:'Your entire chat history with SSM-1.0 will be erased.', confirmText:'Clear All', danger:true})) return;
+  if(!await pbConfirm({title:'{{ _('Clear conversation?') }}', message:'{{ _('Your entire chat history with SSM-1.0 will be erased.') }}', confirmText:'{{ _('Clear All') }}', danger:true})) return;
   await fetch('/chatbot/clear', {method:'POST'});
   window.location.reload();
 }

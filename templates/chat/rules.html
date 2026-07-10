@@ -28,58 +28,58 @@
 
 {% block content %}
   <div class="rules-container">
-    <h1 class="rules-title">Chat Community Guidelines</h1>
-    <p class="rules-subtitle">Please read and accept our rules before starting</p>
+    <h1 class="rules-title">{{ _('Chat Community Guidelines') }}</h1>
+    <p class="rules-subtitle">{{ _('Please read and accept our rules before starting') }}</p>
 
     <div class="rules-list">
       <div class="rule-item">
-        <div class="rule-number">Rule 1: Be Respectful</div>
-        <div class="rule-text">Treat all team members and admins with respect. Avoid any form of harassment, discrimination, or offensive language.</div>
+        <div class="rule-number">{{ _('Rule 1: Be Respectful') }}</div>
+        <div class="rule-text">{{ _('Treat all team members and admins with respect. Avoid any form of harassment, discrimination, or offensive language.') }}</div>
       </div>
 
       <div class="rule-item">
-        <div class="rule-number">Rule 2: Stay Professional</div>
-        <div class="rule-text">Keep conversations focused and professional. Avoid spam, irrelevant content, or excessive self-promotion.</div>
+        <div class="rule-number">{{ _('Rule 2: Stay Professional') }}</div>
+        <div class="rule-text">{{ _('Keep conversations focused and professional. Avoid spam, irrelevant content, or excessive self-promotion.') }}</div>
       </div>
 
       <div class="rule-item">
-        <div class="rule-number">Rule 3: No Hate Speech</div>
-        <div class="rule-text">Any form of hate speech, racism, or bigotry is strictly prohibited and will result in immediate action.</div>
+        <div class="rule-number">{{ _('Rule 3: No Hate Speech') }}</div>
+        <div class="rule-text">{{ _('Any form of hate speech, racism, or bigotry is strictly prohibited and will result in immediate action.') }}</div>
       </div>
 
       <div class="rule-item">
-        <div class="rule-number">Rule 4: Constructive Discussion</div>
-        <div class="rule-text">Provide constructive feedback and solutions. Avoid blame, criticism without alternatives, or disruptive behavior.</div>
+        <div class="rule-number">{{ _('Rule 4: Constructive Discussion') }}</div>
+        <div class="rule-text">{{ _('Provide constructive feedback and solutions. Avoid blame, criticism without alternatives, or disruptive behavior.') }}</div>
       </div>
 
       <div class="rule-item">
-        <div class="rule-number">Rule 5: Privacy &amp; Confidentiality</div>
-        <div class="rule-text">Do not share personal information of others without consent. Respect confidential project details.</div>
+        <div class="rule-number">{{ _('Rule 5: Privacy & Confidentiality') }}</div>
+        <div class="rule-text">{{ _('Do not share personal information of others without consent. Respect confidential project details.') }}</div>
       </div>
 
       <div class="rule-item">
-        <div class="rule-number">Rule 6: No Inappropriate Content</div>
-        <div class="rule-text">Do not share NSFW, illegal content, or anything that violates platform policies.</div>
+        <div class="rule-number">{{ _('Rule 6: No Inappropriate Content') }}</div>
+        <div class="rule-text">{{ _('Do not share NSFW, illegal content, or anything that violates platform policies.') }}</div>
       </div>
 
       <div class="rule-item">
-        <div class="rule-number">Rule 7: Follow Admin Guidance</div>
-        <div class="rule-text">Admins maintain order and enforce rules. Cooperate with admin requests and decisions.</div>
+        <div class="rule-number">{{ _('Rule 7: Follow Admin Guidance') }}</div>
+        <div class="rule-text">{{ _('Admins maintain order and enforce rules. Cooperate with admin requests and decisions.') }}</div>
       </div>
     </div>
 
     <div class="rules-footer">
       <div class="rules-footer-text">
-        <strong>By clicking "I Accept &amp; Continue"</strong>, you agree to follow these guidelines. Violations may result in chat suspension or account restrictions. We're here to help – let's keep it positive!
+        <strong>{{ _('By clicking "I Accept & Continue"') }}</strong>, {{ _("you agree to follow these guidelines. Violations may result in chat suspension or account restrictions. We're here to help – let's keep it positive!") }}
       </div>
     </div>
 
     <div class="action-buttons">
       <form method="POST" style="display:inline;">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <button type="submit" class="btn btn-accept">I Accept &amp; Continue</button>
+        <button type="submit" class="btn btn-accept">{{ _('I Accept & Continue') }}</button>
       </form>
-      <a href="{{ url_for('main.dashboard') }}" class="btn btn-back">Go Back</a>
+      <a href="{{ url_for('main.dashboard') }}" class="btn btn-back">{{ _('Go Back') }}</a>
     </div>
   </div>
 {% endblock %}

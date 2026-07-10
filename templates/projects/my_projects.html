@@ -35,14 +35,14 @@
 
 {% block content %}
   <div class="page-header">
-    <div class="page-title">My Projects</div>
-    <div class="page-sub">Manage your projects and review applications</div>
+    <div class="page-title">{{ _('My Projects') }}</div>
+    <div class="page-sub">{{ _('Manage your projects and review applications') }}</div>
   </div>
 
   <div class="projects-list">
     <!-- OWNED PROJECTS -->
     <div>
-      <h2 style="font-family:'DM Serif Display',serif;font-size:1.2rem;margin-bottom:16px;">My Projects (Owner)</h2>
+      <h2 style="font-family:'DM Serif Display',serif;font-size:1.2rem;margin-bottom:16px;">{{ _('My Projects (Owner)') }}</h2>
       {% if owned_projects_with_apps %}
         {% for item in owned_projects_with_apps %}
           <div class="project-section" style="margin-bottom:12px;">
@@ -52,17 +52,17 @@
                   <div class="project-title">{{ item.project.title }}</div>
                 </a>
                 {% if item.project.status == 'open' %}
-                  <div class="project-status" style="background:rgba(90,138,106,0.15);color:#7ab890;">OPEN</div>
+                  <div class="project-status" style="background:rgba(90,138,106,0.15);color:#7ab890;">{{ _('OPEN') }}</div>
                 {% elif item.project.status == 'closed' %}
-                  <div class="project-status" style="background:rgba(74,127,165,0.15);color:#7aaed0;">CLOSED</div>
+                  <div class="project-status" style="background:rgba(74,127,165,0.15);color:#7aaed0;">{{ _('CLOSED') }}</div>
                 {% elif item.project.status == 'completed' %}
-                  <div class="project-status" style="background:rgba(124,155,255,0.12);color:#7C9BFF;">COMPLETED</div>
+                  <div class="project-status" style="background:rgba(124,155,255,0.12);color:#7C9BFF;">{{ _('COMPLETED') }}</div>
                 {% else %}
                   <div class="project-status">{{ item.project.status | upper }}</div>
                 {% endif %}
               </div>
               {% if item.project.deadline %}
-                <div style="font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--muted);">Due {{ item.project.deadline.strftime('%b %d, %Y') }}</div>
+                <div style="font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--muted);">{{ _('Due') }} {{ item.project.deadline.strftime('%b %d, %Y') }}</div>
               {% endif %}
             </div>
 
@@ -70,7 +70,7 @@
 
             {% if item.pending_apps %}
               <div class="applications">
-                <div class="app-label">{{ item.pending_apps|length }} Pending Application(s)</div>
+                <div class="app-label">{{ item.pending_apps|length }} {{ _('Pending Application(s)') }}</div>
                 <div class="app-list">
                   {% for app in item.pending_apps %}
                     <div class="app-item">
@@ -81,11 +81,11 @@
                       <div class="app-actions">
                         <form method="POST" action="/applications/{{ app.id }}/accept" style="margin:0;">
                           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                          <button type="submit" class="btn-sm btn-accept">Accept</button>
+                          <button type="submit" class="btn-sm btn-accept">{{ _('Accept') }}</button>
                         </form>
                         <form method="POST" action="/applications/{{ app.id }}/reject" style="margin:0;">
                           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                          <button type="submit" class="btn-sm btn-reject">Reject</button>
+                          <button type="submit" class="btn-sm btn-reject">{{ _('Reject') }}</button>
                         </form>
                       </div>
                     </div>
@@ -93,22 +93,22 @@
                 </div>
               </div>
             {% else %}
-              <div style="color:var(--muted);font-size:0.82rem;padding-top:12px;border-top:1px solid var(--border);">No pending applications</div>
+              <div style="color:var(--muted);font-size:0.82rem;padding-top:12px;border-top:1px solid var(--border);">{{ _('No pending applications') }}</div>
             {% endif %}
           </div>
         {% endfor %}
       {% else %}
         <div class="empty">
-          <div class="empty-title">No projects yet</div>
-          <p style="color:var(--soft);font-size:0.85rem;margin-bottom:20px;">Start by posting your first project</p>
-          <a href="/post-project-page" class="btn-gold">+ Post a Project</a>
+          <div class="empty-title">{{ _('No projects yet') }}</div>
+          <p style="color:var(--soft);font-size:0.85rem;margin-bottom:20px;">{{ _('Start by posting your first project') }}</p>
+          <a href="/post-project-page" class="btn-gold">+ {{ _('Post a project') }}</a>
         </div>
       {% endif %}
     </div>
 
     <!-- JOINED PROJECTS -->
     <div style="margin-top:32px;padding-top:32px;border-top:1px solid var(--border);">
-      <h2 style="font-family:'DM Serif Display',serif;font-size:1.2rem;margin-bottom:16px;">Projects I'm In</h2>
+      <h2 style="font-family:'DM Serif Display',serif;font-size:1.2rem;margin-bottom:16px;">{{ _("Projects I'm In") }}</h2>
       {% if joined_projects %}
         <div class="fx-stagger" style="display:grid;grid-template-columns:repeat(auto-fill, minmax(250px, 1fr));gap:12px;">
           {% for project in joined_projects %}
@@ -117,13 +117,13 @@
                 <div style="font-weight:600;margin-bottom:6px;color:var(--text);">{{ project.title }}</div>
                 <div style="font-size:0.75rem;color:var(--soft);margin-bottom:8px;line-height:1.4;">{{ project.description[:80] }}...</div>
                 <div style="display:flex;justify-content:space-between;align-items:center;font-size:0.7rem;color:var(--muted);">
-                  <span>{{ project.course or 'Personal' }}</span>
+                  <span>{{ project.course or _('Personal') }}</span>
                   {% if project.status == 'open' %}
-                    <span style="background:rgba(90,138,106,0.15);color:#7ab890;padding:2px 6px;border-radius:3px;font-family:'DM Mono',monospace;">open</span>
+                    <span style="background:rgba(90,138,106,0.15);color:#7ab890;padding:2px 6px;border-radius:3px;font-family:'DM Mono',monospace;">{{ _('open') }}</span>
                   {% elif project.status == 'closed' %}
-                    <span style="background:rgba(74,127,165,0.15);color:#7aaed0;padding:2px 6px;border-radius:3px;font-family:'DM Mono',monospace;">closed</span>
+                    <span style="background:rgba(74,127,165,0.15);color:#7aaed0;padding:2px 6px;border-radius:3px;font-family:'DM Mono',monospace;">{{ _('closed') }}</span>
                   {% elif project.status == 'completed' %}
-                    <span style="background:var(--accent-dim);color:var(--accent);padding:2px 6px;border-radius:3px;font-family:'DM Mono',monospace;">completed</span>
+                    <span style="background:var(--accent-dim);color:var(--accent);padding:2px 6px;border-radius:3px;font-family:'DM Mono',monospace;">{{ _('completed') }}</span>
                   {% else %}
                     <span style="background:var(--accent-dim);color:var(--accent);padding:2px 6px;border-radius:3px;font-family:'DM Mono',monospace;">{{ project.status }}</span>
                   {% endif %}
@@ -134,7 +134,7 @@
         </div>
       {% else %}
         <div class="empty" style="padding:20px;">
-          <p style="color:var(--soft);font-size:0.85rem;">You haven't joined any projects yet</p>
+          <p style="color:var(--soft);font-size:0.85rem;">{{ _("You haven't joined any projects yet") }}</p>
         </div>
       {% endif %}
     </div>

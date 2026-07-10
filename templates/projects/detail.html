@@ -72,7 +72,7 @@
 {% endblock %}
 
 {% block content %}
-  <a href="/my-projects" class="back-link">← Back to My Projects</a>
+  <a href="/my-projects" class="back-link">← {{ _('Back to My Projects') }}</a>
 
   <div class="project-header fx-up">
     <div class="project-title">{{ project.title }}</div>
@@ -84,19 +84,19 @@
     <div>
       <div class="project-info">
         <div class="info-section">
-          <div class="info-label">Description</div>
+          <div class="info-label">{{ _('Description') }}</div>
           <div class="info-value">{{ project.description }}</div>
         </div>
         <div class="info-section">
-          <div class="info-label">Team Size</div>
-          <div class="info-value">{{ project.team_size }} members</div>
+          <div class="info-label">{{ _('Team Size') }}</div>
+          <div class="info-value">{{ project.team_size }} {{ _('members') }}</div>
         </div>
         <div class="info-section">
-          <div class="info-label">Deadline</div>
+          <div class="info-label">{{ _('Deadline') }}</div>
           <div class="info-value">{{ project.deadline.strftime('%B %d, %Y') if project.deadline else 'N/A' }}</div>
         </div>
         <div class="info-section">
-          <div class="info-label">Topic Tags</div>
+          <div class="info-label">{{ _('Topic Tags') }}</div>
           <div style="display:flex;flex-wrap:wrap;gap:6px;">
             {% for tag in project.topic_tags %}
               <span style="padding:3px 8px;border-radius:3px;font-family:'DM Mono',monospace;font-size:0.62rem;background:var(--accent-dim);color:var(--accent);">{{ tag.tag }}</span>
@@ -104,24 +104,24 @@
           </div>
         </div>
         <div class="info-section">
-          <div class="info-label">Status</div>
+          <div class="info-label">{{ _('Status') }}</div>
           {% if project.status == 'open' %}
-            <div class="status-badge" style="background:rgba(90,138,106,0.15);color:#7ab890;">Open</div>
+            <div class="status-badge" style="background:rgba(90,138,106,0.15);color:#7ab890;">{{ _('Open') }}</div>
           {% elif project.status == 'closed' %}
-            <div class="status-badge" style="background:rgba(74,127,165,0.15);color:#7aaed0;">Closed</div>
+            <div class="status-badge" style="background:rgba(74,127,165,0.15);color:#7aaed0;">{{ _('Closed') }}</div>
           {% elif project.status == 'completed' %}
-            <div class="status-badge">Completed</div>
+            <div class="status-badge">{{ _('Completed') }}</div>
           {% else %}
             <div class="status-badge">{{ project.status | title }}</div>
           {% endif %}
         </div>
         <div class="info-section">
-          <div class="info-label">Team Members</div>
+          <div class="info-label">{{ _('Team Members') }}</div>
           <div class="team-members">
             <div class="member">
               <div class="member-av">●</div>
               <a href="/user/{{ project.owner.id }}" style="text-decoration:none;color:inherit;">
-                <div class="member-name">{{ project.owner.first_name }} {{ project.owner.last_name }} <span style="color:var(--muted);">(Owner)</span></div>
+                <div class="member-name">{{ project.owner.first_name }} {{ project.owner.last_name }} <span style="color:var(--muted);">({{ _('Owner') }})</span></div>
               </a>
             </div>
             {% for member in team_members %}
@@ -136,7 +136,7 @@
         </div>
       </div>
 
-      <h3 style="font-family:'DM Serif Display',serif;font-size:1.1rem;margin-top:32px;margin-bottom:16px;">Project Chat</h3>
+      <h3 style="font-family:'DM Serif Display',serif;font-size:1.1rem;margin-top:32px;margin-bottom:16px;">{{ _('Project Chat') }}</h3>
       <div class="chat-container">
         <div class="chat-messages" id="chat-messages">
           {% if messages %}
@@ -148,19 +148,19 @@
               </div>
             {% endfor %}
           {% else %}
-            <div class="empty-messages">No messages yet. Start the conversation!</div>
+            <div class="empty-messages">{{ _('No messages yet. Start the conversation!') }}</div>
           {% endif %}
         </div>
         {% if is_owner or is_member %}
         <div class="chat-input">
           <form class="chat-form" id="message-form">
-            <textarea id="msg-input" placeholder="Write a message..." required></textarea>
-            <button type="submit" class="btn-send">Send</button>
+            <textarea id="msg-input" placeholder="{{ _('Write a message...') }}" required></textarea>
+            <button type="submit" class="btn-send">{{ _('Send') }}</button>
           </form>
         </div>
         {% else %}
         <div class="chat-input" style="justify-content:center;padding:16px;">
-          <span style="color:var(--soft);font-size:0.8rem;font-family:'DM Mono',monospace;">Join the project to participate in the chat.</span>
+          <span style="color:var(--soft);font-size:0.8rem;font-family:'DM Mono',monospace;">{{ _('Join the project to participate in the chat.') }}</span>
         </div>
         {% endif %}
       </div>
@@ -173,14 +173,14 @@
         <button class="vote-big-btn up {% if user_vote == 'up' %}active{% endif %}"
                 id="det-up" onclick="detailVote('up')">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M12 4l8 8H4z"/></svg>
-          <span>Upvote</span>
+          <span>{{ _('Upvote') }}</span>
         </button>
         <div class="vote-big-score {% if vote_score > 0 %}pos{% elif vote_score < 0 %}neg{% endif %}"
              id="det-score">{{ vote_score }}</div>
         <button class="vote-big-btn down {% if user_vote == 'down' %}active{% endif %}"
                 id="det-down" onclick="detailVote('down')">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M12 20l-8-8h16z"/></svg>
-          <span>Downvote</span>
+          <span>{{ _('Downvote') }}</span>
         </button>
       </div>
 
@@ -188,14 +188,14 @@
         {% if project.status != 'completed' %}
           <form method="POST" action="/project/{{ project.id }}/complete" style="margin:0;">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <button type="submit" class="btn-action btn-complete">Mark as Complete</button>
+            <button type="submit" class="btn-action btn-complete">{{ _('Mark as Complete') }}</button>
           </form>
         {% else %}
-          <div class="btn-action" style="background:var(--accent-dim);color:var(--accent);cursor:default;">✓ Completed</div>
+          <div class="btn-action" style="background:var(--accent-dim);color:var(--accent);cursor:default;">✓ {{ _('Completed') }}</div>
         {% endif %}
       {% endif %}
-      <a href="/projects-page" class="btn-action btn-secondary" style="text-decoration:none;text-align:center;">← Browse Projects</a>
-      <a href="/report-issue" class="btn-action btn-secondary" style="text-decoration:none;text-align:center;">Report Issue</a>
+      <a href="/projects-page" class="btn-action btn-secondary" style="text-decoration:none;text-align:center;">← {{ _('Browse Projects') }}</a>
+      <a href="/report-issue" class="btn-action btn-secondary" style="text-decoration:none;text-align:center;">{{ _('Report Issue') }}</a>
     </div>
   </div>
 {% endblock %}

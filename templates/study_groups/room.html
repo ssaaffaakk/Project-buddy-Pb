@@ -188,31 +188,31 @@ html,body{height:100%;overflow:hidden;}
     <div class="room-title">
       <a href="/study-groups" class="room-back">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
-        Groups
+        {{ _('Groups') }}
       </a>
       <div class="room-name">{{ group.name }}</div>
       {% if group.topic %}<span class="room-topic">{{ group.topic }}</span>{% endif %}
     </div>
     <div class="room-right">
-      <span class="room-meta"><span id="member-count">{{ group.member_count() }}</span> member{{ 's' if group.member_count() != 1 }}</span>
+      <span class="room-meta"><span id="member-count">{{ group.member_count() }}</span> {{ _('members') if group.member_count() != 1 else _('member') }}</span>
 
       {% if is_member %}
-      <button id="voice-btn" class="btn-hdr btn-voice" onclick="toggleVoice()" title="Voice Chat">
+      <button id="voice-btn" class="btn-hdr btn-voice" onclick="toggleVoice()" title="{{ _('Voice Chat') }}">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
-        Voice
+        {{ _('Voice') }}
       </button>
-      <button id="files-btn" class="btn-hdr" onclick="openPanel('files')" title="Shared Files">
+      <button id="files-btn" class="btn-hdr" onclick="openPanel('files')" title="{{ _('Shared Files') }}">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-        Files
+        {{ _('Files') }}
       </button>
-      <button id="notes-btn" class="btn-hdr" onclick="openPanel('notes')" title="Shared Notes">
+      <button id="notes-btn" class="btn-hdr" onclick="openPanel('notes')" title="{{ _('Shared Notes') }}">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-        Notes
+        {{ _('Notes') }}
       </button>
-      <button class="btn-hdr danger" onclick="leaveGroup()">Leave</button>
+      <button class="btn-hdr danger" onclick="leaveGroup()">{{ _('Leave') }}</button>
       {% endif %}
       {% if group.creator_id == user.id or user.role == 'admin' %}
-        <button class="btn-hdr danger" onclick="deleteGroup()">Delete</button>
+        <button class="btn-hdr danger" onclick="deleteGroup()">{{ _('Delete') }}</button>
       {% endif %}
     </div>
   </div>
@@ -224,22 +224,22 @@ html,body{height:100%;overflow:hidden;}
     <!-- CALL STAGE — Discord-style voice / video -->
     <div class="call-stage" id="call-stage">
       <div class="call-top">
-        <span class="call-live"><span class="dot"></span> Live</span>
-        <span class="call-count" id="call-count">Connecting…</span>
+        <span class="call-live"><span class="dot"></span> {{ _('Live') }}</span>
+        <span class="call-count" id="call-count">{{ _('Connecting…') }}</span>
         <span class="call-present" id="call-present">
           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-          <span id="present-name"></span> is presenting
+          <span id="present-name"></span> {{ _('is presenting') }}
         </span>
       </div>
       <div class="call-grid" id="call-grid"></div>
       <div class="call-bar-wrap">
         <div class="call-bar">
-          <div class="cbtn" id="cbtn-mic"><button onclick="toggleMute()" title="Mute" aria-label="Toggle microphone"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><line x1="12" y1="19" x2="12" y2="22"/></svg></button><span class="cbtn-lbl">Mic</span></div>
-          <div class="cbtn" id="cbtn-cam"><button onclick="toggleCamera()" title="Turn on camera" aria-label="Toggle camera"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M15 8.5 21 5v14l-6-3.5"/><rect x="3" y="6" width="12" height="12" rx="2"/></svg></button><span class="cbtn-lbl">Camera</span></div>
-          <div class="cbtn" id="cbtn-share"><button onclick="toggleScreen()" title="Share your screen" aria-label="Share screen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></button><span class="cbtn-lbl">Share</span></div>
-          <div class="cbtn" id="cbtn-notes"><button onclick="toggleNotesPanel()" title="Shared notes" aria-label="Shared notes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M11 4H5a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h13a2 2 0 0 0 2-2v-6"/><path d="M18.5 2.5a2.1 2.1 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg></button><span class="cbtn-lbl">Notes</span></div>
-          <div class="cbtn" id="cbtn-chat"><button onclick="toggleChatDrawer()" title="Chat" aria-label="Toggle chat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></button><span class="cbtn-lbl">Chat</span></div>
-          <div class="cbtn leave" id="cbtn-leave"><button onclick="leaveVoice()" title="Leave call" aria-label="Leave call"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M3 10.5c6-4.5 12-4.5 18 0v3l-4.5.6-.7-2.6c-2.7-1-6.9-1-9.6 0l-.7 2.6L1 13.5v-3Z" transform="rotate(135 12 12)"/></svg></button><span class="cbtn-lbl">Leave</span></div>
+          <div class="cbtn" id="cbtn-mic"><button onclick="toggleMute()" title="{{ _('Mute') }}" aria-label="Toggle microphone"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><line x1="12" y1="19" x2="12" y2="22"/></svg></button><span class="cbtn-lbl">{{ _('Mic') }}</span></div>
+          <div class="cbtn" id="cbtn-cam"><button onclick="toggleCamera()" title="{{ _('Turn on camera') }}" aria-label="Toggle camera"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M15 8.5 21 5v14l-6-3.5"/><rect x="3" y="6" width="12" height="12" rx="2"/></svg></button><span class="cbtn-lbl">{{ _('Camera') }}</span></div>
+          <div class="cbtn" id="cbtn-share"><button onclick="toggleScreen()" title="{{ _('Share your screen') }}" aria-label="Share screen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></button><span class="cbtn-lbl">{{ _('Share') }}</span></div>
+          <div class="cbtn" id="cbtn-notes"><button onclick="toggleNotesPanel()" title="{{ _('Shared notes') }}" aria-label="Shared notes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M11 4H5a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h13a2 2 0 0 0 2-2v-6"/><path d="M18.5 2.5a2.1 2.1 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg></button><span class="cbtn-lbl">{{ _('Notes') }}</span></div>
+          <div class="cbtn" id="cbtn-chat"><button onclick="toggleChatDrawer()" title="{{ _('Chat') }}" aria-label="Toggle chat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></button><span class="cbtn-lbl">{{ _('Chat') }}</span></div>
+          <div class="cbtn leave" id="cbtn-leave"><button onclick="leaveVoice()" title="{{ _('Leave call') }}" aria-label="Leave call"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M3 10.5c6-4.5 12-4.5 18 0v3l-4.5.6-.7-2.6c-2.7-1-6.9-1-9.6 0l-.7 2.6L1 13.5v-3Z" transform="rotate(135 12 12)"/></svg></button><span class="cbtn-lbl">{{ _('Leave') }}</span></div>
         </div>
       </div>
     </div>
@@ -268,7 +268,7 @@ html,body{height:100%;overflow:hidden;}
               </div>
               <span class="msg-author-name {% if mine %}mine{% endif %}">
                 {{ msg.author.first_name }} {{ msg.author.last_name }}
-                {% if msg.author.role == 'instructor' %}<span style="font-family:'DM Mono',monospace;font-size:0.58rem;color:var(--accent);margin-left:4px;">instructor</span>{% endif %}
+                {% if msg.author.role == 'instructor' %}<span style="font-family:'DM Mono',monospace;font-size:0.58rem;color:var(--accent);margin-left:4px;">{{ _('instructor') }}</span>{% endif %}
               </span>
               <span class="msg-time">{{ msg.created_at.strftime('%H:%M') }}</span>
             </div>
@@ -302,15 +302,15 @@ html,body{height:100%;overflow:hidden;}
           <button class="attach-btn" onclick="document.getElementById('chat-file').click()" title="Attach a file" aria-label="Attach a file">
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a5 5 0 0 1-7.07-7.07l9.19-9.19a3.5 3.5 0 0 1 4.95 4.95l-9.2 9.19a1.5 1.5 0 0 1-2.12-2.12l8.49-8.49"/></svg>
           </button>
-          <textarea class="msg-input" id="msg-input" placeholder="Message {{ group.name }}…" rows="1"
+          <textarea class="msg-input" id="msg-input" placeholder="{{ _('Message {name}…').format(name=group.name) }}" rows="1"
                     onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
-          <button class="send-btn" id="send-btn" onclick="sendMessage()">Send</button>
+          <button class="send-btn" id="send-btn" onclick="sendMessage()">{{ _('Send') }}</button>
         </div>
       </div>
       {% else %}
       <div class="join-banner">
-        <p>You are viewing as a guest. Join to participate.</p>
-        <button class="btn-join" onclick="joinAndStay()">Join Group</button>
+        <p>{{ _('You are viewing as a guest. Join to participate.') }}</p>
+        <button class="btn-join" onclick="joinAndStay()">{{ _('Join Group') }}</button>
       </div>
       {% endif %}
     </div>
@@ -320,19 +320,19 @@ html,body{height:100%;overflow:hidden;}
       <div class="sp-tabs">
         <button class="sp-tab active" id="tab-files" onclick="switchTab('files')">
           <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-          Files
+          {{ _('Files') }}
         </button>
         <button class="sp-tab" id="tab-notes" onclick="switchTab('notes')">
           <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-          Notes
+          {{ _('Notes') }}
         </button>
       </div>
 
       <!-- FILES TAB — read-only gallery of everything shared in chat -->
       <div class="files-section visible" id="files-section">
         <div class="fp-header">
-          <div class="fp-title">Shared Files</div>
-          <div class="fp-hint">Everything dropped into the chat, collected here.</div>
+          <div class="fp-title">{{ _('Shared Files') }}</div>
+          <div class="fp-hint">{{ _('Everything dropped into the chat, collected here.') }}</div>
         </div>
         <div class="files-list" id="files-list">
           <div class="skel-row"><div class="skel skel-icon"></div><div class="skel-lines"><div class="skel skel-line"></div><div class="skel skel-line short"></div></div></div>
@@ -344,11 +344,11 @@ html,body{height:100%;overflow:hidden;}
       <!-- NOTES TAB -->
       <div class="notes-section" id="notes-section">
         <div class="np-header">
-          <div class="np-title">Shared Notes</div>
-          <div class="np-status" id="np-status">Synced live</div>
+          <div class="np-title">{{ _('Shared Notes') }}</div>
+          <div class="np-status" id="np-status">{{ _('Synced live') }}</div>
         </div>
         <textarea class="notes-area" id="notes-area"
-                  placeholder="Type shared notes here — everyone in the group sees them live…"
+                  placeholder="{{ _('Type shared notes here — everyone in the group sees them live…') }}"
                   {% if not is_member %}readonly{% endif %}
                   oninput="onNoteInput()">{{ note_content }}</textarea>
       </div>
@@ -411,8 +411,8 @@ async function sendMessage(){
       input.value='';input.style.height='auto';clearStaged();
       appendMessage(d,true);lastMsgId=d.id;scrollBottom(true);
       filesLoaded=false; // gallery will refresh next time it's opened
-    }else{toast(d.error||'Could not send.','error');}
-  }catch(e){toast('Network error.','error');}
+    }else{toast(d.error||'{{ _('Could not send.') }}','error');}
+  }catch(e){toast('{{ _('Network error.') }}','error');}
   btn.disabled=false;
 }
 
@@ -453,12 +453,12 @@ async function pollMessages(){
 if(IS_MEMBER){setInterval(pollMessages,3000);}
 
 async function leaveGroup(){
-  if(!await pbConfirm({title:'Leave this group?', message:'You can rejoin any time from the Voice Chat page.', confirmText:'Leave', danger:true}))return;
+  if(!await pbConfirm({title:'{{ _('Leave this group?') }}', message:'{{ _('You can rejoin any time from the Voice Chat page.') }}', confirmText:'{{ _('Leave') }}', danger:true}))return;
   var r=await fetch('/study-groups/'+GROUP_ID+'/leave',{method:'POST'});
   if((await r.json()).ok){window.location.href='/study-groups';}
 }
 async function deleteGroup(){
-  if(!await pbConfirm({title:'Delete this group?', message:'This permanently deletes the group, its messages, and shared files. This cannot be undone.', confirmText:'Delete Forever', danger:true}))return;
+  if(!await pbConfirm({title:'{{ _('Delete this group?') }}', message:'{{ _('This permanently deletes the group, its messages, and shared files. This cannot be undone.') }}', confirmText:'{{ _('Delete Forever') }}', danger:true}))return;
   var r=await fetch('/study-groups/'+GROUP_ID+'/delete',{method:'POST'});
   var d=await r.json();
   if(d.ok){window.location.href='/study-groups';}else{toast(d.error,'error');}
@@ -572,11 +572,11 @@ function ensureSocket(){
   socket.on('note_update',function(d){
     var ta=document.getElementById('notes-area');
     if(document.activeElement!==ta){ta.value=d.content;}
-    setNotesStatus('Edited by '+d.by,false);
+    setNotesStatus('{{ _('Edited by') }} '+d.by,false);
   });
 
   socket.on('note_saved',function(d){
-    setNotesStatus(d.ok?'Saved':'Save failed — retrying on next edit',d.ok);
+    setNotesStatus(d.ok?'{{ _('Saved') }}':'{{ _('Save failed — retrying on next edit') }}',d.ok);
   });
 
   socket.on('voice_user_joined',function(user){
@@ -652,7 +652,7 @@ function addTile(sid,name,initials,avatar,isMe){
   t.id='ct-'+sid;
   if(isMe)t.dataset.me='1';
   var avInner=avatar?'<img src="'+escAttr(avatar)+'" alt="">':escHtml(initials);
-  var meTag=isMe?' <span style="color:var(--accent);">(You)</span>':'';
+  var meTag=isMe?' <span style="color:var(--accent);">{{ _('(You)') }}</span>':'';
   t.innerHTML=
     '<video class="ctile-vid" autoplay playsinline'+(isMe?' muted':'')+'></video>'+
     '<div class="ctile-av">'+avInner+'</div>'+
@@ -695,14 +695,14 @@ function setTileVideo(sid,track){
 function updateCallCount(){
   var n=callGrid()?callGrid().querySelectorAll('.ctile').length:0;
   var el=document.getElementById('call-count');
-  if(el)el.textContent=n+' in voice';
+  if(el)el.textContent=n+' {{ _('in voice') }}';
 }
 function updatePresenting(){
   var el=document.getElementById('call-present'); if(!el)return;
   var sharer=callGrid().querySelector('.ctile.sharing.has-video');
   if(sharer){
     var nm=sharer.querySelector('.ctile-nm span');
-    var name=nm?nm.textContent.replace('(You)','').trim():'Someone';
+    var name=nm?nm.textContent.replace('{{ _('(You)') }}','').trim():'{{ _('Someone') }}';
     document.getElementById('present-name').textContent=name;
     el.classList.add('on');
   }else{el.classList.remove('on');}
@@ -736,19 +736,19 @@ async function toggleVoice(){
 async function joinVoice(){
   if(inVoice)return;
   if(!VOICE_HAS_TURN){
-    toast('Voice may not connect on some networks — relay server not configured.','error');
+    toast('{{ _('Voice may not connect on some networks — relay server not configured.') }}','error');
   }
   try{
     localStream=await navigator.mediaDevices.getUserMedia({audio:true,video:false});
   }catch(e){
-    toast('Microphone access denied. Allow microphone in browser settings.','error');
+    toast('{{ _('Microphone access denied. Allow microphone in browser settings.') }}','error');
     return;
   }
   try{
     ensureSocket();
     socket.emit('join_voice',{group_id:GROUP_ID});
   }catch(e){
-    toast('Connection error. Please refresh and try again.','error');
+    toast('{{ _('Connection error. Please refresh and try again.') }}','error');
     if(localStream){localStream.getTracks().forEach(function(t){t.stop();});localStream=null;}
     return;
   }
@@ -857,7 +857,7 @@ async function toggleCamera(){
     var s=await navigator.mediaDevices.getUserMedia({video:{width:{ideal:640},height:{ideal:360}},audio:false});
     camTrack=s.getVideoTracks()[0];
   }catch(e){
-    toast('Camera access denied. Allow camera in browser settings.','error');
+    toast('{{ _('Camera access denied. Allow camera in browser settings.') }}','error');
     return;
   }
   setCtl('cbtn-cam',true);
@@ -937,12 +937,12 @@ function setNotesStatus(text,saved){
   el.textContent=text;
   el.classList.toggle('saved',!!saved);
   clearTimeout(statusTimer);
-  statusTimer=setTimeout(function(){el.textContent='Synced live';el.classList.remove('saved');},3000);
+  statusTimer=setTimeout(function(){el.textContent='{{ _('Synced live') }}';el.classList.remove('saved');},3000);
 }
 
 function onNoteInput(){
   if(!IS_MEMBER)return;
-  setNotesStatus('Typing…',false);
+  setNotesStatus('{{ _('Typing…') }}',false);
   clearTimeout(noteTimer);
   noteTimer=setTimeout(function(){
     ensureSocket();
@@ -969,7 +969,7 @@ async function loadFiles(){
 function renderFiles(files){
   var list=document.getElementById('files-list');
   if(files.length===0){
-    list.innerHTML='<div class="fp-empty">No files yet. Drop one into the chat to share it.</div>';
+    list.innerHTML='<div class="fp-empty">{{ _('No files yet. Drop one into the chat to share it.') }}</div>';
     return;
   }
   list.innerHTML=files.map(function(f){

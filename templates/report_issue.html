@@ -28,57 +28,57 @@
 
 {% block content %}
   <div class="page-header">
-    <div class="page-title">Report an Issue</div>
-    <div class="page-sub">Help us keep ProjectBuddy safe</div>
+    <div class="page-title">{{ _('Report an Issue') }}</div>
+    <div class="page-sub">{{ _('Help us keep ProjectBuddy safe') }}</div>
   </div>
 
   <div class="alert warning">
-    False reports may result in account restrictions. Please only report genuine issues.
+    {{ _('False reports may result in account restrictions. Please only report genuine issues.') }}
   </div>
 
   <div class="form-container">
     <form method="POST">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <div class="form-group">
-        <label class="form-label">What are you reporting?</label>
+        <label class="form-label">{{ _('What are you reporting?') }}</label>
         <select name="target_type" required>
-          <option value="">Select...</option>
-          <option value="user">Report a User</option>
-          <option value="project">Report a Project</option>
+          <option value="">{{ _('Select...') }}</option>
+          <option value="user">{{ _('Report a User') }}</option>
+          <option value="project">{{ _('Report a Project') }}</option>
         </select>
       </div>
 
       <div class="form-group">
-        <label class="form-label">User or Project Name</label>
-        <input type="text" name="target_name" id="target_name" placeholder="Enter project name or person name..."
+        <label class="form-label">{{ _('User or Project Name') }}</label>
+        <input type="text" name="target_name" id="target_name" placeholder="{{ _('Enter project name or person name...') }}"
                value="{{ request.args.get('target_name', '') }}" autocomplete="off">
         <div style="font-family:'DM Mono',monospace;font-size:0.65rem;color:var(--muted);margin-top:5px;">
-          Type the project or user name to search
+          {{ _('Type the project or user name to search') }}
         </div>
         <input type="hidden" name="target_id" id="target_id" required>
       </div>
 
       <div class="form-group">
-        <label class="form-label">Reason</label>
+        <label class="form-label">{{ _('Reason') }}</label>
         <select name="reason" required>
-          <option value="">Select a reason...</option>
-          <option value="spam">Spam</option>
-          <option value="fake_listing">Fake Listing</option>
-          <option value="inappropriate">Inappropriate Content</option>
-          <option value="harassment">Harassment</option>
-          <option value="cheating">Academic Dishonesty</option>
-          <option value="other">Other</option>
+          <option value="">{{ _('Select a reason...') }}</option>
+          <option value="spam">{{ _('Spam') }}</option>
+          <option value="fake_listing">{{ _('Fake Listing') }}</option>
+          <option value="inappropriate">{{ _('Inappropriate Content') }}</option>
+          <option value="harassment">{{ _('Harassment') }}</option>
+          <option value="cheating">{{ _('Academic Dishonesty') }}</option>
+          <option value="other">{{ _('Other') }}</option>
         </select>
       </div>
 
       <div class="form-group">
-        <label class="form-label">Description</label>
-        <textarea name="description" placeholder="Explain the issue in detail..." required></textarea>
+        <label class="form-label">{{ _('Description') }}</label>
+        <textarea name="description" placeholder="{{ _('Explain the issue in detail...') }}" required></textarea>
       </div>
 
       <div class="form-actions">
-        <button type="submit" class="btn-submit">Submit Report</button>
-        <a href="/dashboard" class="btn-cancel">Cancel</a>
+        <button type="submit" class="btn-submit">{{ _('Submit Report') }}</button>
+        <a href="/dashboard" class="btn-cancel">{{ _('Cancel') }}</a>
       </div>
     </form>
   </div>
@@ -120,7 +120,7 @@ targetInput.addEventListener('input', (e) => {
       `).join('');
       searchResults.style.display = 'block';
     } else {
-      searchResults.innerHTML = '<div style="padding:10px;color:var(--muted);">No results found</div>';
+      searchResults.innerHTML = '<div style="padding:10px;color:var(--muted);">{{ _('No results found') }}</div>';
       searchResults.style.display = 'block';
     }
   }, 300);

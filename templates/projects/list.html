@@ -87,21 +87,21 @@
 {% block content %}
   <div class="page-header">
     <div>
-      <div class="page-title">Projects</div>
-      <div class="page-sub">Browse open projects · Find your team</div>
+      <div class="page-title">{{ _('Projects') }}</div>
+      <div class="page-sub">{{ _('Browse open projects · Find your team') }}</div>
     </div>
-    <a href="/post-project-page" class="btn-gold">+ Post Project</a>
+    <a href="/post-project-page" class="btn-gold">+ {{ _('Post Project') }}</a>
   </div>
 
   <form method="GET" action="/projects-page">
     <div class="search-row">
-      <input type="text" name="q" class="search-input" placeholder="Search by title, skill, or keyword..." value="{{ search_query }}">
-      <button type="submit" class="search-btn">Search</button>
+      <input type="text" name="q" class="search-input" placeholder="{{ _('Search by title, skill, or keyword...') }}" value="{{ search_query }}">
+      <button type="submit" class="search-btn">{{ _('Search') }}</button>
     </div>
   </form>
 
   <div class="results-meta">
-    <strong>{{ projects|length }}</strong> open project(s){% if search_query %} — "{{ search_query }}"{% endif %}
+    <strong>{{ projects|length }}</strong> {{ _('open project(s)') }}{% if search_query %} — "{{ search_query }}"{% endif %}
   </div>
 
   {% if projects %}
@@ -130,7 +130,7 @@
         <!-- CARD CONTENT -->
         <div style="flex:1;min-width:0;">
           <div class="pc-eyebrow">
-            <div class="pc-type">Open Project</div>
+            <div class="pc-type">{{ _('Open Project') }}</div>
             {% if project.course %}<div class="pc-course">{{ project.course }}</div>{% endif %}
           </div>
           <div class="pc-title">{{ project.title }}</div>
@@ -144,7 +144,7 @@
               <span class="pc-owner-name">{{ project.owner.first_name ~ ' ' ~ project.owner.last_name if project.owner else 'Unknown' }}</span>
             </div>
             {% if current_user.is_authenticated and current_user.id != project.owner_id and current_user.role != 'admin' %}
-            <a href="/projects/{{ project.id }}/apply" class="apply-link" onclick="event.stopPropagation()">Apply</a>
+            <a href="/projects/{{ project.id }}/apply" class="apply-link" onclick="event.stopPropagation()">{{ _('Apply') }}</a>
             {% endif %}
           </div>
         </div>
@@ -153,11 +153,11 @@
     </div>
   {% else %}
     <div class="empty-state">
-      <h3>No projects found</h3>
+      <h3>{{ _('No projects found') }}</h3>
       {% if search_query %}
-        <p>Try a different search. <a href="/projects-page">Clear →</a></p>
+        <p>{{ _('Try a different search.') }} <a href="/projects-page">{{ _('Clear') }} →</a></p>
       {% else %}
-        <p>Be the first. <a href="/post-project-page">Post a project →</a></p>
+        <p>{{ _('Be the first.') }} <a href="/post-project-page">{{ _('Post a project') }} →</a></p>
       {% endif %}
     </div>
   {% endif %}
@@ -169,13 +169,13 @@
         <div class="modal-title" id="m-title"></div>
         <div class="modal-close" onclick="closeModal()">×</div>
       </div>
-      <div class="modal-lbl">Description</div>
+      <div class="modal-lbl">{{ _('Description') }}</div>
       <div class="modal-val" id="m-desc"></div>
-      <div class="modal-lbl">Posted by</div>
+      <div class="modal-lbl">{{ _('Posted by') }}</div>
       <div class="modal-val" id="m-owner"></div>
-      <div class="modal-lbl" id="m-course-lbl" style="display:none;">Course</div>
+      <div class="modal-lbl" id="m-course-lbl" style="display:none;">{{ _('Course') }}</div>
       <div class="modal-val" id="m-course"></div>
-      <a id="m-apply" href="#" class="modal-apply" style="display:none;">Apply to Join</a>
+      <a id="m-apply" href="#" class="modal-apply" style="display:none;">{{ _('Apply to Join') }}</a>
     </div>
   </div>
 {% endblock %}

@@ -221,9 +221,9 @@
   <!-- PAGE HEADER -->
   <div class="page-header">
     <div class="page-title-wrap">
-      <div class="breadcrumb">ProjectBuddy / Community</div>
-      <div class="page-title">Community</div>
-      <div class="page-sub">Share what you learn — screenshots, videos, tips, breakthroughs.</div>
+      <div class="breadcrumb">ProjectBuddy / {{ _('Community') }}</div>
+      <div class="page-title">{{ _('Community') }}</div>
+      <div class="page-sub">{{ _('Share what you learn — screenshots, videos, tips, breakthroughs.') }}</div>
     </div>
   </div>
 
@@ -234,8 +234,8 @@
         {% if user.avatar_url %}<img src="{{ user.avatar_url }}" alt="">
         {% else %}{{ user.first_name[0] }}{{ user.last_name[0] }}{% endif %}
       </div>
-      <span class="composer-placeholder">Share something with the community…</span>
-      <button class="btn-share" type="button" onclick="openComposer(event)">+ Share</button>
+      <span class="composer-placeholder">{{ _('Share something with the community…') }}</span>
+      <button class="btn-share" type="button" onclick="openComposer(event)">+ {{ _('Share') }}</button>
     </div>
 
     <div class="composer-panel" id="composerPanel">
@@ -243,9 +243,9 @@
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="composer-body">
           <input class="composer-title-input" type="text" name="title"
-                 placeholder="Title (optional) — e.g. Finally understood recursion ✦">
+                 placeholder="{{ _('Title (optional) — e.g. Finally understood recursion ✦') }}">
           <textarea class="composer-textarea" name="body" id="composerBody"
-                    placeholder="What did you learn? Share a tip, a screenshot moment, a video walkthrough… Use @Name to tag someone."
+                    placeholder="{{ _('What did you learn? Share a tip, a screenshot moment, a video walkthrough… Use @Name to tag someone.') }}"
                     required></textarea>
         </div>
         <div class="composer-footer">
@@ -254,7 +254,7 @@
               <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/>
               <polyline points="21 15 16 10 5 21"/>
             </svg>
-            Attach photo / video
+            {{ _('Attach photo / video') }}
           </label>
           <input type="file" id="composer-file" name="media" accept="image/*,video/*"
                  onchange="previewComposerFile(this)">
@@ -264,8 +264,8 @@
             <button type="button" class="btn-remove-file" onclick="removeComposerFile()" title="Remove">×</button>
           </div>
           <div class="spacer"></div>
-          <button type="button" class="btn-cancel-compose" onclick="closeComposer()">Cancel</button>
-          <button type="submit" class="btn-post">Post</button>
+          <button type="button" class="btn-cancel-compose" onclick="closeComposer()">{{ _('Cancel') }}</button>
+          <button type="submit" class="btn-post">{{ _('Post') }}</button>
         </div>
       </form>
     </div>
@@ -276,9 +276,9 @@
     {% if not posts %}
     <div class="empty-feed">
       <span class="ef-icon">✦</span>
-      <h3>Nothing here yet.</h3>
-      <p>Be the first to share something with the community.<br>
-         A screenshot of a bug fix, a video walkthrough, a tip — anything goes.</p>
+      <h3>{{ _('Nothing here yet.') }}</h3>
+      <p>{{ _('Be the first to share something with the community.') }}<br>
+         {{ _('A screenshot of a bug fix, a video walkthrough, a tip — anything goes.') }}</p>
     </div>
     {% endif %}
 
@@ -305,7 +305,7 @@
                 {{ post.author.first_name }} {{ post.author.last_name }}
               </span>
             </a>
-            {% if is_admin_post %}<span class="admin-badge">Admin</span>{% endif %}
+            {% if is_admin_post %}<span class="admin-badge">{{ _('Admin') }}</span>{% endif %}
           </div>
           <div class="post-time" data-ts="{{ post.created_at.isoformat() }}">
             {{ post.created_at.strftime('%b %d, %Y') }}
@@ -313,7 +313,7 @@
         </div>
         <div class="post-header-actions">
           {% if can_del %}
-          <button class="btn-del-post" onclick="deletePost({{ post.id }})">Delete</button>
+          <button class="btn-del-post" onclick="deletePost({{ post.id }})">{{ _('Delete') }}</button>
           {% endif %}
         </div>
       </div>
@@ -334,7 +334,7 @@
         {% elif post.media_type == 'video' %}
           <video controls preload="metadata">
             <source src="{{ post.media_url }}">
-            Your browser does not support video.
+            {{ _('Your browser does not support video.') }}
           </video>
         {% endif %}
       </div>
@@ -352,7 +352,7 @@
                 onclick="toggleComments({{ post.id }})">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
           <span id="comment-count-{{ post.id }}">{{ post.comments | length }}</span>
-          <span>{{ 'comment' if post.comments | length == 1 else 'comments' }}</span>
+          <span>{{ _('comment') if post.comments | length == 1 else _('comments') }}</span>
         </button>
       </div>
 
@@ -374,17 +374,17 @@
                     {{ c.author.first_name }} {{ c.author.last_name }}
                   </span>
                 </a>
-                {% if is_admin_c %}<span class="admin-badge">Admin</span>{% endif %}
+                {% if is_admin_c %}<span class="admin-badge">{{ _('Admin') }}</span>{% endif %}
                 <span class="comment-time" data-ts="{{ c.created_at.isoformat() }}">
                   {{ c.created_at.strftime('%b %d') }}
                 </span>
                 <div class="comment-actions">
                   <button class="btn-reply"
                     onclick="replyTo({{ post.id }},'{{ c.author.first_name }}{{ c.author.last_name }}')">
-                    Reply
+                    {{ _('Reply') }}
                   </button>
                   {% if can_del_c %}
-                  <button class="btn-del-comment" onclick="deleteComment({{ c.id }}, {{ post.id }})">Del</button>
+                  <button class="btn-del-comment" onclick="deleteComment({{ c.id }}, {{ post.id }})">{{ _('Del') }}</button>
                   {% endif %}
                 </div>
               </div>
@@ -402,14 +402,14 @@
           </div>
           <div class="new-comment-right">
             <textarea class="new-comment-textarea" id="ctextarea-{{ post.id }}"
-                      placeholder="Write a comment… use @Name to mention someone"
+                      placeholder="{{ _('Write a comment… use @Name to mention someone') }}"
                       oninput="autoResize(this); handleMention(this, {{ post.id }})"
                       onkeydown="handleCommentKey(event, {{ post.id }})"
                       rows="1"></textarea>
             <div class="mention-dropdown" id="mention-drop-{{ post.id }}"></div>
             <div class="new-comment-footer" id="comment-footer-{{ post.id }}" style="display:none;">
               <button class="btn-post-comment" onclick="postComment({{ post.id }})">
-                Post Comment
+                {{ _('Post Comment') }}
               </button>
             </div>
           </div>
@@ -580,9 +580,9 @@ function appendComment(postId, d) {
     ? '<img src="' + d.author_avatar + '" alt="">'
     : d.author_initials;
   var nameClass = 'comment-author' + (isAdmin ? ' is-admin' : '');
-  var badge     = isAdmin ? '<span class="admin-badge">Admin</span>' : '';
+  var badge     = isAdmin ? '<span class="admin-badge">{{ _('Admin') }}</span>' : '';
   var canDel    = d.can_delete ?
-    '<button class="btn-del-comment" onclick="deleteComment('+d.id+','+postId+')">Del</button>' : '';
+    '<button class="btn-del-comment" onclick="deleteComment('+d.id+','+postId+')">{{ _('Del') }}</button>' : '';
 
   div.innerHTML =
     '<div class="comment-av">' + avHtml + '</div>' +
@@ -592,9 +592,9 @@ function appendComment(postId, d) {
           '<span class="' + nameClass + '">' + esc(d.author_name) + '</span>' +
         '</a>' +
         badge +
-        '<span class="comment-time">just now</span>' +
+        '<span class="comment-time">{{ _('just now') }}</span>' +
         '<div class="comment-actions">' +
-          '<button class="btn-reply" onclick="replyTo('+postId+',\''+esc(d.author_handle)+'\')">Reply</button>' +
+          '<button class="btn-reply" onclick="replyTo('+postId+',\''+esc(d.author_handle)+'\')">{{ _('Reply') }}</button>' +
           canDel +
         '</div>' +
       '</div>' +

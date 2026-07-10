@@ -56,34 +56,34 @@
 {% block content %}
   <div class="topbar">
     <div>
-      <h1>Study <em style="font-style:italic;color:var(--accent);">Groups</em></h1>
-      <p>Join a topic room, ask questions, and learn together in real time.</p>
+      <h1>{{ _('Study') }} <em style="font-style:italic;color:var(--accent);">{{ _('Groups') }}</em></h1>
+      <p>{{ _('Join a topic room, ask questions, and learn together in real time.') }}</p>
     </div>
     <div style="font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--muted);">
-      {{ groups|length }} groups · {{ my_ids|length }} joined
+      {{ groups|length }} {{ _('groups') }} · {{ my_ids|length }} {{ _('joined') }}
     </div>
   </div>
 
   <!-- CREATE GROUP -->
   <div class="create-panel">
-    <h2>Create a new study group</h2>
+    <h2>{{ _('Create a new study group') }}</h2>
     <form method="POST" action="/study-groups/create">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <div class="create-row">
         <div class="field">
-          <label>Group name *</label>
-          <input type="text" name="name" placeholder="e.g. Python Beginners" maxlength="120" required>
+          <label>{{ _('Group name') }} *</label>
+          <input type="text" name="name" placeholder="{{ _('e.g. Python Beginners') }}" maxlength="120" required>
         </div>
         <div class="field">
-          <label>Topic</label>
-          <input type="text" name="topic" placeholder="e.g. Machine Learning" maxlength="80">
+          <label>{{ _('Topic') }}</label>
+          <input type="text" name="topic" placeholder="{{ _('e.g. Machine Learning') }}" maxlength="80">
         </div>
         <div class="field">
-          <label>Description</label>
-          <input type="text" name="description" placeholder="What will your group focus on?" maxlength="300">
+          <label>{{ _('Description') }}</label>
+          <input type="text" name="description" placeholder="{{ _('What will your group focus on?') }}" maxlength="300">
         </div>
         <div class="field" style="padding-bottom:0;">
-          <button type="submit" class="btn-gold" style="white-space:nowrap;">+ Create</button>
+          <button type="submit" class="btn-gold" style="white-space:nowrap;">+ {{ _('Create') }}</button>
         </div>
       </div>
     </form>
@@ -91,7 +91,7 @@
 
   <!-- TOPIC FILTERS -->
   <div class="filters" id="filters">
-    <button class="filter-btn active" data-topic="">All</button>
+    <button class="filter-btn active" data-topic="">{{ _('All') }}</button>
     {% set topics = groups | map(attribute='topic') | select | unique | list %}
     {% for t in topics %}
       <button class="filter-btn" data-topic="{{ t }}">{{ t }}</button>
@@ -105,7 +105,7 @@
     <div class="group-card {% if g.id in my_ids %}is-member{% endif %}" data-topic="{{ g.topic or '' }}"
          onclick="openGroup({{ g.id }}, {{ 'true' if g.id in my_ids else 'false' }})">
       {% if voice_counts and voice_counts.get(g.id, 0) > 0 %}
-      <div class="gc-live"><b></b>Live · {{ voice_counts[g.id] }} in voice</div>
+      <div class="gc-live"><b></b>{{ _('Live') }} · {{ voice_counts[g.id] }} {{ _('in voice') }}</div>
       {% endif %}
       <div class="gc-header">
         <div class="gc-name">{{ g.name }}</div>
@@ -116,14 +116,14 @@
       {% endif %}
       <div class="gc-footer">
         <div class="gc-meta">
-          <span>{{ g.member_count() }} member{{ 's' if g.member_count() != 1 }}</span>
+          <span>{{ g.member_count() }} {{ _('members') if g.member_count() != 1 else _('member') }}</span>
           <span style="margin:0 6px;">·</span>
-          <span>by {{ g.creator.first_name }} {{ g.creator.last_name }}</span>
+          <span>{{ _('by') }} {{ g.creator.first_name }} {{ g.creator.last_name }}</span>
         </div>
         {% if g.id in my_ids %}
-          <span class="gc-member-badge">Joined</span>
+          <span class="gc-member-badge">{{ _('Joined') }}</span>
         {% else %}
-          <button class="gc-join-btn" onclick="event.stopPropagation();joinGroup({{ g.id }}, this)">Join</button>
+          <button class="gc-join-btn" onclick="event.stopPropagation();joinGroup({{ g.id }}, this)">{{ _('Join') }}</button>
         {% endif %}
       </div>
     </div>
@@ -134,7 +134,7 @@
     <div class="empty-icon">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
     </div>
-    <p>No study groups yet.<br>Be the first to create one above.</p>
+    <p>{{ _('No study groups yet.') }}<br>{{ _('Be the first to create one above.') }}</p>
   </div>
   {% endif %}
 {% endblock %}
@@ -178,7 +178,7 @@ async function joinGroup(id, btn){
   var r = await fetch('/study-groups/' + id + '/join', {method:'POST'});
   var d = await r.json();
   if(d.ok){
-    btn.outerHTML = '<span class="gc-member-badge">Joined</span>';
+    btn.outerHTML = '<span class="gc-member-badge">{{ _('Joined') }}</span>';
     toast('Joined! Opening chat room…', 'success');
     setTimeout(function(){ window.location.href = '/study-groups/' + id; }, 800);
   } else {

@@ -129,30 +129,30 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
 
 {% block content %}
   <div class="form-area">
-    <div class="page-title">Post a Project</div>
-    <div class="page-sub">Fill in the details — 3 steps to find your perfect team.</div>
+    <div class="page-title">{{ _('Post a Project') }}</div>
+    <div class="page-sub">{{ _('Fill in the details — 3 steps to find your perfect team.') }}</div>
 
     <!-- STEP INDICATORS -->
     <div class="steps">
-      <div class="step active" id="sp1"><div class="step-dot">1</div><div class="step-text">Basics</div></div>
-      <div class="step" id="sp2"><div class="step-dot">2</div><div class="step-text">Requirements</div></div>
-      <div class="step" id="sp3"><div class="step-dot">3</div><div class="step-text">Review & Post</div></div>
+      <div class="step active" id="sp1"><div class="step-dot">1</div><div class="step-text">{{ _('Basics') }}</div></div>
+      <div class="step" id="sp2"><div class="step-dot">2</div><div class="step-text">{{ _('Requirements') }}</div></div>
+      <div class="step" id="sp3"><div class="step-dot">3</div><div class="step-text">{{ _('Review & Post') }}</div></div>
     </div>
 
     <!-- STEP 1: BASICS -->
     <div class="panel active" id="step1">
       <div class="form-group">
-        <label>Project Title <span class="req">*</span></label>
-        <input type="text" id="titleInput" placeholder="e.g., E-Commerce Platform for Local Business" oninput="updatePreview()">
+        <label>{{ _('Project Title') }} <span class="req">*</span></label>
+        <input type="text" id="titleInput" placeholder="{{ _('e.g., E-Commerce Platform for Local Business') }}" oninput="updatePreview()">
       </div>
       <div class="form-group">
-        <label>Description <span class="req">*</span></label>
-        <textarea id="descInput" placeholder="What are you building? What problem does it solve? What kind of teammate are you looking for?" oninput="updatePreview();updateChar()"></textarea>
+        <label>{{ _('Description') }} <span class="req">*</span></label>
+        <textarea id="descInput" placeholder="{{ _('What are you building? What problem does it solve? What kind of teammate are you looking for?') }}" oninput="updatePreview();updateChar()"></textarea>
         <div class="char-count"><span id="charCount">0</span> / 500</div>
       </div>
       <div class="form-row">
         <div class="form-group">
-          <label>Project Type <span class="req">*</span></label>
+          <label>{{ _('Project Type') }} <span class="req">*</span></label>
           <select id="typeInput" onchange="updatePreview()">
             <option value="" disabled selected>Select type</option>
             <option>Personal / Portfolio</option>
@@ -163,7 +163,7 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
           </select>
         </div>
         <div class="form-group">
-          <label>Course (optional)</label>
+          <label>{{ _('Course (optional)') }}</label>
           <select id="courseInput" onchange="onCourseChange()">
             <option value="">Not course-related</option>
             <optgroup label="Computer Science (CS)">
@@ -368,19 +368,19 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
         </div>
       </div>
       <div class="form-group">
-        <label>Deadline (optional)</label>
+        <label>{{ _('Deadline (optional)') }}</label>
         <input type="date" id="deadlineInput">
       </div>
       <div class="btn-row">
-        <button class="btn-next" onclick="goStep(2)">Continue to Requirements →</button>
+        <button class="btn-next" onclick="goStep(2)">{{ _('Continue to Requirements') }} →</button>
       </div>
     </div>
 
     <!-- STEP 2: REQUIREMENTS -->
     <div class="panel" id="step2">
       <div class="form-group">
-        <label>Required Skills <span class="req">*</span></label>
-        <div class="hint" style="margin-bottom:10px;">Select the skills your ideal teammate needs.</div>
+        <label>{{ _('Required Skills') }} <span class="req">*</span></label>
+        <div class="hint" style="margin-bottom:10px;">{{ _('Select the skills your ideal teammate needs.') }}</div>
         <div class="tags-wrap" id="skillTagsWrap">
           <div class="sel-tag" onclick="toggleSkill(this)">Python</div>
           <div class="sel-tag" onclick="toggleSkill(this)">SQL / Database</div>
@@ -402,8 +402,8 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
       </div>
 
       <div class="form-group" style="margin-top:24px;">
-        <label>Topic Tags <span class="req">*</span></label>
-        <div class="hint" style="margin-bottom:10px;">Select <strong>exactly 5</strong> topic tags — these power the recommendation engine.</div>
+        <label>{{ _('Topic Tags') }} <span class="req">*</span></label>
+        <div class="hint" style="margin-bottom:10px;">{{ _('Select') }} <strong>{{ _('exactly 5') }}</strong> {{ _('topic tags — these power the recommendation engine.') }}</div>
         <div class="tags-wrap" id="topicTagsWrap">
           <div class="sel-tag" onclick="toggleTopic(this)">Frontend</div>
           <div class="sel-tag" onclick="toggleTopic(this)">Backend</div>
@@ -418,12 +418,12 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
           <div class="sel-tag" onclick="toggleTopic(this)">Networking</div>
           <div class="sel-tag" onclick="toggleTopic(this)">Game Dev</div>
         </div>
-        <div class="tag-count"><span id="topicCount">0</span> / 5 topics selected</div>
+        <div class="tag-count"><span id="topicCount">0</span> / 5 {{ _('topics selected') }}</div>
       </div>
 
       <div class="form-group" style="margin-top:24px;">
-        <label>Maximum Team Size <span class="req">*</span></label>
-        <div class="hint" style="margin-bottom:12px;">Including yourself. Min 2, max 6.</div>
+        <label>{{ _('Maximum Team Size') }} <span class="req">*</span></label>
+        <div class="hint" style="margin-bottom:12px;">{{ _('Including yourself. Min 2, max 6.') }}</div>
         <div class="size-opts">
           <div class="size-opt" onclick="selectSize(this,2)">2</div>
           <div class="size-opt active" onclick="selectSize(this,3)">3</div>
@@ -434,34 +434,34 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
       </div>
 
       <div class="btn-row">
-        <button class="btn-back" onclick="goStep(1)">← Back</button>
-        <button class="btn-next" onclick="goStep(3)">Review Project →</button>
+        <button class="btn-back" onclick="goStep(1)">← {{ _('Back') }}</button>
+        <button class="btn-next" onclick="goStep(3)">{{ _('Review Project') }} →</button>
       </div>
     </div>
 
     <!-- STEP 3: REVIEW -->
     <div class="panel" id="step3">
       <div style="padding:16px;background:var(--accent-dim);border:1px solid rgba(0,229,176,0.2);border-radius:14px;margin-bottom:24px;">
-        <div style="font-size:0.88rem;font-weight:600;color:var(--accent);">Review your listing before posting.</div>
-        <div style="font-size:0.78rem;color:var(--soft);margin-top:2px;">You can edit the project after posting too.</div>
+        <div style="font-size:0.88rem;font-weight:600;color:var(--accent);">{{ _('Review your listing before posting.') }}</div>
+        <div style="font-size:0.78rem;color:var(--soft);margin-top:2px;">{{ _('You can edit the project after posting too.') }}</div>
       </div>
 
       <div class="review-block">
-        <h4>Project Details</h4>
-        <div class="review-row"><div class="review-key">Title</div><div class="review-val" id="rv-title">—</div></div>
-        <div class="review-row"><div class="review-key">Type</div><div class="review-val" id="rv-type">—</div></div>
-        <div class="review-row"><div class="review-key">Course</div><div class="review-val" id="rv-course">—</div></div>
-        <div class="review-row"><div class="review-key">Team size</div><div class="review-val" id="rv-size">3 members</div></div>
-        <div class="review-row"><div class="review-key">Deadline</div><div class="review-val" id="rv-deadline">Not set</div></div>
+        <h4>{{ _('Project Details') }}</h4>
+        <div class="review-row"><div class="review-key">{{ _('Title') }}</div><div class="review-val" id="rv-title">—</div></div>
+        <div class="review-row"><div class="review-key">{{ _('Type') }}</div><div class="review-val" id="rv-type">—</div></div>
+        <div class="review-row"><div class="review-key">{{ _('Course') }}</div><div class="review-val" id="rv-course">—</div></div>
+        <div class="review-row"><div class="review-key">{{ _('Team size') }}</div><div class="review-val" id="rv-size">3 {{ _('members') }}</div></div>
+        <div class="review-row"><div class="review-key">{{ _('Deadline') }}</div><div class="review-val" id="rv-deadline">{{ _('Not set') }}</div></div>
       </div>
 
       <div class="review-block">
-        <h4>Checklist</h4>
-        <div class="checklist-item"><span>&#10003;</span> Title filled in</div>
-        <div class="checklist-item"><span>&#10003;</span> Description written</div>
-        <div class="checklist-item"><span>&#10003;</span> Skills selected</div>
-        <div class="checklist-item"><span id="chk-topics"></span> <span id="chk-topics-lbl">5 topic tags chosen</span></div>
-        <div class="checklist-item"><span>&#10003;</span> Team size set</div>
+        <h4>{{ _('Checklist') }}</h4>
+        <div class="checklist-item"><span>&#10003;</span> {{ _('Title filled in') }}</div>
+        <div class="checklist-item"><span>&#10003;</span> {{ _('Description written') }}</div>
+        <div class="checklist-item"><span>&#10003;</span> {{ _('Skills selected') }}</div>
+        <div class="checklist-item"><span id="chk-topics"></span> <span id="chk-topics-lbl">{{ _('5 topic tags chosen') }}</span></div>
+        <div class="checklist-item"><span>&#10003;</span> {{ _('Team size set') }}</div>
       </div>
 
       <form method="POST" action="/projects/" id="postForm">
@@ -476,7 +476,7 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
 
         <div class="btn-row">
           <button type="button" class="btn-back" onclick="goStep(2)">← Back</button>
-          <button type="submit" class="btn-next" id="submitBtn" onclick="prepareForm()">Post Project</button>
+          <button type="submit" class="btn-next" id="submitBtn" onclick="prepareForm()">{{ _('Post Project') }}</button>
         </div>
       </form>
     </div>
@@ -484,11 +484,11 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
     <!-- SUCCESS -->
     <div class="panel" id="step-success">
       <div style="text-align:center;padding:60px 20px;">
-        <h2 style="font-family:'DM Serif Display',serif;font-size:1.8rem;font-weight:400;margin-bottom:12px;">Project posted!</h2>
-        <p style="color:var(--soft);margin-bottom:32px;line-height:1.7;">Your project is now live and visible to matching students.</p>
+        <h2 style="font-family:'DM Serif Display',serif;font-size:1.8rem;font-weight:400;margin-bottom:12px;">{{ _('Project posted!') }}</h2>
+        <p style="color:var(--soft);margin-bottom:32px;line-height:1.7;">{{ _('Your project is now live and visible to matching students.') }}</p>
         <div style="display:flex;gap:12px;justify-content:center;">
-          <a href="/dashboard" style="padding:12px 28px;background:linear-gradient(110deg,var(--accent) 0%,var(--violet,#A78BFF) 45%,var(--coral,#FF6B6B) 100%);border-radius:12px;color:#fff;font-weight:700;text-decoration:none;">Go to Dashboard</a>
-          <a href="/projects-page" style="padding:12px 28px;background:var(--card);border:1px solid var(--border);border-radius:12px;color:var(--soft);text-decoration:none;">Browse Projects</a>
+          <a href="/dashboard" style="padding:12px 28px;background:linear-gradient(110deg,var(--accent) 0%,var(--violet,#A78BFF) 45%,var(--coral,#FF6B6B) 100%);border-radius:12px;color:#fff;font-weight:700;text-decoration:none;">{{ _('Go to Dashboard') }}</a>
+          <a href="/projects-page" style="padding:12px 28px;background:var(--card);border:1px solid var(--border);border-radius:12px;color:var(--soft);text-decoration:none;">{{ _('Browse Projects') }}</a>
         </div>
       </div>
     </div>

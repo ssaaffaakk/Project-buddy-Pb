@@ -37,9 +37,9 @@
 
 {% block content %}
 <div class="wl-wrap">
-  <div class="wl-eyebrow">Step 1 — make it yours</div>
-  <h1 class="wl-title">Welcome, <em>{{ user.first_name }}</em>.</h1>
-  <p class="wl-sub">Add a photo and a cover so teammates recognize you. You can always change these later — or skip for now.</p>
+  <div class="wl-eyebrow">{{ _('Step 1 — make it yours') }}</div>
+  <h1 class="wl-title">{{ _('Welcome,') }} <em>{{ user.first_name }}</em>.</h1>
+  <p class="wl-sub">{{ _('Add a photo and a cover so teammates recognize you. You can always change these later — or skip for now.') }}</p>
 
   <form method="POST" action="{{ url_for('main.welcome') }}" enctype="multipart/form-data" id="wl-form">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -52,16 +52,16 @@
       </div>
       <div class="wl-body">
         <div class="wl-section">
-          <div class="wl-label">Profile photo</div>
+          <div class="wl-label">{{ _('Profile photo') }}</div>
           <label class="wl-choose">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-            Choose photo
+            {{ _('Choose photo') }}
             <input type="file" name="avatar" accept="image/*" style="display:none;" id="wl-avatar-input">
           </label>
         </div>
 
         <div class="wl-section">
-          <div class="wl-label">Cover banner</div>
+          <div class="wl-label">{{ _('Cover banner') }}</div>
           <div class="wl-presets" id="wl-presets">
             {% for p in BANNER_PRESETS %}
             <div class="wl-swatch" data-key="{{ p.key }}" data-css="{{ p.css }}" style="background:{{ p.css }};" title="{{ p.key }}"></div>
@@ -69,15 +69,15 @@
           </div>
           <label class="wl-choose">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-            Upload your own
+            {{ _('Upload your own') }}
             <input type="file" name="banner" accept="image/*" style="display:none;" id="wl-banner-input">
           </label>
           <input type="hidden" name="banner_preset" id="wl-banner-preset" value="">
         </div>
 
         <div class="wl-actions">
-          <button type="submit" class="wl-continue">Continue</button>
-          <button type="submit" name="action" value="skip" class="wl-skip">Skip for now</button>
+          <button type="submit" class="wl-continue">{{ _('Continue') }}</button>
+          <button type="submit" name="action" value="skip" class="wl-skip">{{ _('Skip for now') }}</button>
         </div>
       </div>
     </div>

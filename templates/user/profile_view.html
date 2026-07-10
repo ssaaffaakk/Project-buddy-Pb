@@ -113,7 +113,7 @@
 {% endblock %}
 
 {% block content %}
-  <a href="/profile" class="back-link">← Back to My Profile</a>
+  <a href="/profile" class="back-link">← {{ _('Back to My Profile') }}</a>
 
   <!-- COVER BANNER -->
   <div class="pv-cover" style="{{ banner_style(profile_user.banner_url) }}"></div>
@@ -134,22 +134,22 @@
       {% if profile_user.role != 'admin' %}
       <div class="profile-stats">
         <div class="stat-item">
-          <div class="stat-label">Projects</div>
+          <div class="stat-label">{{ _('Projects') }}</div>
           <div class="stat-value">{{ user_stats.projects_count }}</div>
         </div>
         <div class="stat-item">
-          <div class="stat-label">Rating</div>
+          <div class="stat-label">{{ _('Rating') }}</div>
           <div class="stat-value">{{ user_stats.avg_rating or '—' }}</div>
         </div>
         <div class="stat-item">
-          <div class="stat-label">Reviews</div>
+          <div class="stat-label">{{ _('Reviews') }}</div>
           <div class="stat-value">{{ user_stats.reviews_count }}</div>
         </div>
       </div>
       {% else %}
       <div class="profile-stats">
         <div class="stat-item" style="color:var(--muted);">
-          <p style="font-size:0.85rem;margin-top:12px;">Administrator account. Limited profile information available.</p>
+          <p style="font-size:0.85rem;margin-top:12px;">{{ _('Administrator account. Limited profile information available.') }}</p>
         </div>
       </div>
       {% endif %}
@@ -158,8 +158,8 @@
 
   {% if profile_user.role != 'admin' %}
   <div class="tabs">
-    <button class="tab-btn active" onclick="switchTab(event, 'reviews-tab')">Reviews</button>
-    <button class="tab-btn" onclick="switchTab(event, 'skills-tab')">Skills & Endorsements</button>
+    <button class="tab-btn active" onclick="switchTab(event, 'reviews-tab')">{{ _('Reviews') }}</button>
+    <button class="tab-btn" onclick="switchTab(event, 'skills-tab')">{{ _('Skills & Endorsements') }}</button>
   </div>
   {% endif %}
 
@@ -167,11 +167,11 @@
   <div id="reviews-tab" class="tab-content active">
     {% if can_leave_review %}
       <div class="review-form">
-        <h3 style="font-family:'DM Serif Display',serif;font-size:1.1rem;margin-bottom:16px;">Leave a Review</h3>
+        <h3 style="font-family:'DM Serif Display',serif;font-size:1.1rem;margin-bottom:16px;">{{ _('Leave a Review') }}</h3>
         <form method="POST" action="/user/{{ profile_user.id }}/review">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <div class="form-group">
-            <label class="form-label">Rating</label>
+            <label class="form-label">{{ _('Rating') }}</label>
             <div class="rating-selector" id="rating-selector">
               <button type="button" class="rating-btn" data-rating="1">1</button>
               <button type="button" class="rating-btn" data-rating="2">2</button>
@@ -182,18 +182,18 @@
             <input type="hidden" id="rating-input" name="rating" required>
           </div>
           <div class="form-group">
-            <label class="form-label">Comment</label>
-            <textarea name="comment" placeholder="Share your experience working with this person..." minlength="10" required></textarea>
-            <div style="font-size:0.7rem;color:var(--muted);margin-top:4px;">Minimum 10 characters</div>
+            <label class="form-label">{{ _('Comment') }}</label>
+            <textarea name="comment" placeholder="{{ _('Share your experience working with this person...') }}" minlength="10" required></textarea>
+            <div style="font-size:0.7rem;color:var(--muted);margin-top:4px;">{{ _('Minimum 10 characters') }}</div>
           </div>
           <div class="form-actions">
-            <button type="submit" class="btn-submit">Submit Review</button>
+            <button type="submit" class="btn-submit">{{ _('Submit Review') }}</button>
           </div>
         </form>
       </div>
     {% endif %}
 
-    <h3 style="font-family:'DM Serif Display',serif;font-size:1.1rem;margin-bottom:16px;">{{ user_stats.reviews_count }} Review{% if user_stats.reviews_count != 1 %}s{% endif %}</h3>
+    <h3 style="font-family:'DM Serif Display',serif;font-size:1.1rem;margin-bottom:16px;">{{ user_stats.reviews_count }} {{ _('Reviews') if user_stats.reviews_count != 1 else _('Review') }}</h3>
     {% if reviews %}
       <div class="reviews-grid">
         {% for review in reviews %}
@@ -213,7 +213,7 @@
         {% endfor %}
       </div>
     {% else %}
-      <div class="empty-state"><p>No reviews yet</p></div>
+      <div class="empty-state"><p>{{ _('No reviews yet') }}</p></div>
     {% endif %}
   </div>
   {% endif %}
@@ -222,7 +222,7 @@
   <div id="skills-tab" class="tab-content">
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;">
       <div>
-        <h3 style="font-family:'DM Serif Display',serif;font-size:1.1rem;margin-bottom:16px;">Skills</h3>
+        <h3 style="font-family:'DM Serif Display',serif;font-size:1.1rem;margin-bottom:16px;">{{ _('Skills') }}</h3>
         {% if profile_user.skills %}
           <div style="display:flex;flex-wrap:wrap;gap:8px;">
             {% for skill in profile_user.skills %}
@@ -233,23 +233,23 @@
             {% endfor %}
           </div>
         {% else %}
-          <div class="empty-state"><p>No skills listed</p></div>
+          <div class="empty-state"><p>{{ _('No skills listed') }}</p></div>
         {% endif %}
       </div>
       <div>
         {% if can_endorse %}
-          <h3 style="font-family:'DM Serif Display',serif;font-size:1.1rem;margin-bottom:16px;">Endorse a Skill</h3>
+          <h3 style="font-family:'DM Serif Display',serif;font-size:1.1rem;margin-bottom:16px;">{{ _('Endorse a Skill') }}</h3>
           <form method="POST" action="/user/{{ profile_user.id }}/endorse">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div class="form-group">
-              <label class="form-label">Skill</label>
-              <input type="text" name="skill" placeholder="e.g. Python, React, Project Management" required>
+              <label class="form-label">{{ _('Skill') }}</label>
+              <input type="text" name="skill" placeholder="{{ _('e.g. Python, React, Project Management') }}" required>
             </div>
-            <button type="submit" class="btn-submit">Endorse Skill</button>
+            <button type="submit" class="btn-submit">{{ _('Endorse Skill') }}</button>
           </form>
           {% if already_endorsed_skills %}
             <div style="margin-top:12px;font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--muted);">
-              Already endorsed: {{ already_endorsed_skills | join(', ') }}
+              {{ _('Already endorsed:') }} {{ already_endorsed_skills | join(', ') }}
             </div>
           {% endif %}
         {% endif %}
@@ -257,7 +257,7 @@
     </div>
 
     <div style="margin-top:32px;">
-      <h3 style="font-family:'DM Serif Display',serif;font-size:1.1rem;margin-bottom:16px;">Endorsements Received</h3>
+      <h3 style="font-family:'DM Serif Display',serif;font-size:1.1rem;margin-bottom:16px;">{{ _('Endorsements Received') }}</h3>
       {% if profile_user.endorsements_received %}
         {% set skill_endorsements = {} %}
         {% for endorsement in profile_user.endorsements_received %}
@@ -274,12 +274,12 @@
             <div class="endorsement-sticker" style="--sc:{{ colors[ci] }};">
               <div class="sticker-ribbon">{{ count }}×</div>
               <div class="sticker-skill">{{ skill }}</div>
-              <div class="sticker-label">endorsed</div>
+              <div class="sticker-label">{{ _('endorsed') }}</div>
             </div>
           {% endfor %}
         </div>
       {% else %}
-        <div class="empty-state"><p>No endorsements yet</p></div>
+        <div class="empty-state"><p>{{ _('No endorsements yet') }}</p></div>
       {% endif %}
     </div>
   </div>
@@ -289,12 +289,12 @@
   <!-- PROFILE WALL -->
   <div class="pv-wall">
     <div class="pv-wall-head">
-      <h3>Wall</h3>
-      <span class="cnt" id="wall-count">{{ wall_comments|length }} comment{% if wall_comments|length != 1 %}s{% endif %}</span>
+      <h3>{{ _('Wall') }}</h3>
+      <span class="cnt" id="wall-count">{{ wall_comments|length }} {{ _('comments') if wall_comments|length != 1 else _('comment') }}</span>
     </div>
     <div class="wall-form">
-      <textarea class="wall-input" id="wall-input" rows="1" placeholder="Leave a comment on {{ profile_user.first_name }}'s wall…" onkeydown="wallKey(event)"></textarea>
-      <button class="wall-post" id="wall-post" onclick="postWall()">Post</button>
+      <textarea class="wall-input" id="wall-input" rows="1" placeholder="{{ _('Leave a comment…') }}" onkeydown="wallKey(event)"></textarea>
+      <button class="wall-post" id="wall-post" onclick="postWall()">{{ _('Post') }}</button>
     </div>
     <div class="wall-list" id="wall-list"></div>
   </div>
@@ -334,9 +334,9 @@ function wallCommentHtml(c){
       '<svg width="12" height="12" viewBox="0 0 24 24" fill="'+(c.liked?'currentColor':'none')+'" stroke="currentColor" stroke-width="2"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>'+
       '<span class="lc">'+(c.likes||0)+'</span></button>';
   if(!c.can_delete){
-    actions += '<button class="wc-act" onclick="reportWall('+c.id+')">Report</button>';
+    actions += '<button class="wc-act" onclick="reportWall('+c.id+')">{{ _('Report') }}</button>';
   }else{
-    actions += '<button class="wc-act del" onclick="deleteWall('+c.id+',this)">Delete</button>';
+    actions += '<button class="wc-act del" onclick="deleteWall('+c.id+',this)">{{ _('Delete') }}</button>';
   }
   return '<div class="wc" id="wc-'+c.id+'">'+
     '<a class="wc-av" href="/user/'+c.author_id+'">'+av+'</a>'+
@@ -349,12 +349,12 @@ function wallCommentHtml(c){
 
 function renderWall(){
   var list=document.getElementById('wall-list');
-  if(!WALL.length){list.innerHTML='<div class="wall-empty">No comments yet. Be the first to say hi.</div>';return;}
+  if(!WALL.length){list.innerHTML='<div class="wall-empty">{{ _('No comments yet. Be the first to say hi.') }}</div>';return;}
   list.innerHTML=WALL.map(wallCommentHtml).join('');
 }
 function updateWallCount(){
   var el=document.getElementById('wall-count');
-  el.textContent=WALL.length+' comment'+(WALL.length===1?'':'s');
+  el.textContent=WALL.length+' '+(WALL.length===1?'{{ _('comment') }}':'{{ _('comments') }}');
 }
 
 function wallKey(e){ if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();postWall();} }
