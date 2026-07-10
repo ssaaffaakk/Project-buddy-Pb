@@ -7,7 +7,7 @@ from datetime import datetime, timezone, timedelta
 from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app, jsonify
 from flask_login import login_required, current_user
 from werkzeug.utils import secure_filename
-from extensions import db
+from extensions import db, limiter
 from models import (
     User, Project, ProjectMember, Application, Feedback, Endorsement,
     UserBadge, Badge, Report, Chat, AdminMessage, UserInterest, UserSkill, UserCourse,
@@ -1072,6 +1072,7 @@ def admin_remove_project(project_id):
 
 # ── NOTIFICATIONS ─────────────────────────────────────────────────────────────
 @main_bp.route("/notifications/unread")
+@limiter.exempt  # fetched on every page load — must not eat the rate budget
 @login_required
 def get_notifications():
     notifs = (Notification.query

@@ -27,13 +27,15 @@ csrf = CSRFProtect()
 socketio = SocketIO(async_mode='eventlet')
 
 # Rate limiter — keyed by client IP
-# Default: 200 per day, 50 per hour (overridden per-route where needed)
+# Defaults sized for normal authenticated browsing (each page view triggers
+# several requests). Sensitive routes (login etc.) set stricter per-route
+# limits; high-frequency polling endpoints are @limiter.exempt.
 # Uses Redis when REDIS_URL is set (production/multi-worker), falls back to
 # in-process memory for dev / single-worker deployments.
 _ratelimit_storage = os.environ.get('REDIS_URL', 'memory://')
 limiter = Limiter(
     key_func=get_remote_address,
-    default_limits=["200 per day", "50 per hour"],
+    default_limits=["10000 per day", "1500 per hour"],
     storage_uri=_ratelimit_storage,
 )
 login_manager.login_view = "auth.login"

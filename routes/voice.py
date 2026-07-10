@@ -236,3 +236,67 @@ def on_ice(data):
     emit('webrtc_ice',
          {'candidate': data['candidate'], 'from_sid': request.sid},
          to=to_sid)
+
+
+# ── Collaborative notes ──────────────────────────────────────────────────────
+
+NOTE_MAX_LEN = 50_000
+
+
+def _verify_member(group_id: int):
+    """Return the StudyGroup if current_user is a member, else None."""
+    from models import StudyGroup
+    group = StudyGroup.query.get(group_id)
+    if group and group.is_member(current_user.id):
+        return group
+    return None
+
+
+@socketio.on('join_collab')
+def on_join_collab(data):
+    """Join the group's collaboration room (shared notes sync)."""
+    if not current_user.is_authenticated:
+        return
+    try:
+        group_id = int(data.get('group_id', 0))
+    except (TypeError, ValueError):
+        return
+    if not group_id or not _verify_member(group_id):
+        return
+    join_room(f'collab_{group_id}')
+
+
+@socketio.on('note_update')
+def on_note_update(data):
+    """Persist the shared note and broadcast it to everyone else in the room."""
+    if not current_user.is_authenticated:
+        return
+    try:
+        group_id = int(data.get('group_id', 0))
+    except (TypeError, ValueError):
+        return
+    content = data.get('content')
+    if not group_id or not isinstance(content, str) or not _verify_member(group_id):
+        return
+    content = content[:NOTE_MAX_LEN]
+
+    from extensions import db
+    from models import StudyGroupNote
+    note = StudyGroupNote.query.filter_by(group_id=group_id).first()
+    if not note:
+        note = StudyGroupNote(group_id=group_id, content=content, updated_by=current_user.id)
+        db.session.add(note)
+    else:
+        note.content = content
+        note.updated_by = current_user.id
+    try:
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+        emit('note_saved', {'ok': False})
+        return
+
+    emit('note_update',
+         {'content': content, 'by': current_user.get_full_name()},
+         to=f'collab_{group_id}', include_self=False)
+    emit('note_saved', {'ok': True})

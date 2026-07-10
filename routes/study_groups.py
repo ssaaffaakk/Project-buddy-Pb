@@ -9,8 +9,8 @@ from datetime import datetime
 from flask import Blueprint, render_template, request, jsonify, redirect, url_for, flash, send_from_directory, current_app
 from flask_login import login_required, current_user
 from werkzeug.utils import secure_filename
-from extensions import db
-from models import StudyGroup, StudyGroupMember, StudyGroupMessage, Notification, SharedFile
+from extensions import db, limiter
+from models import StudyGroup, StudyGroupMember, StudyGroupMessage, StudyGroupNote, Notification, SharedFile
 from services.file_storage import storage
 
 
@@ -186,12 +186,14 @@ def room(group_id):
                 .limit(60).all())
     messages = list(reversed(messages))
     ice = _ice_servers()
+    note = StudyGroupNote.query.filter_by(group_id=group_id).first()
     return render_template(
         "study_groups/room.html",
         group=group, messages=messages,
         is_member=is_member, user=current_user,
         ice_servers=json.dumps(ice),
         voice_has_turn=_servers_include_turn(ice),
+        note_content=note.content if note else "",
     )
 
 
@@ -228,6 +230,7 @@ def send_message(group_id):
 
 # ── POLL NEW MESSAGES ────────────────────────────────────────────────────────
 @study_groups_bp.route("/<int:group_id>/messages")
+@limiter.exempt  # polled every 3 s by the room page — must not eat the rate budget
 @login_required
 def poll_messages(group_id):
     """Return messages with id > after_id (frontend polls every 3 s)."""

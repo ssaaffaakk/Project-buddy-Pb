@@ -440,6 +440,21 @@ class StudyGroupMessage(db.Model):
     author = db.relationship("User", lazy=True)
 
 
+class StudyGroupNote(db.Model):
+    """One shared collaborative note per study group, live-synced over SocketIO."""
+    __tablename__ = "study_group_notes"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    group_id: Mapped[int] = mapped_column(db.ForeignKey("study_groups.id"), unique=True)
+    content: Mapped[str] = mapped_column(Text, default="")
+    updated_by: Mapped[Optional[int]] = mapped_column(db.ForeignKey("users.id"))
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime,
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+    )
+
+
 # ── AI CHATBOT ────────────────────────────────────────────────────────────────
 
 class ChatbotSession(db.Model):

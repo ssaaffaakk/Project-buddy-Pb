@@ -153,8 +153,12 @@ html.lm nav.sc{background:rgba(247,245,241,.95);}
 .btn-au:hover{box-shadow:0 0 30px rgba(255,107,107,.4),0 0 18px rgba(124,155,255,.4);filter:saturate(1.15);}
 .btn-lg{font-size:.78rem;padding:1rem 2.5rem;border-radius:99px;background:linear-gradient(110deg,var(--gold) 0%,var(--violet) 45%,var(--coral) 100%);color:#fff;font-weight:700;}
 .btn-lg:hover{box-shadow:0 0 46px rgba(255,107,107,.45),0 0 26px rgba(124,155,255,.4);filter:saturate(1.15);}
-.btn-dk{font-size:.78rem;padding:1rem 2.5rem;border-radius:99px;background:rgba(255,255,255,.07);color:var(--text);border:1px solid var(--border-m);}
-.btn-dk:hover{background:rgba(255,255,255,.13);border-color:rgba(124,155,255,.32);}
+.btn-dk{font-size:.78rem;padding:1rem 2.5rem;border-radius:99px;background:rgba(124,155,255,.05);color:var(--text);border:1px solid transparent;gap:9px;}
+.btn-dk::before{content:'';position:absolute;inset:0;border-radius:99px;padding:1px;background:linear-gradient(120deg,rgba(124,155,255,.6),rgba(167,139,255,.22) 45%,rgba(255,107,107,.5));-webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);mask-composite:exclude;pointer-events:none;transition:opacity .3s;opacity:.7;}
+.btn-dk:hover{background:rgba(124,155,255,.11);box-shadow:0 0 30px rgba(124,155,255,.22),inset 0 0 18px rgba(124,155,255,.06);color:#fff;}
+.btn-dk:hover::before{opacity:1;}
+.btn-dk .ar{display:inline-block;transition:transform .3s cubic-bezier(.16,1,.3,1);color:var(--gold);}
+.btn-dk:hover .ar{transform:translateX(4px);}
 .btn-lg::after,.btn-au::after{content:'';position:absolute;top:0;left:-120%;width:55%;height:100%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.5),transparent);transform:skewX(-18deg);animation:bshimmer 4.5s ease-in-out infinite;}
 @keyframes bshimmer{0%,100%{left:-120%;}55%,70%{left:130%;}}
 /* click ripple */
@@ -539,6 +543,65 @@ footer p{font-family:'DM Mono',monospace;font-size:.6rem;letter-spacing:.04em;co
 .fcard-tags span{font-family:'DM Mono',monospace;font-size:.53rem;letter-spacing:.04em;padding:4px 9px;border-radius:4px;background:var(--gold-lo);color:var(--gold);}
 .fcard-tags span.c{background:rgba(255,107,107,.1);color:var(--coral);}
 .fcard-tags span.v{background:rgba(167,139,255,.1);color:var(--violet);}
+
+/* ── LIVE COLLAB SHOWCASE — full-width flagship card ── */
+.collab-hero{position:relative;margin-top:18px;border:1px solid rgba(124,155,255,.22);border-radius:20px;overflow:hidden;background:rgba(14,22,48,.55);backdrop-filter:blur(12px);box-shadow:0 0 80px rgba(124,155,255,.08),0 30px 80px rgba(0,0,0,.45);transition:border-color .3s,box-shadow .4s;}
+.collab-hero:hover{border-color:rgba(124,155,255,.4);box-shadow:0 0 110px rgba(124,155,255,.14),0 30px 80px rgba(0,0,0,.45);}
+.collab-hero::before{content:'';position:absolute;top:0;left:8%;right:8%;height:1px;background:linear-gradient(90deg,transparent,var(--gold),var(--violet),var(--coral),transparent);opacity:.7;z-index:3;}
+.collab-new{position:absolute;top:16px;right:16px;z-index:5;display:flex;align-items:center;gap:6px;font-family:'DM Mono',monospace;font-size:.56rem;font-weight:700;letter-spacing:.16em;padding:5px 12px;border-radius:99px;background:linear-gradient(110deg,var(--violet),var(--coral));color:#fff;box-shadow:0 4px 18px rgba(255,107,107,.35);}
+.collab-new span{width:5px;height:5px;border-radius:50%;background:#fff;animation:dp 1.6s ease-in-out infinite;}
+.collab-mock{background:#060A18;border-bottom:1px solid var(--border);}
+.collab-mock .mock-topbar{padding-right:96px;}
+.collab-body{display:grid;grid-template-columns:1.65fr 1fr;min-height:320px;}
+/* left: screen share stage + camera tiles */
+.collab-stage{display:flex;flex-direction:column;padding:14px;gap:12px;border-right:1px solid rgba(255,255,255,.06);}
+.cs-share{flex:1;border:1px solid rgba(124,155,255,.14);border-radius:10px;background:#0A1126;overflow:hidden;position:relative;display:flex;flex-direction:column;}
+.cs-share::after{content:'';position:absolute;inset:0;background:linear-gradient(115deg,transparent 30%,rgba(124,155,255,.055) 48%,transparent 62%);background-size:220% 100%;animation:cs-scan 5s ease-in-out infinite;pointer-events:none;}
+@keyframes cs-scan{0%,100%{background-position:130% 0;}50%{background-position:-30% 0;}}
+.cs-share-hd{display:flex;align-items:center;gap:8px;padding:9px 13px;border-bottom:1px solid rgba(255,255,255,.05);font-family:'DM Mono',monospace;font-size:.54rem;letter-spacing:.06em;color:#8fa3e8;}
+.cs-share-hd .csh-chip{margin-left:auto;padding:2px 8px;border-radius:4px;background:rgba(58,209,122,.12);color:#3ad17a;font-size:.48rem;letter-spacing:.1em;}
+.cs-code{flex:1;padding:14px 16px;display:flex;flex-direction:column;gap:9px;}
+.cs-code i{display:block;height:7px;border-radius:4px;background:linear-gradient(90deg,rgba(124,155,255,.34),rgba(167,139,255,.18));width:0;animation:cs-ln .8s cubic-bezier(.16,1,.3,1) forwards;animation-delay:var(--d,0s);}
+.cs-code i.g{background:linear-gradient(90deg,rgba(58,209,122,.35),rgba(58,209,122,.12));}
+.cs-code i.c{background:linear-gradient(90deg,rgba(255,107,107,.32),rgba(255,107,107,.1));}
+@keyframes cs-ln{to{width:var(--w,70%);}}
+.collab-tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;flex-shrink:0;}
+.ct{position:relative;aspect-ratio:16/9.5;border-radius:9px;overflow:hidden;border:1.5px solid rgba(255,255,255,.09);display:grid;place-items:center;font-family:'DM Serif Display',serif;font-size:1.5rem;color:#fff;opacity:0;animation:ct-in .6s cubic-bezier(.16,1,.3,1) forwards;animation-delay:var(--d,0s);}
+@keyframes ct-in{from{transform:translateY(14px) scale(.94);opacity:0;}to{transform:none;opacity:1;}}
+.ct.a{background:radial-gradient(ellipse at 30% 25%,rgba(124,155,255,.5),rgba(16,24,58,.95) 70%);}
+.ct.b{background:radial-gradient(ellipse at 65% 30%,rgba(167,139,255,.42),rgba(22,16,50,.95) 70%);}
+.ct.c{background:radial-gradient(ellipse at 45% 70%,rgba(255,107,107,.32),rgba(40,16,30,.95) 72%);}
+.ct.speaking{border-color:#3ad17a;box-shadow:0 0 0 0 rgba(58,209,122,.5);animation:ct-in .6s cubic-bezier(.16,1,.3,1) forwards,ct-speak 2.2s ease-out infinite 1s;}
+@keyframes ct-speak{0%{box-shadow:0 0 0 0 rgba(58,209,122,.45);}60%{box-shadow:0 0 0 7px rgba(58,209,122,0);}100%{box-shadow:0 0 0 0 rgba(58,209,122,0);}}
+.ct-nm{position:absolute;left:7px;bottom:6px;font-family:'DM Mono',monospace;font-size:.47rem;letter-spacing:.05em;color:#e6e9f8;background:rgba(0,0,0,.5);padding:2px 7px;border-radius:99px;backdrop-filter:blur(3px);}
+.ct-mic{position:absolute;top:6px;right:6px;width:16px;height:16px;border-radius:50%;background:rgba(0,0,0,.55);display:grid;place-items:center;font-size:.5rem;}
+/* right: live shared notes */
+.collab-notes{display:flex;flex-direction:column;background:rgba(255,255,255,.014);}
+.cn-hd{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid rgba(255,255,255,.05);font-family:'DM Mono',monospace;font-size:.56rem;letter-spacing:.14em;text-transform:uppercase;color:#8fa3e8;}
+.cn-sync{display:flex;align-items:center;gap:5px;font-size:.5rem;letter-spacing:.08em;color:#3ad17a;text-transform:none;}
+.cn-sync i{width:5px;height:5px;border-radius:50%;background:#3ad17a;box-shadow:0 0 6px #3ad17a;animation:dp 2s ease-in-out infinite;}
+.cn-lines{flex:1;padding:16px;display:flex;flex-direction:column;gap:10px;font-family:'DM Mono',monospace;font-size:.62rem;line-height:1.5;color:#bbc3e0;}
+.cn-ln{display:inline-block;white-space:nowrap;overflow:hidden;width:0;animation:cn-type .9s steps(24) forwards;animation-delay:var(--d,0s);}
+.cn-ln.h{color:var(--gold);font-weight:700;}
+.cn-ln.done{color:#5c688f;text-decoration:line-through;}
+@keyframes cn-type{to{width:100%;}}
+.cn-caret{width:7px;height:13px;background:var(--gold);opacity:0;animation:cn-caret-in .1s forwards 2.6s,caret-blink 1.1s step-end infinite 2.6s;}
+@keyframes cn-caret-in{to{opacity:1;}}
+@keyframes caret-blink{50%{opacity:0;}}
+.cn-editing{display:flex;align-items:center;gap:8px;padding:10px 16px;border-top:1px solid rgba(255,255,255,.05);font-family:'DM Mono',monospace;font-size:.52rem;color:var(--muted);}
+.cn-editing b{width:18px;height:18px;border-radius:50%;background:linear-gradient(135deg,var(--violet),var(--coral));display:grid;place-items:center;font-size:.5rem;font-family:'DM Serif Display',serif;color:#fff;font-weight:400;}
+.cn-editing .dots i{display:inline-block;width:3px;height:3px;border-radius:50%;background:var(--muted);margin-left:2.5px;animation:tdots 1.2s ease-in-out infinite;animation-delay:var(--td,0s);}
+@keyframes tdots{0%,60%,100%{transform:none;opacity:.4;}30%{transform:translateY(-3px);opacity:1;}}
+/* info footer */
+.collab-info{display:flex;align-items:center;justify-content:space-between;gap:28px;padding:26px 30px;flex-wrap:wrap;}
+.collab-name{font-family:'DM Serif Display',serif;font-size:clamp(1.4rem,2.6vw,2rem);font-weight:400;letter-spacing:-.03em;margin-bottom:10px;line-height:1.12;}
+.collab-name em{font-style:italic;color:var(--gold);}
+.collab-cta{font-size:.72rem;padding:.95rem 2.1rem;border-radius:99px;background:linear-gradient(110deg,var(--gold) 0%,var(--violet) 45%,var(--coral) 100%);color:#fff;font-weight:700;flex-shrink:0;gap:9px;}
+.collab-cta:hover{box-shadow:0 0 40px rgba(255,107,107,.4),0 0 22px rgba(124,155,255,.35);filter:saturate(1.15);}
+.collab-cta .ar{transition:transform .3s cubic-bezier(.16,1,.3,1);}
+.collab-cta:hover .ar{transform:translateX(4px);}
+.collab-cta::after{content:'';position:absolute;top:0;left:-120%;width:55%;height:100%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.5),transparent);transform:skewX(-18deg);animation:bshimmer 4.5s ease-in-out infinite;}
+@media(max-width:920px){.collab-body{grid-template-columns:1fr;}.collab-stage{border-right:none;border-bottom:1px solid rgba(255,255,255,.06);}.collab-info{flex-direction:column;align-items:flex-start;}}
 @media(max-width:768px){.feat-s{padding:64px 20px;}.feat-trio{grid-template-columns:1fr;}}
 
 /* ═══════════════════ CTA SOCIAL PROOF ═══════════════════ */
@@ -635,7 +698,7 @@ html.lm .mob-nav{background:rgba(247,245,241,.99);}
       <div class="h-phases"><span class="ph">Find</span><i>→</i><span class="ph">Match</span><i>→</i><span class="ph">Build</span><i>→</i><span class="ph">Ship</span></div>
       <div class="h-act">
         <a href="/auth/register" class="btn btn-lg btn-mag">Start Matching</a>
-        <a href="/projects-page" class="btn btn-dk btn-mag">Browse Projects</a>
+        <a href="/projects-page" class="btn btn-dk btn-mag">Browse Projects <span class="ar">→</span></a>
       </div>
     </div>
 
@@ -674,10 +737,10 @@ html.lm .mob-nav{background:rgba(247,245,241,.99);}
 <div class="mq-wrap" aria-hidden="true">
   <div class="mq-track">
     <div class="mq-run">
-      <span class="ma">Skill Matching</span><span class="ms">◆</span><span>Reputation System</span><span class="ms">◆</span><span class="ma">Course Integration</span><span class="ms">◆</span><span>Achievement Badges</span><span class="ms">◆</span><span class="ma">Real-time Chat</span><span class="ms">◆</span><span>Study Groups</span><span class="ms">◆</span><span class="ma">Team Building</span><span class="ms">◆</span><span>Instructor Tools</span><span class="ms">◆</span><span class="ma">AI Assistant</span><span class="ms">◆</span><span>Project Matching</span><span class="ms">◆</span>
+      <span class="ma">Video Calls</span><span class="ms">◆</span><span>Screen Sharing</span><span class="ms">◆</span><span class="ma">Live Shared Notes</span><span class="ms">◆</span><span>Skill Matching</span><span class="ms">◆</span><span class="ma">Reputation System</span><span class="ms">◆</span><span>Course Integration</span><span class="ms">◆</span><span class="ma">Achievement Badges</span><span class="ms">◆</span><span>Real-time Chat</span><span class="ms">◆</span><span class="ma">Study Groups</span><span class="ms">◆</span><span>Team Building</span><span class="ms">◆</span><span class="ma">Instructor Tools</span><span class="ms">◆</span><span>AI Assistant</span><span class="ms">◆</span><span class="ma">Project Matching</span><span class="ms">◆</span>
     </div>
     <div class="mq-run" aria-hidden="true">
-      <span class="ma">Skill Matching</span><span class="ms">◆</span><span>Reputation System</span><span class="ms">◆</span><span class="ma">Course Integration</span><span class="ms">◆</span><span>Achievement Badges</span><span class="ms">◆</span><span class="ma">Real-time Chat</span><span class="ms">◆</span><span>Study Groups</span><span class="ms">◆</span><span class="ma">Team Building</span><span class="ms">◆</span><span>Instructor Tools</span><span class="ms">◆</span><span class="ma">AI Assistant</span><span class="ms">◆</span><span>Project Matching</span><span class="ms">◆</span>
+      <span class="ma">Video Calls</span><span class="ms">◆</span><span>Screen Sharing</span><span class="ms">◆</span><span class="ma">Live Shared Notes</span><span class="ms">◆</span><span>Skill Matching</span><span class="ms">◆</span><span class="ma">Reputation System</span><span class="ms">◆</span><span>Course Integration</span><span class="ms">◆</span><span class="ma">Achievement Badges</span><span class="ms">◆</span><span>Real-time Chat</span><span class="ms">◆</span><span class="ma">Study Groups</span><span class="ms">◆</span><span>Team Building</span><span class="ms">◆</span><span class="ma">Instructor Tools</span><span class="ms">◆</span><span>AI Assistant</span><span class="ms">◆</span><span class="ma">Project Matching</span><span class="ms">◆</span>
     </div>
   </div>
 </div>
@@ -686,9 +749,9 @@ html.lm .mob-nav{background:rgba(247,245,241,.99);}
 <section class="feat-s" id="feat-s" data-sec="Hidden features">
   <div class="feat-bg-glow" aria-hidden="true"></div>
   <div class="feat-hd rv">
-    <div class="feat-sup">Don't miss these — 03</div>
+    <div class="feat-sup">Don't miss these — 04</div>
     <h2 class="feat-h2">You had <em>superpowers.</em><br>Now you know.</h2>
-    <p class="feat-lead">Most users discover voice rooms and file sharing weeks after joining. These three features are built in — zero setup, zero extras, zero excuses.</p>
+    <p class="feat-lead">Voice rooms, file sharing, study groups — and now full live collaboration with video, screen sharing and shared notes. All built in. Zero setup, zero extras, zero excuses.</p>
   </div>
   <div class="feat-trio">
 
@@ -716,7 +779,7 @@ html.lm .mob-nav{background:rgba(247,245,241,.99);}
         <div class="fcard-num">01 — Feature</div>
         <div class="fcard-name">Voice Rooms</div>
         <p class="fcard-desc">Real-time voice built right into your project. No Zoom links, no Discord invites, no third-party apps — just click and talk with your team.</p>
-        <div class="fcard-tags"><span>In-app</span><span class="v">Zero setup</span><span>Live now</span></div>
+        <div class="fcard-tags"><span>In-app</span><span class="v">Zero setup</span><span class="c">Video ready</span></div>
       </div>
     </div>
 
@@ -794,6 +857,63 @@ html.lm .mob-nav{background:rgba(247,245,241,.99);}
     </div>
 
   </div>
+
+  <!-- ─── 04 LIVE COLLAB ROOM — full-width flagship showcase ─── -->
+  <div class="collab-hero rv" id="collab-hero">
+    <div class="collab-new"><span></span>NEW</div>
+    <div class="collab-mock">
+      <div class="mock-topbar">
+        <span class="mock-live-dot"></span>
+        <span class="mock-title">Live Room · Cyber Security Project</span>
+        <span class="mock-badge">3 on camera</span>
+        <span class="mock-badge">Screen · Deniz</span>
+      </div>
+      <div class="collab-body">
+        <div class="collab-stage">
+          <div class="cs-share">
+            <div class="cs-share-hd">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+              deniz is presenting — phishing_sim.py
+              <span class="csh-chip">LIVE</span>
+            </div>
+            <div class="cs-code" aria-hidden="true">
+              <i style="--w:46%;--d:.2s"></i>
+              <i class="g" style="--w:72%;--d:.45s"></i>
+              <i style="--w:64%;--d:.7s"></i>
+              <i class="c" style="--w:38%;--d:.95s"></i>
+              <i style="--w:81%;--d:1.2s"></i>
+              <i class="g" style="--w:55%;--d:1.45s"></i>
+            </div>
+          </div>
+          <div class="collab-tiles">
+            <div class="ct a speaking" style="--d:.3s">A<span class="ct-nm">Aylin</span></div>
+            <div class="ct b" style="--d:.5s">D<span class="ct-nm">Deniz · sharing</span></div>
+            <div class="ct c" style="--d:.7s">M<span class="ct-nm">Mira</span><span class="ct-mic">🔇</span></div>
+          </div>
+        </div>
+        <div class="collab-notes">
+          <div class="cn-hd">Shared Notes <span class="cn-sync"><i></i>Synced live</span></div>
+          <div class="cn-lines">
+            <span class="cn-ln h" style="--d:.5s"># Sprint Plan — Week 4</span>
+            <span class="cn-ln" style="--d:1.1s">- Phishing module → Aylin</span>
+            <span class="cn-ln done" style="--d:1.6s">- Report UI → Deniz ✓</span>
+            <span class="cn-ln" style="--d:2.1s">- Demo Friday · 15:00</span>
+            <span class="cn-caret" aria-hidden="true"></span>
+          </div>
+          <div class="cn-editing"><b>A</b> Aylin is editing<span class="dots" aria-hidden="true"><i style="--td:0s"></i><i style="--td:.15s"></i><i style="--td:.3s"></i></span></div>
+        </div>
+      </div>
+    </div>
+    <div class="collab-info">
+      <div>
+        <div class="fcard-num">04 — Just shipped</div>
+        <div class="collab-name">One room. <em>Voice, video, screen &amp; notes.</em></div>
+        <p class="fcard-desc" style="max-width:560px;margin-bottom:16px;">Turn any study group into a live workspace: talk, turn on cameras, present your screen, and take notes together — everyone sees every keystroke, live. No Zoom, no Google Docs, no tab-juggling.</p>
+        <div class="fcard-tags"><span>Video calls</span><span class="c">Screen sharing</span><span class="v">Live shared notes</span><span>Zero installs</span></div>
+      </div>
+      <a href="/auth/register" class="btn collab-cta btn-mag">Open a Live Room <span class="ar">→</span></a>
+    </div>
+  </div>
 </section>
 
 <!-- ════════════════ GOLD BLOCK MANIFESTO ════════════════ -->
@@ -826,7 +946,7 @@ html.lm .mob-nav{background:rgba(247,245,241,.99);}
       <div class="sl">The Platform — 04</div>
       <h2>Built for how<br><em>teams actually work.</em></h2>
       <p>Skill-based matching, reputation systems, course integration — all in one seamless place.</p>
-      <div class="fi-prog"><div class="t"><i id="fi-bar"></i></div><div class="c"><span id="fi-c">01</span> / 06</div></div>
+      <div class="fi-prog"><div class="t"><i id="fi-bar"></i></div><div class="c"><span id="fi-c">01</span> / 07</div></div>
     </div>
     <div id="ft">
       <div class="fc"><div class="fc-bg-n">01</div><div class="fc-n">01 — Feature</div><div class="fc-t">Skill-Based Matching</div><div class="fc-d">Personalized recommendations powered by your 5 interest tags. No more scrolling through irrelevant listings.</div><div class="fc-ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div></div>
@@ -835,6 +955,7 @@ html.lm .mob-nav{background:rgba(247,245,241,.99);}
       <div class="fc"><div class="fc-bg-n">04</div><div class="fc-n">04 — Feature</div><div class="fc-t">Trust &amp; Safety</div><div class="fc-d">Built-in reporting system. Admins can warn, suspend, or ban users to keep the community clean.</div><div class="fc-ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div></div>
       <div class="fc"><div class="fc-bg-n">05</div><div class="fc-n">05 — Feature</div><div class="fc-t">Application Flow</div><div class="fc-d">Apply, accept, manage your team — all from a clean dashboard. No awkward cold messages.</div><div class="fc-ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="9,11 12,14 22,4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div></div>
       <div class="fc"><div class="fc-bg-n">06</div><div class="fc-n">06 — Feature</div><div class="fc-t">Achievement Badges</div><div class="fc-d">First Step after 1 project. Veteran after 5. Expert after 10 endorsements. Progress that matters.</div><div class="fc-ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg></div></div>
+      <div class="fc"><div class="fc-bg-n">07</div><div class="fc-n">07 — New</div><div class="fc-t">Live Collab Rooms</div><div class="fc-d">Voice, cameras, screen sharing and live shared notes in every study group. One click, zero installs.</div><div class="fc-ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg></div></div>
     </div>
   </div>
 </div>
@@ -941,7 +1062,7 @@ html.lm .mob-nav{background:rgba(247,245,241,.99);}
   </div>
   <div class="cta-act">
     <a href="/auth/register" class="btn btn-lg btn-mag">Create Your Profile</a>
-    <a href="/projects-page" class="btn btn-dk btn-mag">Explore Projects</a>
+    <a href="/projects-page" class="btn btn-dk btn-mag">Explore Projects <span class="ar">→</span></a>
   </div>
   <div class="cta-foot"><span>Free for students</span><span>No credit card</span><span>Set up in 2 minutes</span></div>
   <div class="cta-proof rv">
@@ -1232,7 +1353,7 @@ function horizScroll(){
   const x=Math.round(-horizMaxX*prog);
   track.style.transform=`translate3d(${x}px,0,0)`;
   if($fiBar)$fiBar.style.width=(prog*100)+'%';
-  if($fiC)$fiC.textContent=String(Math.min(6,Math.floor(prog*6)+1)).padStart(2,'0');
+  if($fiC)$fiC.textContent=String(Math.min(7,Math.floor(prog*7)+1)).padStart(2,'0');
 }
 
 /* ── LIVING DEMO ── */

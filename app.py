@@ -156,9 +156,10 @@ def _initialize_extensions(app: Flask) -> None:
             "base-uri 'self'; "
             "frame-ancestors 'none';"
         )
-        # Restrict browser API access (microphone allowed for WebRTC voice)
+        # Restrict browser API access (mic + camera + screen share for WebRTC rooms)
         response.headers["Permissions-Policy"] = (
-            "camera=(), microphone=(self), geolocation=(), payment=(), usb=()"
+            "camera=(self), microphone=(self), display-capture=(self), "
+            "geolocation=(), payment=(), usb=()"
         )
         # Isolate browsing context — prevents cross-origin window attacks
         response.headers["Cross-Origin-Opener-Policy"] = "same-origin"
