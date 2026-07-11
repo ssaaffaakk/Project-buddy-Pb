@@ -7,6 +7,7 @@ This module defines configuration classes for different environments.
 import os
 from datetime import timedelta
 from dotenv import load_dotenv
+from sqlalchemy.pool import StaticPool
 
 load_dotenv()
 
@@ -85,8 +86,17 @@ class Config:
     # ── AI chatbot ───────────────────────────────────────────────────────────────
     GROQ_API_KEY      = os.environ.get('GROQ_API_KEY', '')
     ANTHROPIC_API_KEY = os.environ.get('ANTHROPIC_API_KEY', '')
+    # Default is the 8B model actually deployed (high free-tier quota, ~14,400 req/day).
+    # Upgrade via GROQ_MODEL in .env — e.g. 'llama-3.3-70b-versatile' for higher quality (lower quota).
     GROQ_MODEL        = os.environ.get('GROQ_MODEL', 'llama-3.1-8b-instant')
     ANTHROPIC_MODEL   = os.environ.get('ANTHROPIC_MODEL', 'claude-3-haiku-20240307')
+
+    # ── Web push (VAPID) ─────────────────────────────────────────────────────────
+    # Generate a keypair once with `py_vapid` and set these in .env.
+    # Push is a no-op (gracefully skipped) when the keys are absent.
+    VAPID_PUBLIC_KEY  = os.environ.get('VAPID_PUBLIC_KEY', '')
+    VAPID_PRIVATE_KEY = os.environ.get('VAPID_PRIVATE_KEY', '')
+    VAPID_SUBJECT     = os.environ.get('VAPID_SUBJECT', 'mailto:surmeliisafak@gmail.com')
 
     # ── Rate limiting ──────────────────────────────────────────────────────────
     # Use Redis if REDIS_URL is set (required for multi-worker deployments),
@@ -115,12 +125,21 @@ class DevelopmentConfig(Config):
 
 class TestingConfig(Config):
     """Testing configuration."""
-    
+
     DEBUG = True
     TESTING = True
     SQLALCHEMY_DATABASE_URI = 'sqlite:///:memory:'
+    # A single shared connection so the schema created by the startup thread is
+    # visible to request-handling connections. Without StaticPool each :memory:
+    # connection is a separate empty database and every query 500s.
+    SQLALCHEMY_ENGINE_OPTIONS = {
+        'connect_args': {'check_same_thread': False},
+        'poolclass': StaticPool,
+    }
     WTF_CSRF_ENABLED = False
     SESSION_COOKIE_SECURE = False
+    SEED_MOCK_DATA = False   # deterministic tests — never seed demo data
+    RATELIMIT_ENABLED = False
 
 
 class ProductionConfig(Config):

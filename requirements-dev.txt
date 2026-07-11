@@ -1,0 +1,5 @@
+# Development / test dependencies (not needed in production).
+#   pip install -r requirements-dev.txt
+#   pytest
+-r requirements.txt
+pytest==8.4.2
