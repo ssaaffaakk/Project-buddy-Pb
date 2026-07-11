@@ -103,6 +103,42 @@
   </div>
   {% endif %}
 
+  {% if metrics.ranking %}
+  <div class="mc-card">
+    <h2>{{ _('Ranking quality (what a recommender is actually judged on)') }}</h2>
+    <div class="mc-metrics" style="margin-bottom:0;">
+      <div class="mc-metric">
+        <div class="k">Recall@5</div>
+        <div class="v">{{ metrics.ranking.recall_at_5 }}</div>
+        <div class="note">{{ _('share of true matches found in each user\'s top 5') }}</div>
+      </div>
+      <div class="mc-metric">
+        <div class="k">NDCG@10</div>
+        <div class="v">{{ metrics.ranking.ndcg_at_10 }}</div>
+        <div class="note">{{ _('rank-weighted relevance of the top 10') }}</div>
+      </div>
+      <div class="mc-metric">
+        <div class="k">{{ _('Users evaluated') }}</div>
+        <div class="v">{{ metrics.ranking.n_users_evaluated }}</div>
+        <div class="note">{{ _('per-user ranking, out-of-fold scores') }}</div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  {% if ab_summary %}
+  <div class="mc-card">
+    <h2>{{ _('Live A/B experiment — ML ranking vs rule-based') }}</h2>
+    {% for arm in ab_summary %}
+    <div class="mc-row">
+      <span class="lbl">{{ _('arm') }} · {{ arm.variant }}</span>
+      <span class="val">{{ arm.impressions }} {{ _('impressions') }} · {{ arm.clicks }} {{ _('clicks') }} · <strong>{{ arm.ctr }}% CTR</strong></span>
+    </div>
+    {% endfor %}
+    <p class="cmp-note">{{ _('Users are deterministically split 50/50 by hash. Each dashboard recommendation card logs an impression; clicking Apply from a card logs a click. Online click-through rate is the ground truth the offline metrics try to predict.') }}</p>
+  </div>
+  {% endif %}
+
   <div class="mc-card">
     <h2>{{ _('What the model learned') }}</h2>
     {% set maxw = metrics.feature_weights | map(attribute='weight') | map('abs') | max %}

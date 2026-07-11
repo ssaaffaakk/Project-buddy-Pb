@@ -112,6 +112,8 @@ def create_project():
             if skill:
                 db.session.add(ProjectSkill(project_id=project.id, skill=skill))
 
+        from services.analytics import track
+        track("project_created", current_user.id, "project", project.id)
         db.session.commit()
 
         flash("Project posted successfully!", "success")

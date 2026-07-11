@@ -27,19 +27,42 @@ INTEREST_TO_TOPIC_MAP = {
 def get_recommended_projects(user_id):
     """Return [(project, fit_percent), ...] ranked best-first.
 
-    Uses the trained ML recommender when a model artifact is available;
-    otherwise falls back to the rule-based tag-overlap scorer.
+    Backward-compatible wrapper around get_recommendations_with_variant().
     """
-    # ── ML path (learned recommender) ────────────────────────────────────────
+    recommendations, _variant = get_recommendations_with_variant(user_id)
+    return recommendations
+
+
+def get_recommendations_with_variant(user_id):
+    """Return ([(project, fit_percent), ...], variant).
+
+    A/B experiment ('rec_ranker'): when a trained model artifact is available,
+    users are deterministically split 50/50 — the 'ml' arm is ranked by the
+    learned recommender, the 'rules' arm by the tag-overlap heuristic. Logged
+    impressions/clicks carry the arm so CTR per arm is directly comparable.
+
+    variant is None when the experiment is inactive (no model artifact), so
+    fallback traffic never contaminates the experiment's metrics.
+    """
     try:
-        from services.ml.recommender import rank_open_projects
-        ranked = rank_open_projects(user_id)
-        if ranked is not None:
-            return ranked  # [(project, fit_percent_float)]
+        from services.ml.recommender import model_available, rank_open_projects
+        if model_available():
+            from services.analytics import ab_variant
+            variant = ab_variant(user_id, experiment="rec_ranker")
+            if variant == "ml":
+                ranked = rank_open_projects(user_id)
+                if ranked is not None:
+                    return ranked, "ml"
+                # Model vanished between the check and the call — no experiment.
+                return _rule_based_recommendations(user_id), None
+            return _rule_based_recommendations(user_id), "rules"
     except Exception:
         logger.exception("ML recommender failed; falling back to rule-based scorer")
+    return _rule_based_recommendations(user_id), None
 
-    # ── Rule-based fallback ──────────────────────────────────────────────────
+
+def _rule_based_recommendations(user_id):
+    """Tag-overlap heuristic: [(project, rough_fit_percent), ...]."""
     user_interests = UserInterest.query.filter_by(user_id=user_id).all()
     if not user_interests:
         return []

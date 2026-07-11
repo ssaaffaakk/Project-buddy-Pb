@@ -169,6 +169,101 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;displ
     </div>
   </div>
 
+  <!-- ENGAGEMENT ROW: active users from the event stream -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-label">Daily Active Users</div>
+      <div class="stat-value blue">{{ dau }}</div>
+      <div class="stat-sub">distinct users with activity today</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Weekly Active Users</div>
+      <div class="stat-value blue">{{ wau }}</div>
+      <div class="stat-sub">trailing 7 days</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Monthly Active Users</div>
+      <div class="stat-value blue">{{ mau }}</div>
+      <div class="stat-sub">trailing 30 days</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Stickiness</div>
+      <div class="stat-value gold">{{ stickiness }}%</div>
+      <div class="stat-sub">DAU / MAU</div>
+    </div>
+  </div>
+
+  <!-- FUNNEL + RETENTION -->
+  <div class="section-row">
+    <div class="section-card">
+      <div class="section-title">Activation Funnel</div>
+      {% set funnel_max = funnel[0].count if funnel and funnel[0].count else 1 %}
+      {% for stage in funnel %}
+      <div class="dept-row">
+        <div class="dept-label" title="{{ stage.stage }}">{{ stage.stage }}</div>
+        <div class="dept-bar-wrap">
+          <div class="dept-bar-fill" style="width:{{ ((stage.count / funnel_max) * 100) | round(1) }}%;"></div>
+        </div>
+        <div class="dept-count">{{ stage.count }}</div>
+      </div>
+      {% endfor %}
+      <p style="color:var(--muted);font-size:0.72rem;margin-top:10px;">
+        signup → onboarded → first application → first completed project
+      </p>
+    </div>
+
+    <div class="section-card">
+      <div class="section-title">Weekly Retention Cohorts</div>
+      <table class="rank-table">
+        <thead>
+          <tr>
+            <th>Cohort</th><th>Size</th>
+            {% for w in range(6) %}<th style="text-align:right;">W{{ w }}</th>{% endfor %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in retention %}
+          <tr>
+            <td style="font-size:0.78rem;">{{ row.cohort }}</td>
+            <td style="color:var(--soft);">{{ row.size }}</td>
+            {% for pct in row.weeks %}
+            <td style="text-align:right;{% if pct is not none and pct >= 50 %}color:var(--accent);{% endif %}">
+              {{ pct ~ '%' if pct is not none else '—' }}
+            </td>
+            {% endfor %}
+            {% for _ in range(6 - row.weeks|length) %}<td style="text-align:right;color:var(--muted);">·</td>{% endfor %}
+          </tr>
+          {% else %}
+          <tr><td colspan="8" style="text-align:center;color:var(--muted);padding:24px;font-family:'DM Mono',monospace;font-size:0.78rem;">Cohorts appear as event data accrues</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      <p style="color:var(--muted);font-size:0.72rem;margin-top:10px;">
+        % of each signup cohort active in week N after joining
+      </p>
+    </div>
+  </div>
+
+  {% if rec_ab %}
+  <div class="section-row full">
+    <div class="section-card">
+      <div class="section-title">Recommender A/B — ML vs rule-based (live CTR)</div>
+      {% for arm in rec_ab %}
+      <div class="dept-row">
+        <div class="dept-label">arm: {{ arm.variant }}</div>
+        <div class="dept-bar-wrap">
+          <div class="dept-bar-fill" style="width:{{ [arm.ctr, 100] | min }}%;"></div>
+        </div>
+        <div class="dept-count">{{ arm.ctr }}% CTR ({{ arm.clicks }}/{{ arm.impressions }})</div>
+      </div>
+      {% endfor %}
+      <p style="color:var(--muted);font-size:0.72rem;margin-top:10px;">
+        Full experiment details on the <a href="/ml/recommender" style="color:var(--accent);">model card</a>.
+      </p>
+    </div>
+  </div>
+  {% endif %}
+
   <!-- ROW 1: Monthly Signups chart + Project Status doughnut -->
   <div class="section-row">
 

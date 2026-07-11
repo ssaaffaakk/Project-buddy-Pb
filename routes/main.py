@@ -10,13 +10,14 @@ from werkzeug.utils import secure_filename
 from extensions import db, limiter
 from models import (
     User, Project, ProjectMember, Application, Feedback, Endorsement,
-    UserBadge, Badge, Report, Chat, AdminMessage, UserInterest, UserSkill, UserCourse,
+    UserBadge, Report, Chat, AdminMessage, UserInterest, UserSkill, UserCourse,
     ProjectMessage, ProjectVote, CommunityPost, CommunityComment, CommunityLike,
     Notification, ProfileComment, ProfileCommentLike, PushSubscription
 )
-from services.recommendation_service import get_recommended_projects
+from services.recommendation_service import get_recommendations_with_variant
 from services.badge_service import check_and_award_badges
 from services.file_storage import storage
+from services import analytics
 
 ALLOWED_AVATAR_EXTENSIONS = {"jpg", "jpeg", "png", "webp"}
 MAX_AVATAR_BYTES = 2 * 1024 * 1024  # 2 MB
@@ -394,11 +395,18 @@ def dashboard():
     # Endorsement count
     endorsement_count = Endorsement.query.filter_by(receiver_id=user.id).count()
 
-    # Recommendations
+    # Recommendations (A/B: 'ml' vs 'rules' arm — see recommendation_service)
     try:
-        recommendations = get_recommended_projects(user.id)[:6]
+        recommendations, rec_variant = get_recommendations_with_variant(user.id)
+        recommendations = recommendations[:6]
     except Exception:
-        recommendations = []
+        recommendations, rec_variant = [], None
+
+    # Log one impression per shown card so CTR per arm is measurable.
+    for rec_project, rec_score in recommendations:
+        analytics.track("rec_impression", user.id, "project", rec_project.id,
+                        variant=rec_variant, value=rec_score)
+    analytics.commit_quietly()
 
     # Badges
     user_badges = (
@@ -427,6 +435,7 @@ def dashboard():
         avg_rating=avg_rating,
         endorsement_count=endorsement_count,
         recommendations=recommendations,
+        rec_variant=rec_variant,
         badges=badges,
         open_support_chat=open_support_chat,
         warnings=warnings,
@@ -608,10 +617,17 @@ def apply_to_project(project_id):
             message = f"📬 {current_user.first_name} {current_user.last_name} applied to your project \"{project.title}\"",
             link    = "/my-projects",
         )
+        analytics.track("application_sent", current_user.id, "project", project_id)
         db.session.commit()
         flash("Application submitted successfully!", "success")
         return redirect(url_for("main.dashboard"))
 
+    # Attribution: the dashboard rec cards link here with ?src=rec&v=<arm>
+    if request.args.get("src") == "rec":
+        variant = request.args.get("v")
+        analytics.track("rec_click", current_user.id, "project", project_id,
+                        variant=variant if variant in ("ml", "rules") else None,
+                        commit=True)
     return render_template("projects/apply_confirm.html", project=project)
 
 
@@ -650,6 +666,8 @@ def project_detail(project_id):
     ).first()
     if existing_vote:
         user_vote = existing_vote.direction
+
+    analytics.track("project_view", current_user.id, "project", project_id, commit=True)
 
     return render_template(
         "projects/detail.html",
@@ -1102,10 +1120,15 @@ def set_language(lang):
 @login_required
 def ml_model_card():
     from services.ml.recommender import load_metrics, model_available
+    try:
+        ab_summary = analytics.rec_ab_summary()
+    except Exception:
+        ab_summary = []
     return render_template(
         "ml/model_card.html",
         metrics=load_metrics(),
         available=model_available(),
+        ab_summary=ab_summary,
     )
 
 
@@ -1447,7 +1470,6 @@ def admin_analytics():
         return redirect(url_for("main.dashboard"))
 
     from sqlalchemy import func
-    from datetime import timedelta
 
     # --- USER COUNTS ---
     total_users   = User.query.count()  # User.query.count()
@@ -1472,11 +1494,20 @@ def admin_analytics():
     total_votes = ProjectVote.query.count()
     total_likes = CommunityLike.query.count()
 
-    # --- TOP VOTED PROJECTS ---
-    all_projects = Project.query.all()
-    top_projects = list(enumerate(
-        sorted(all_projects, key=lambda p: p.vote_score, reverse=True)[:8]
-    ))
+    # --- TOP VOTED PROJECTS (single SQL aggregation — no full-table Python sort) ---
+    from sqlalchemy import case
+    vote_sum = func.coalesce(
+        func.sum(case((ProjectVote.direction == "up", 1), else_=-1)), 0
+    ).label("score")
+    top_rows = (
+        db.session.query(Project, vote_sum)
+        .outerjoin(ProjectVote, ProjectVote.project_id == Project.id)
+        .group_by(Project.id)
+        .order_by(vote_sum.desc())
+        .limit(8)
+        .all()
+    )
+    top_projects = list(enumerate([p for p, _score in top_rows]))
 
     # --- DEPARTMENT BREAKDOWN ---
     dept_breakdown = db.session.query(
@@ -1540,8 +1571,28 @@ def admin_analytics():
         activity_raw, key=lambda x: x["sort"] or datetime.min, reverse=True
     )[:15]
 
+    # --- PRODUCT METRICS (event stream: services/analytics.py) ---
+    try:
+        dau = analytics.active_users(1)
+        wau = analytics.active_users(7)
+        mau = analytics.active_users(30)
+        funnel = analytics.activation_funnel()
+        retention = analytics.retention_cohorts(weeks=6)
+        rec_ab = analytics.rec_ab_summary()
+    except Exception:
+        current_app.logger.exception("product metrics failed")
+        dau = wau = mau = 0
+        funnel, retention, rec_ab = [], [], []
+
     # --- RENDER ---
     return render_template("admin/analytics.html",
+        dau=dau,
+        wau=wau,
+        mau=mau,
+        stickiness=round(dau / mau * 100) if mau else 0,
+        funnel=funnel,
+        retention=retention,
+        rec_ab=rec_ab,
         total_users=total_users,
         total_students=total_students,
         new_users_30d=new_users_30d,

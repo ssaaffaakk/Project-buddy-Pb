@@ -1,12 +1,11 @@
 import re
-import os
 import hmac
 import hashlib
 import time
 import secrets
 import requests as http_requests
 import eventlet.tpool
-from flask import Blueprint, render_template, request, redirect, url_for, flash, session, current_app
+from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app
 from flask_login import login_user, logout_user, login_required, current_user
 from extensions import db, limiter
 from models import User, UserInterest
@@ -65,8 +64,10 @@ def login():
             return redirect(url_for('auth.login'))
 
         login_user(user)
+        from services.analytics import track
+        track("login", user.id, commit=True)
         flash(f'Welcome back, {user.first_name}!', 'success')
-        
+
         # Redirect admins to admin dashboard, others to student dashboard
         if user.role == 'admin':
             return redirect(url_for('main.admin_dashboard'))
@@ -138,6 +139,8 @@ def register():
         for tag in tags:
             db.session.add(UserInterest(user_id=user.id, tag=tag))
 
+        from services.analytics import track
+        track("signup", user.id)
         db.session.commit()
         login_user(user)
         flash(f'Welcome, {user.first_name}! Your account has been created.', 'success')
@@ -365,7 +368,6 @@ def github_callback():
     )
     profile = profile_response.json()
 
-    github_id  = str(profile.get('id'))
     name       = profile.get('name') or ''
     email      = profile.get('email')
     avatar_url = profile.get('avatar_url')
@@ -398,6 +400,8 @@ def github_callback():
             user.avatar_url = avatar_url
             db.session.commit()
         login_user(user)
+        from services.analytics import track
+        track("login", user.id, commit=True)
         flash(f'Welcome back, {user.first_name}!', 'success')
         return redirect(url_for('main.dashboard'))
 
@@ -421,6 +425,9 @@ def github_callback():
             password_hash = secrets.token_hex(32),
         )
         db.session.add(new_user)
+        db.session.flush()
+        from services.analytics import track
+        track("signup", new_user.id)
         db.session.commit()
 
         login_user(new_user)

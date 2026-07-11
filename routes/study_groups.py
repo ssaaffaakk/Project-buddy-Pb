@@ -5,12 +5,11 @@ Study Groups — mini Discord-style group chat rooms.
 import os
 import json
 import uuid
-from datetime import datetime
-from flask import Blueprint, render_template, request, jsonify, redirect, url_for, flash, send_from_directory, current_app
+from flask import Blueprint, render_template, request, jsonify, redirect, url_for, flash, send_from_directory
 from flask_login import login_required, current_user
 from werkzeug.utils import secure_filename
 from extensions import db, limiter
-from models import StudyGroup, StudyGroupMember, StudyGroupMessage, StudyGroupNote, Notification, SharedFile
+from models import StudyGroup, StudyGroupMember, StudyGroupMessage, StudyGroupNote, SharedFile
 from services.file_storage import storage
 
 
@@ -159,6 +158,8 @@ def join_group(group_id):
     if existing:
         return jsonify({"error": "Already a member."}), 400
     db.session.add(StudyGroupMember(group_id=group_id, user_id=current_user.id))
+    from services.analytics import track
+    track("group_join", current_user.id, "group", group_id)
     db.session.commit()
     return jsonify({"ok": True, "count": group.member_count()})
 

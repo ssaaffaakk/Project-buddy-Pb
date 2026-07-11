@@ -349,6 +349,35 @@ class ProjectVote(db.Model):
     __table_args__ = (db.UniqueConstraint("project_id", "user_id", name="unique_project_vote"),)
 
 
+class ActivityEvent(db.Model):
+    """Append-only product-analytics event stream (one row per user action).
+
+    Written via services/analytics.track() — never directly. Feeds the admin
+    analytics dashboard (DAU/WAU/MAU, funnel, retention) and supplies the
+    implicit-feedback signals (impressions/clicks) used to evaluate and
+    retrain the ML recommender.
+    """
+    __tablename__ = "activity_events"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[Optional[int]] = mapped_column(db.ForeignKey("users.id"), index=True)
+    # e.g. 'login', 'signup', 'project_view', 'rec_impression', 'rec_click',
+    #      'application_sent', 'project_created', 'group_join', 'post_created',
+    #      'chatbot_message', 'voice_join'
+    event: Mapped[str] = mapped_column(String(40), index=True)
+    object_type: Mapped[Optional[str]] = mapped_column(String(30))   # 'project' | 'group' | 'post' | ...
+    object_id: Mapped[Optional[int]] = mapped_column(Integer)
+    # A/B experiment arm that produced this event ('ml' | 'rules'), if any
+    variant: Mapped[Optional[str]] = mapped_column(String(10))
+    # Generic numeric payload (e.g. the recommender's fit score at impression time)
+    value: Mapped[Optional[float]] = mapped_column(db.Float)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, default=lambda: datetime.now(timezone.utc), index=True
+    )
+
+    __table_args__ = (db.Index("ix_activity_events_event_created", "event", "created_at"),)
+
+
 class Notification(db.Model):
     __tablename__ = "notifications"
 
@@ -493,7 +522,7 @@ class ProfileComment(db.Model):
         return len(self.likes)
 
     def liked_by(self, user_id: int) -> bool:
-        return any(l.user_id == user_id for l in self.likes)
+        return any(like.user_id == user_id for like in self.likes)
 
 
 class ProfileCommentLike(db.Model):

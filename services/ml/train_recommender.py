@@ -104,17 +104,23 @@ def _build_dataset():
         negatives.add((uid, pid))
 
     # ── vectorize ────────────────────────────────────────────────────────────
-    X, y = [], []
+    X, y, pair_uids = [], [], []
     for (uid, pid) in positives:
-        X.append(pair_features(users[uid], projects[pid])); y.append(1)
+        X.append(pair_features(users[uid], projects[pid]))
+        y.append(1)
+        pair_uids.append(uid)
     for (uid, pid) in negatives:
-        X.append(pair_features(users[uid], projects[pid])); y.append(0)
+        X.append(pair_features(users[uid], projects[pid]))
+        y.append(0)
+        pair_uids.append(uid)
 
-    return np.array(X, dtype=float), np.array(y, dtype=int), {
+    meta = {
         "n_users": len(users), "n_projects": len(projects),
         "n_positive": len(positives), "n_negative": len(negatives),
         "positive_source": src,
     }
+    return (np.array(X, dtype=float), np.array(y, dtype=int),
+            np.array(pair_uids, dtype=int), meta)
 
 
 def _make_pipe():
@@ -132,9 +138,78 @@ def _make_pipe():
 
 
 def _cv_auc(X, y, n_splits):
+    """Out-of-fold CV: returns (roc_auc, pr_auc, oof_scores)."""
     cv = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=RANDOM_SEED)
     oof = cross_val_predict(_make_pipe(), X, y, cv=cv, method="predict_proba")[:, 1]
-    return float(roc_auc_score(y, oof)), float(average_precision_score(y, oof))
+    return float(roc_auc_score(y, oof)), float(average_precision_score(y, oof)), oof
+
+
+def _ranking_metrics(scores, y, uids, k_recall=5, k_ndcg=10):
+    """Per-user ranking quality from out-of-fold scores.
+
+    ROC-AUC treats every pair independently, but a recommender is judged on
+    the ORDER it shows each user — so we also report ranking metrics:
+      recall@5 — of a user's true matches, what share lands in their top 5
+      NDCG@10  — rank-weighted relevance of the top 10 (1.0 = perfect order)
+    Averaged over users that have at least one positive and one negative.
+    """
+    import math
+    from collections import defaultdict
+
+    by_user = defaultdict(list)
+    for s, label, uid in zip(scores, y, uids):
+        by_user[int(uid)].append((float(s), int(label)))
+
+    recalls, ndcgs = [], []
+    for rows in by_user.values():
+        n_pos = sum(label for _, label in rows)
+        if n_pos == 0 or n_pos == len(rows):
+            continue  # ranking is undefined without both classes
+        ranked = [label for _, label in sorted(rows, key=lambda t: t[0], reverse=True)]
+        recalls.append(sum(ranked[:k_recall]) / n_pos)
+        dcg = sum(rel / math.log2(i + 2) for i, rel in enumerate(ranked[:k_ndcg]))
+        ideal = sorted(ranked, reverse=True)
+        idcg = sum(rel / math.log2(i + 2) for i, rel in enumerate(ideal[:k_ndcg]))
+        ndcgs.append(dcg / idcg if idcg > 0 else 0.0)
+
+    if not recalls:
+        return None
+    return {
+        "recall_at_5": round(float(np.mean(recalls)), 4),
+        "ndcg_at_10": round(float(np.mean(ndcgs)), 4),
+        "n_users_evaluated": len(recalls),
+    }
+
+
+def _log_mlflow(metrics):
+    """Log the run to MLflow when the package is installed (dev-only,
+    see requirements-dev.txt). Silently skipped otherwise."""
+    try:
+        import mlflow
+    except ImportError:
+        return
+    try:
+        mlflow.set_experiment("projectbuddy-recommender")
+        with mlflow.start_run():
+            mlflow.log_params({
+                "model": metrics["model"],
+                "n_samples": metrics["n_samples"],
+                "n_features": metrics["n_features"],
+                "cv_folds": metrics["cv_folds"],
+                "negative_ratio": NEGATIVE_RATIO,
+            })
+            numeric = {"roc_auc": metrics["roc_auc"], "pr_auc": metrics["pr_auc"]}
+            if metrics.get("ranking"):
+                numeric.update({
+                    "recall_at_5": metrics["ranking"]["recall_at_5"],
+                    "ndcg_at_10": metrics["ranking"]["ndcg_at_10"],
+                })
+            mlflow.log_metrics(numeric)
+            mlflow.log_artifact(MODEL_PATH)
+            mlflow.log_artifact(METRICS_PATH)
+        print("[recommender] run logged to MLflow")
+    except Exception as e:  # tracking must never fail the training itself
+        print(f"[recommender] MLflow logging skipped: {e}")
 
 
 def train(verbose=True):
@@ -142,7 +217,7 @@ def train(verbose=True):
     emb_docs, emb_dims = embeddings.build_embedding_model()
 
     # 2) Assemble the labeled (user, project) dataset with all features.
-    X, y, meta = _build_dataset()
+    X, y, pair_uids, meta = _build_dataset()
     if len(y) < 12 or y.sum() < 4 or (len(y) - y.sum()) < 4:
         raise RuntimeError(
             f"Not enough signal to train (samples={len(y)}, positives={int(y.sum())}). "
@@ -155,13 +230,16 @@ def train(verbose=True):
     # ── The experiment: baseline vs semantic-only vs full ────────────────────
     # baseline  — hand-engineered overlap features, no embeddings
     X_base = np.delete(X, sem_idx, axis=1)
-    base_roc, base_pr = _cv_auc(X_base, y, n_splits)
+    base_roc, base_pr, _ = _cv_auc(X_base, y, n_splits)
     # semantic-only — rank purely by embedding cosine similarity (the retriever)
     sem_scores = X[:, sem_idx]
     sem_roc = float(roc_auc_score(y, sem_scores))
     sem_pr = float(average_precision_score(y, sem_scores))
     # full — overlap features + the semantic embedding similarity
-    roc_auc, pr_auc = _cv_auc(X, y, n_splits)
+    roc_auc, pr_auc, oof_full = _cv_auc(X, y, n_splits)
+
+    # Per-user ranking quality on the same out-of-fold scores.
+    ranking = _ranking_metrics(oof_full, y, pair_uids)
 
     pipe = _make_pipe()
 
@@ -184,6 +262,7 @@ def train(verbose=True):
         "roc_auc": round(roc_auc, 4),
         "pr_auc": round(pr_auc, 4),
         "random_pr_auc": round(float(y.sum()) / len(y), 4),  # random baseline = positive rate
+        "ranking": ranking,  # recall@5 / NDCG@10 per user, or None if not computable
         # ── the experiment: three approaches, same eval ──────────────────────
         "comparison": [
             {"name": "Rule-based overlap (baseline)", "roc_auc": round(base_roc, 4), "pr_auc": round(base_pr, 4)},
@@ -200,6 +279,8 @@ def train(verbose=True):
     with open(METRICS_PATH, "w") as f:
         json.dump(metrics, f, indent=2)
 
+    _log_mlflow(metrics)
+
     if verbose:
         print(f"[recommender] trained on {metrics['n_samples']} pairs "
               f"({metrics['n_positive']} pos / {metrics['n_negative']} neg)")
@@ -207,6 +288,9 @@ def train(verbose=True):
         print(f"[recommender] baseline ROC-AUC   = {round(base_roc,4)}")
         print(f"[recommender] semantic-only AUC  = {round(sem_roc,4)}")
         print(f"[recommender] FULL ROC-AUC       = {round(roc_auc,4)}  PR-AUC={round(pr_auc,4)}  ({n_splits}-fold CV)")
+        if ranking:
+            print(f"[recommender] recall@5={ranking['recall_at_5']}  NDCG@10={ranking['ndcg_at_10']}  "
+                  f"({ranking['n_users_evaluated']} users)")
         print(f"[recommender] saved → {MODEL_PATH}")
     return metrics
 

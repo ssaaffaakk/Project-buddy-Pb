@@ -7,10 +7,10 @@ from datetime import datetime, timezone
 from werkzeug.utils import secure_filename
 from flask import (
     Blueprint, render_template, request, jsonify,
-    redirect, url_for, flash, current_app
+    redirect, url_for, flash
 )
 from flask_login import login_required, current_user
-from extensions import db, csrf
+from extensions import db
 from models import CommunityPost, CommunityComment, CommunityLike, Notification
 from services.file_storage import storage
 
@@ -94,8 +94,8 @@ def feed():
         .all()
     )
     liked_ids = {
-        l.post_id
-        for l in CommunityLike.query.filter_by(user_id=current_user.id).all()
+        like.post_id
+        for like in CommunityLike.query.filter_by(user_id=current_user.id).all()
     }
     return render_template(
         "community.html",
@@ -133,6 +133,9 @@ def new_post():
         media_type = media_type,
     )
     db.session.add(post)
+    db.session.flush()
+    from services.analytics import track
+    track("post_created", current_user.id, "post", post.id)
     db.session.commit()
     flash("Post shared to the community!", "success")
     return redirect(url_for("community.feed"))

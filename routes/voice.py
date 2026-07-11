@@ -180,6 +180,8 @@ def on_join_voice(data):
 
     # Tell everyone else a new person joined
     emit('voice_user_joined', me, to=room, include_self=False)
+    from services.analytics import track
+    track("voice_join", current_user.id, "group", group_id, commit=True)
     logger.info(
         "voice join: user=%s group=%s sid=%s peers=%d redis=%s",
         current_user.id, group_id, request.sid, len(existing), bool(_get_redis()),
