@@ -77,16 +77,24 @@ def rank_open_projects(user_id, limit=None):
     joined = {m.project_id for m in ProjectMember.query.filter_by(user_id=user_id, removed=False).all()}
     applied = {a.project_id for a in Application.query.filter_by(applicant_id=user_id).all()}
 
-    candidates, feats = [], []
-    for p in Project.query.filter_by(status="open").all():
-        if p.owner_id == user_id or p.id in joined or p.id in applied or p.is_full():
-            continue
-        candidates.append(p)
-        p_vec = embeddings.embed(embeddings.project_text(p))
-        feats.append(pair_features(u, build_project_profile(p, now, vec=p_vec)))
-
+    # Eager-load tags/skills so project_text() doesn't N+1, and batch-embed all
+    # candidates in one transform (this path runs on every dashboard load).
+    from sqlalchemy.orm import joinedload
+    candidates = [
+        p for p in (Project.query.filter_by(status="open")
+                    .options(joinedload(Project.topic_tags),
+                             joinedload(Project.required_skills),
+                             joinedload(Project.members)).all())
+        if not (p.owner_id == user_id or p.id in joined or p.id in applied or p.is_full())
+    ]
     if not candidates:
         return []
+
+    p_vecs = embeddings.embed_many([embeddings.project_text(p) for p in candidates])
+    if p_vecs is None:
+        p_vecs = [None] * len(candidates)
+    feats = [pair_features(u, build_project_profile(p, now, vec=v))
+             for p, v in zip(candidates, p_vecs)]
 
     probs = model.predict_proba(np.array(feats, dtype=float))[:, 1]
     ranked = sorted(zip(candidates, probs), key=lambda t: t[1], reverse=True)

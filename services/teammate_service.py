@@ -81,6 +81,24 @@ def find_teammates(user_id, limit=12):
     for c in UserCourse.query.all():
         courses_by_user.setdefault(c.user_id, []).append(c)
 
+    # Embed every candidate in ONE vectorized transform (not one call per user
+    # — that was O(n) and made the page take seconds). Falls back to no-semantic
+    # scoring if the embedding model isn't available.
+    vecs_by_user = {}
+    if my_vec is not None:
+        try:
+            from services.ml import embeddings
+            texts = [embeddings.user_text(o, interests_by_user.get(o.id, []),
+                                          skills_by_user.get(o.id, []),
+                                          courses_by_user.get(o.id, []))
+                     for o in others]
+            batch = embeddings.embed_many(texts)
+            if batch is not None:
+                vecs_by_user = {o.id: v for o, v in zip(others, batch)}
+        except Exception:
+            logger.debug("batch teammate embedding failed", exc_info=True)
+
+    from services.ml.embeddings import cosine
     results = []
     for other in others:
         o_interests = interests_by_user.get(other.id, [])
@@ -102,11 +120,9 @@ def find_teammates(user_id, limit=12):
                  + _W_COURSE * len(shared_courses)
                  + (_W_DEPARTMENT if same_dept else 0))
 
-        if my_vec is not None:
-            o_vec = _embed_user(other, o_interests, o_skills, o_courses)
-            if o_vec is not None:
-                from services.ml.embeddings import cosine
-                score += _W_SEMANTIC * max(0.0, cosine(my_vec, o_vec))
+        o_vec = vecs_by_user.get(other.id)
+        if my_vec is not None and o_vec is not None:
+            score += _W_SEMANTIC * max(0.0, cosine(my_vec, o_vec))
 
         if score <= 0:
             continue

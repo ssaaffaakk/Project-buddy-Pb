@@ -16,9 +16,20 @@ rather than raising.
 import logging
 import re
 
+from sqlalchemy.orm import joinedload
+
 from models import Project
 
 logger = logging.getLogger(__name__)
+
+
+def _open_projects_with_tags():
+    """Open projects with tags+skills eager-loaded — avoids an N+1 lazy load
+    when project_text() reads those relationships for every project."""
+    return (Project.query.filter_by(status="open")
+            .options(joinedload(Project.topic_tags),
+                     joinedload(Project.required_skills))
+            .all())
 
 _MIN_SEMANTIC = 0.05     # cosine floor below which a hit is noise
 _SIMILAR_FLOOR = 0.18    # stricter: only surface genuinely close duplicates
@@ -43,7 +54,7 @@ def _keyword_rank(projects, query, limit):
 def semantic_search(query, limit=40):
     """Return open Project objects ranked by relevance to `query`."""
     query = (query or "").strip()
-    open_projects = Project.query.filter_by(status="open").all()
+    open_projects = _open_projects_with_tags()
     if not query or not open_projects:
         return open_projects[:limit]
 
@@ -51,14 +62,15 @@ def semantic_search(query, limit=40):
         from services.ml import embeddings
         q_vec = embeddings.embed(query)
         if q_vec is not None:
-            scored = []
-            for p in open_projects:
-                p_vec = embeddings.embed(embeddings.project_text(p))
-                scored.append((p, embeddings.cosine(q_vec, p_vec)))
-            hits = [(p, s) for p, s in scored if s > _MIN_SEMANTIC]
-            if hits:
-                hits.sort(key=lambda t: t[1], reverse=True)
-                return [p for p, _ in hits[:limit]]
+            # One batched transform for all projects, not one call each.
+            p_vecs = embeddings.embed_many([embeddings.project_text(p) for p in open_projects])
+            if p_vecs is not None:
+                scored = [(p, embeddings.cosine(q_vec, v))
+                          for p, v in zip(open_projects, p_vecs)]
+                hits = [(p, s) for p, s in scored if s > _MIN_SEMANTIC]
+                if hits:
+                    hits.sort(key=lambda t: t[1], reverse=True)
+                    return [p for p, _ in hits[:limit]]
     except Exception:
         logger.exception("semantic search failed; using keyword fallback")
 
@@ -71,8 +83,7 @@ def similar_projects(title, description="", limit=3, exclude_id=None):
     text = f"{title or ''} . {description or ''}".strip(" .")
     if len(text) < 4:
         return []
-    candidates = Project.query.filter_by(status="open").all()
-    candidates = [p for p in candidates if p.id != exclude_id]
+    candidates = [p for p in _open_projects_with_tags() if p.id != exclude_id]
     if not candidates:
         return []
 
@@ -83,10 +94,12 @@ def similar_projects(title, description="", limit=3, exclude_id=None):
         q_vec = None
 
     scored = []
-    if q_vec is not None:
+    p_vecs = embeddings.embed_many([embeddings.project_text(p) for p in candidates]) \
+        if q_vec is not None else None
+    if q_vec is not None and p_vecs is not None:
         from services.ml.embeddings import cosine
-        for p in candidates:
-            sim = cosine(q_vec, embeddings.embed(embeddings.project_text(p)))
+        for p, v in zip(candidates, p_vecs):
+            sim = cosine(q_vec, v)
             if sim >= _SIMILAR_FLOOR:
                 scored.append((p, sim))
     else:

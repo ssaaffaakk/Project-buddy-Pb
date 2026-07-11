@@ -129,6 +129,18 @@ def embed(text):
     return pipe.transform([text])[0]
 
 
+def embed_many(texts):
+    """Embed a list of texts in ONE vectorized transform → list of vectors
+    (or None). Callers that embed N documents per request must use this instead
+    of N embed() calls — a single transform is dramatically cheaper than N."""
+    pipe = _load()
+    if pipe is None:
+        return None
+    if not texts:
+        return []
+    return list(pipe.transform(texts))
+
+
 def cosine(a, b):
     """Cosine similarity of two (already unit-normalized) vectors → [-1, 1]."""
     if a is None or b is None:

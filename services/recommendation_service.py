@@ -77,8 +77,13 @@ def _rule_based_recommendations(user_id):
         for application in Application.query.filter_by(applicant_id=user_id).all()
     }
 
+    # Eager-load tags so the per-project tag read below doesn't N+1 (dashboard path).
+    from sqlalchemy.orm import joinedload
+    open_projects = (Project.query.filter_by(status="open")
+                     .options(joinedload(Project.topic_tags)).all())
+
     recommendations = []
-    for project in Project.query.filter_by(status="open").all():
+    for project in open_projects:
         if project.owner_id == user_id or project.id in active_project_ids or project.id in applied_project_ids:
             continue
 
