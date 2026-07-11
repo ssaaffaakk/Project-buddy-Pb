@@ -1,11 +1,14 @@
 """
 Mock Data Seeder for ProjectBuddy
-Run: python seed_mock.py
+Run: python scripts/seed_mock.py
 Clears existing non-admin data and seeds fresh realistic IUS mock data.
 """
 import sys
+import os
 import io
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
+# Allow running as `python scripts/seed_mock.py` from the repo root.
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from app import create_app
 from extensions import db
 from models import (
