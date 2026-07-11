@@ -278,7 +278,7 @@ def send_message(group_id):
     db.session.commit()
 
     u = current_user
-    return jsonify({
+    payload = {
         "id":              msg.id,
         "body":            body,
         "author_name":     f"{u.first_name} {u.last_name}",
@@ -287,15 +287,27 @@ def send_message(group_id):
         "author_id":       u.id,
         "time":            msg.created_at.strftime("%H:%M"),
         "attachment":      _attachment_json(attachment, group_id),
-    })
+    }
+
+    # Push to everyone in the group's collab room in real time (the same room
+    # members already join for shared notes). The sender's own browser also
+    # receives this echo, but appendMessage() on the client is idempotent by
+    # message id, so its optimistic local render is never duplicated.
+    from extensions import socketio
+    socketio.emit("sg_message", payload, to=f"collab_{group_id}")
+
+    return jsonify(payload)
 
 
 # ── POLL NEW MESSAGES ────────────────────────────────────────────────────────
 @study_groups_bp.route("/<int:group_id>/messages")
-@limiter.exempt  # polled every 3 s by the room page — must not eat the rate budget
+@limiter.exempt  # realtime fallback + reconnect catch-up — must not eat the rate budget
 @login_required
 def poll_messages(group_id):
-    """Return messages with id > after_id (frontend polls every 3 s)."""
+    """Return messages with id > after_id.
+
+    Live delivery is over SocketIO ('sg_message'); this endpoint is now only a
+    fallback the client calls on (re)connect and while the socket is down."""
     StudyGroup.query.get_or_404(group_id)
     after_id = request.args.get("after", 0, type=int)
     msgs = (StudyGroupMessage.query

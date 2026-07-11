@@ -383,6 +383,7 @@ var IS_MEMBER  = {{ 'true' if is_member else 'false' }};
 var MY_NAME    = "{{ user.first_name }} {{ user.last_name }}";
 var MY_INITIALS= "{{ user.first_name[0] }}{{ user.last_name[0] }}";
 var MY_AVATAR  = "{{ user.avatar_url or '' }}";
+var MY_ID      = {{ user.id }};
 var lastMsgId  = {{ messages[-1].id if messages else 0 }};
 
 function scrollBottom(smooth){
@@ -447,6 +448,7 @@ function attachHtml(a,mine){
 }
 
 function appendMessage(m,mine){
+  if(document.getElementById('msg-'+m.id))return; // idempotent: socket echo + fallback poll may both deliver
   var feed=document.getElementById('messages');
   var div=document.createElement('div');
   div.id='msg-'+m.id;
@@ -468,7 +470,15 @@ async function pollMessages(){
     if(msgs.length){msgs.forEach(function(m){appendMessage(m,m.is_mine);});lastMsgId=msgs[msgs.length-1].id;scrollBottom(true);}
   }catch(e){}
 }
-if(IS_MEMBER){setInterval(pollMessages,3000);}
+// Messages now arrive in real time over SocketIO (see the 'sg_message' handler
+// in ensureSocket). Polling is only a safety net: it runs at a slow cadence and
+// ONLY while the socket is down, so a healthy connection no longer hits the
+// server every 3 s. On every (re)connect we also do one catch-up poll so no
+// message is missed across the connect gap. appendMessage is idempotent, so
+// the two paths never double-render.
+if(IS_MEMBER){
+  setInterval(function(){ if(!socket || !socket.connected) pollMessages(); }, 8000);
+}
 
 async function leaveGroup(){
   if(!await pbConfirm({title:'{{ _('Leave this group?') }}', message:'{{ _('You can rejoin any time from the Voice Chat page.') }}', confirmText:'{{ _('Leave') }}', danger:true}))return;
@@ -571,7 +581,7 @@ function ensureSocket(){
 
   socket.on('connect',function(){
     // Re-join collab room for shared notes on every (re)connect
-    if(IS_MEMBER){socket.emit('join_collab',{group_id:GROUP_ID});}
+    if(IS_MEMBER){socket.emit('join_collab',{group_id:GROUP_ID});pollMessages();/* catch up on anything missed while disconnected */}
     // Re-join voice room after socket reconnect (server removed us on disconnect)
     if(inVoice){
       Object.keys(peers).forEach(function(sid){
@@ -595,6 +605,14 @@ function ensureSocket(){
 
   socket.on('note_saved',function(d){
     setNotesStatus(d.ok?'{{ _('Saved') }}':'{{ _('Save failed — retrying on next edit') }}',d.ok);
+  });
+
+  // Real-time chat: a new group message pushed from the server. "mine" is
+  // derived from the author id (the sender's optimistic echo is deduped by id).
+  socket.on('sg_message',function(m){
+    appendMessage(m, m.author_id===MY_ID);
+    if(m.id>lastMsgId) lastMsgId=m.id;
+    scrollBottom(true);
   });
 
   socket.on('voice_user_joined',function(user){
