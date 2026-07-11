@@ -283,7 +283,11 @@ ProjectBuddy/
 ├── scripts/                # CLI: recommender training, evals, admin, db init
 ├── render.yaml             # Render Blueprint (IaC)
 ├── Dockerfile              # Web image · docker-compose.yml (web + Postgres + Redis)
-├── .github/workflows/      # CI (ruff + pytest 3.9/3.11 + frontend build)
+├── .github/                # CI workflow + issue/PR templates
+├── docs/                   # White paper + architecture notes
+├── CONTRIBUTING.md         # Dev setup + PR guidelines
+├── SECURITY.md             # Vulnerability disclosure policy
+├── CHANGELOG.md            # Notable changes by version
 ├── templates/              # Jinja2 HTML templates (CSP nonce-aware)
 ├── static/                 # CSS, JS, images
 ├── migrations/             # Alembic database migrations
@@ -321,6 +325,12 @@ python -m scripts.eval_assistant
 
 CI runs on every push/PR (`.github/workflows/ci.yml`): ruff lint + pytest with a
 coverage floor, on Python 3.9 (dev floor) and 3.11 (production runtime).
+
+Documentation
+
+- [docs/WHITEPAPER.md](docs/WHITEPAPER.md) — the academic white paper (design, evaluation, v3.0 work)
+- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — engineering architecture notes
+- [CONTRIBUTING.md](CONTRIBUTING.md) · [SECURITY.md](SECURITY.md) · [CHANGELOG.md](CHANGELOG.md)
 
 License
 MIT — Safak Surmeli
