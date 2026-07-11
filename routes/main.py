@@ -1098,6 +1098,18 @@ def set_language(lang):
     return redirect(request.referrer or url_for("main.dashboard"))
 
 
+# ── BETA: React projects explorer (feature-flagged) ──────────────────────────
+@main_bp.route("/beta/projects")
+@login_required
+def beta_projects():
+    """React + TypeScript explorer over /api/v1. Gated by FEATURE_SPA so it
+    only ships to production deliberately (flag is off there by default)."""
+    if not current_app.config.get("FEATURE_SPA"):
+        from flask import abort
+        abort(404)
+    return render_template("beta/projects.html")
+
+
 # ── ML MODEL CARD (recommender metrics) ───────────────────────────────────────
 @main_bp.route("/ml/recommender")
 @login_required
@@ -1567,8 +1579,13 @@ def admin_analytics():
         dau = wau = mau = 0
         funnel, retention, rec_ab = [], [], []
 
+    # --- DATA WAREHOUSE FRESHNESS (admin-only visibility of the ETL) ---
+    from services.etl import freshness
+    warehouse = freshness()
+
     # --- RENDER ---
     return render_template("admin/analytics.html",
+        warehouse=warehouse,
         dau=dau,
         wau=wau,
         mau=mau,

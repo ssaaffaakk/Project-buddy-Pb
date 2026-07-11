@@ -119,6 +119,11 @@ class Config:
     # CELERY_BROKER_URL (set together with a running worker) enables queueing.
     CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL', '')
 
+    # ── Feature flags ──────────────────────────────────────────────────────────
+    # React projects explorer at /beta/projects. Default OFF in production —
+    # new surfaces roll out deliberately, never by accident.
+    FEATURE_SPA = _env_bool('FEATURE_SPA', False)
+
     # ── Rate limiting ──────────────────────────────────────────────────────────
     # Use Redis if REDIS_URL is set (required for multi-worker deployments),
     # fall back to in-process memory for single-worker / dev environments.
@@ -138,6 +143,7 @@ class DevelopmentConfig(Config):
 
     DEBUG = True
     TESTING = False
+    FEATURE_SPA = _env_bool('FEATURE_SPA', True)   # on by default in dev only
     SESSION_COOKIE_SECURE = False
     SESSION_COOKIE_NAME   = 'session'   # __Host- requires HTTPS, not valid on http://localhost
     WTF_CSRF_SSL_STRICT   = False

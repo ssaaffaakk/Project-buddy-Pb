@@ -1,0 +1,54 @@
+/* Scoped SPA styles — inherits ProjectBuddy dark-theme variables from the
+   surrounding app shell (base_app.html). */
+.spa-wrap { max-width: 1060px; margin: 0 auto; padding: 8px 4px 48px; }
+.spa-header h1 { font-size: 1.6rem; margin: 0 0 4px; }
+.spa-sub { color: var(--muted, #8a8fa3); font-size: 0.85rem; margin: 0 0 20px; }
+.spa-sub code { color: var(--accent, #7c9bff); }
+.spa-section-title { font-size: 1rem; margin: 18px 0 10px; }
+
+.spa-controls { display: flex; gap: 10px; margin: 14px 0 18px; }
+.spa-controls input, .spa-controls select {
+  background: var(--bg2, #141d3a); color: var(--text, #e8eaf2);
+  border: 1px solid var(--border, rgba(255,255,255,0.1));
+  border-radius: 8px; padding: 9px 12px; font-size: 0.88rem;
+}
+.spa-controls input { flex: 1; }
+
+.spa-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
+.spa-card {
+  background: var(--bg2, #141d3a); border: 1px solid var(--border, rgba(255,255,255,0.1));
+  border-radius: 12px; padding: 16px; position: relative;
+}
+.spa-card h3 { margin: 0 0 8px; font-size: 0.98rem; }
+.spa-card h3 a { color: var(--text, #e8eaf2); text-decoration: none; }
+.spa-card h3 a:hover { color: var(--accent, #7c9bff); }
+.spa-fit {
+  position: absolute; top: 12px; right: 12px;
+  font-size: 0.68rem; color: var(--accent, #7c9bff);
+  border: 1px solid currentColor; border-radius: 99px; padding: 2px 8px;
+}
+.spa-desc { color: var(--soft, #aab0c4); font-size: 0.8rem; line-height: 1.5; min-height: 3em; }
+.spa-tags { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0; }
+.spa-tag {
+  font-size: 0.66rem; padding: 2px 8px; border-radius: 99px;
+  background: rgba(124, 155, 255, 0.12); color: var(--accent, #7c9bff);
+}
+.spa-card footer {
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 0.72rem; color: var(--muted, #8a8fa3);
+}
+.spa-apply {
+  color: var(--accent, #7c9bff); text-decoration: none; font-weight: 600;
+  border: 1px solid currentColor; border-radius: 8px; padding: 4px 12px;
+}
+
+.spa-pager { display: flex; align-items: center; gap: 14px; justify-content: center; margin-top: 22px; }
+.spa-pager button {
+  background: var(--bg2, #141d3a); color: var(--text, #e8eaf2);
+  border: 1px solid var(--border, rgba(255,255,255,0.1));
+  border-radius: 8px; padding: 7px 14px; cursor: pointer; font-size: 0.8rem;
+}
+.spa-pager button:disabled { opacity: 0.4; cursor: default; }
+.spa-pager span { color: var(--muted, #8a8fa3); font-size: 0.78rem; }
+.spa-error { color: #ff6b6b; font-size: 0.85rem; }
+.spa-muted { color: var(--muted, #8a8fa3); font-size: 0.85rem; }

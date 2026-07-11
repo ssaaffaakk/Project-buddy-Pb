@@ -1,0 +1,13 @@
+{% extends 'base_app.html' %}
+{% block title %}ProjectBuddy — Projects Explorer{% endblock %}
+
+{% block extra_style %}
+<link rel="stylesheet" href="/static/spa/spa.css?v=1">
+{% endblock %}
+
+{% block content %}
+{# React + TypeScript explorer (frontend/), reading /api/v1 with the session
+   cookie. Served only when FEATURE_SPA is enabled — off by default in prod. #}
+<div id="pb-spa-root"></div>
+<script type="module" src="/static/spa/spa.js?v=1" nonce="{{ csp_nonce }}"></script>
+{% endblock %}
