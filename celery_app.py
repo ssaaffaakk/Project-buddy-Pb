@@ -48,6 +48,11 @@ def init_celery(app):
                 "task": "tasks.retrain_recommender",
                 "schedule": crontab(day_of_week=0, hour=4, minute=0),
             },
+            # Weekly recommendation digest (Monday 08:00 UTC — start of the week)
+            "digest-weekly": {
+                "task": "tasks.send_weekly_digest",
+                "schedule": crontab(day_of_week=1, hour=8, minute=0),
+            },
         },
     )
     return celery

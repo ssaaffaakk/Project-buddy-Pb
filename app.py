@@ -111,6 +111,12 @@ def create_app(config_class=None):
         else:
             print("drift check skipped (no baseline or no population)")
 
+    @app.cli.command("send-digest")
+    def send_digest_cmd():
+        """Send the weekly recommendation digest now (also runs via beat)."""
+        from services.digest import send_weekly_digest
+        print(f"digest: {send_weekly_digest()}")
+
     @app.route("/favicon.ico")
     def favicon():
         from flask import send_from_directory

@@ -94,6 +94,14 @@ def check_model_drift_task():
         compute_drift()
 
 
+@celery.task(name="tasks.send_weekly_digest")
+def send_weekly_digest_task():
+    """Weekly per-user recommendation digest (in-app notification + push)."""
+    with _flask_context():
+        from services.digest import send_weekly_digest
+        send_weekly_digest()
+
+
 @celery.task(name="tasks.run_etl", bind=True, max_retries=1, default_retry_delay=600)
 def run_etl_task(self):
     """Nightly warehouse load (services/etl.py). A data-quality failure raises
