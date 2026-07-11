@@ -20,3 +20,7 @@ numpy==2.0.2
 scikit-learn==1.6.1
 joblib==1.5.3
 pywebpush==2.1.2
+
+# ── Observability ──
+prometheus-client==0.25.0
+sentry-sdk[flask]==2.35.2

@@ -9,7 +9,6 @@ import os
 import logging
 from logging.handlers import RotatingFileHandler
 from flask import Flask
-from config import Config
 from extensions import db, login_manager, socketio, migrate
 
 
@@ -37,6 +36,9 @@ def create_app(config_class=None):
     from werkzeug.middleware.proxy_fix import ProxyFix
     app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
 
+    # Error monitoring (no-op unless SENTRY_DSN is set)
+    _init_sentry(app)
+
     # Initialize extensions
     _initialize_extensions(app)
     
@@ -48,6 +50,10 @@ def create_app(config_class=None):
     
     # Register blueprints
     _register_blueprints(app)
+
+    # Prometheus metrics: request RED metrics + domain gauges at /metrics
+    from services.metrics import init_metrics
+    init_metrics(app)
 
     # CLI: retrain the teammate/project recommender  →  flask train-recommender
     @app.cli.command("train-recommender")
@@ -80,10 +86,33 @@ def create_app(config_class=None):
     return app
 
 
+def _init_sentry(app: Flask) -> None:
+    """Initialize Sentry error monitoring when SENTRY_DSN is configured.
+
+    Graceful no-op when the DSN is unset or the SDK isn't installed, so
+    development environments need zero setup.
+    """
+    dsn = os.environ.get("SENTRY_DSN")
+    if not dsn:
+        return
+    try:
+        import sentry_sdk
+        sentry_sdk.init(
+            dsn=dsn,
+            traces_sample_rate=float(os.environ.get("SENTRY_TRACES_RATE", "0.1")),
+            send_default_pii=False,  # never ship user emails/IPs to a third party
+        )
+        app.logger.info("Sentry error monitoring initialized.")
+    except ImportError:
+        app.logger.warning("SENTRY_DSN set but sentry-sdk not installed — skipping.")
+    except Exception as e:
+        app.logger.warning("Sentry init failed: %s", e)
+
+
 def _initialize_extensions(app: Flask) -> None:
     """Initialize Flask extensions with the app."""
     from extensions import limiter, csrf
-    import models  # ensure all models are registered before migrate sees them
+    import models  # noqa: F401 — side-effect import: registers all models before migrate sees them
 
     db.init_app(app)
     migrate.init_app(app, db)
