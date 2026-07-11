@@ -112,7 +112,12 @@ class Config:
     # ── Celery task queue ──────────────────────────────────────────────────────
     # With a broker: async tasks with retries (worker: celery -A celery_worker.celery worker).
     # Without: tasks run eagerly/in-thread — identical to the pre-queue behavior.
-    CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL', '') or os.environ.get('REDIS_URL', '')
+    #
+    # Deliberately does NOT fall back to REDIS_URL: production has Redis for
+    # SocketIO/rate-limiting but NO worker process — treating it as a broker
+    # would queue emails/pushes that nothing ever consumes. Only an explicit
+    # CELERY_BROKER_URL (set together with a running worker) enables queueing.
+    CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL', '')
 
     # ── Rate limiting ──────────────────────────────────────────────────────────
     # Use Redis if REDIS_URL is set (required for multi-worker deployments),
