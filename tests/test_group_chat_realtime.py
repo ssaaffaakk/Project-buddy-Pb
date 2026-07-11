@@ -6,7 +6,7 @@ payload, and only members may send. socketio.emit is captured so nothing
 actually goes over the wire.
 """
 from extensions import db, socketio
-from models import StudyGroup, StudyGroupMember, User
+from models import StudyGroup, StudyGroupMember, StudyGroupMessage, User
 
 
 def _group_with_member(app, email):
@@ -131,3 +131,76 @@ def test_sg_typing_from_non_member_is_ignored(app):
     assert not any(e["name"] == "sg_typing" for e in sm.get_received())
     sm.disconnect()
     so.disconnect()
+
+
+# ── Delete a message ─────────────────────────────────────────────────────────────
+
+def _post_message(app, gid, author_id, body="hi"):
+    with app.app_context():
+        m = StudyGroupMessage(group_id=gid, author_id=author_id, body=body)
+        db.session.add(m)
+        db.session.commit()
+        return m.id
+
+
+def test_author_can_delete_own_message_and_broadcasts(app, client, login, monkeypatch):
+    gid, uid = _group_with_member(app, "del-a@example.com")
+    mid = _post_message(app, gid, uid, "bye")
+    login("del-a@example.com")
+
+    calls = []
+    monkeypatch.setattr(socketio, "emit", lambda *a, **k: calls.append((a, k)))
+    resp = client.post(f"/study-groups/{gid}/messages/{mid}/delete")
+    assert resp.status_code == 200
+
+    with app.app_context():
+        assert db.session.get(StudyGroupMessage, mid) is None
+    sg = [(a, k) for (a, k) in calls if a and a[0] == "sg_delete"]
+    assert len(sg) == 1
+    assert sg[0][0][1]["id"] == mid
+    assert sg[0][1].get("to") == f"collab_{gid}"
+
+
+def test_other_member_cannot_delete(app, client, login):
+    gid, owner = _group_with_member(app, "del-owner@example.com")
+    author = _add_member(app, gid, "del-author@example.com")
+    mid = _post_message(app, gid, author, "keep me")
+    _add_member(app, gid, "del-third@example.com")
+    login("del-third@example.com")            # a member, but not author/creator/admin
+
+    resp = client.post(f"/study-groups/{gid}/messages/{mid}/delete")
+    assert resp.status_code == 403
+    with app.app_context():
+        assert db.session.get(StudyGroupMessage, mid) is not None
+
+
+def test_group_creator_can_delete_any_message(app, client, login, monkeypatch):
+    gid, creator = _group_with_member(app, "del-c@example.com")
+    member = _add_member(app, gid, "del-m@example.com")
+    mid = _post_message(app, gid, member, "not mine")
+    login("del-c@example.com")                 # the creator
+
+    monkeypatch.setattr(socketio, "emit", lambda *a, **k: None)
+    resp = client.post(f"/study-groups/{gid}/messages/{mid}/delete")
+    assert resp.status_code == 200
+    with app.app_context():
+        assert db.session.get(StudyGroupMessage, mid) is None
+
+
+# ── Presence ─────────────────────────────────────────────────────────────────────
+
+def test_presence_counts_distinct_members(app):
+    gid, _ = _group_with_member(app, "pres-a@example.com")
+    _add_member(app, gid, "pres-b@example.com")
+    sa = socketio.test_client(app, flask_test_client=_login_client(app, "pres-a@example.com"))
+    sb = socketio.test_client(app, flask_test_client=_login_client(app, "pres-b@example.com"))
+    sa.get_received()
+    sb.get_received()
+
+    sa.emit("join_collab", {"group_id": gid})
+    sb.emit("join_collab", {"group_id": gid})
+
+    presence = [e for e in sb.get_received() if e["name"] == "sg_presence"]
+    assert presence and presence[-1]["args"][0]["count"] == 2
+    sa.disconnect()
+    sb.disconnect()

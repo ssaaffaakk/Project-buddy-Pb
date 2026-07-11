@@ -204,6 +204,7 @@ def on_leave_voice(data):
 @socketio.on('disconnect')
 def on_disconnect():
     _remove_sid(request.sid)
+    _drop_collab_presence(request.sid)
 
 
 # ── WebRTC relay ─────────────────────────────────────────────────────────────
@@ -294,9 +295,39 @@ def _verify_member(group_id: int):
     return None
 
 
+# ── Collab-room presence (who is currently viewing the group) ────────────────
+# In-process registry: group_id -> { sid: {'id', 'name'} }. Best-effort and
+# ephemeral, like the voice roster; a shared store would be needed to span
+# multiple workers (see the whitepaper's fan-out limitation).
+_collab_presence: dict = {}
+
+
+def _presence_users(group_id):
+    """Distinct present users for a group (multiple tabs of one user collapse)."""
+    seen = {}
+    for info in _collab_presence.get(group_id, {}).values():
+        seen[info['id']] = info['name']
+    return [{'id': uid, 'name': name} for uid, name in seen.items()]
+
+
+def _broadcast_presence(group_id):
+    users = _presence_users(group_id)
+    emit('sg_presence', {'users': users, 'count': len(users)}, to=f'collab_{group_id}')
+
+
+def _drop_collab_presence(sid):
+    """Remove a socket from any collab room it was present in, and re-broadcast."""
+    for group_id, members in list(_collab_presence.items()):
+        if sid in members:
+            members.pop(sid, None)
+            if not members:
+                _collab_presence.pop(group_id, None)
+            _broadcast_presence(group_id)
+
+
 @socketio.on('join_collab')
 def on_join_collab(data):
-    """Join the group's collaboration room (shared notes sync)."""
+    """Join the group's collaboration room (shared notes + chat presence)."""
     if not current_user.is_authenticated:
         return
     try:
@@ -306,6 +337,9 @@ def on_join_collab(data):
     if not group_id or not _verify_member(group_id):
         return
     join_room(f'collab_{group_id}')
+    _collab_presence.setdefault(group_id, {})[request.sid] = {
+        'id': current_user.id, 'name': current_user.first_name}
+    _broadcast_presence(group_id)
 
 
 @socketio.on('sg_typing')

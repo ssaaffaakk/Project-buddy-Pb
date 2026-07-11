@@ -328,6 +328,28 @@ def poll_messages(group_id):
     } for m in msgs])
 
 
+# ── DELETE A MESSAGE ─────────────────────────────────────────────────────────
+@study_groups_bp.route("/<int:group_id>/messages/<int:message_id>/delete", methods=["POST"])
+@login_required
+def delete_message(group_id, message_id):
+    """Delete a chat message. Allowed for its author, the group creator, or an
+    admin. Broadcasts 'sg_delete' so it disappears for everyone in real time."""
+    group = StudyGroup.query.get_or_404(group_id)
+    msg = StudyGroupMessage.query.filter_by(id=message_id, group_id=group_id).first_or_404()
+
+    is_author = msg.author_id == current_user.id
+    is_manager = group.creator_id == current_user.id or current_user.role == "admin"
+    if not (is_author or is_manager):
+        return jsonify({"error": "You can only delete your own messages."}), 403
+
+    db.session.delete(msg)
+    db.session.commit()
+
+    from extensions import socketio
+    socketio.emit("sg_delete", {"id": message_id}, to=f"collab_{group_id}")
+    return jsonify({"ok": True})
+
+
 # ── AI MEETING NOTES (transcribe a recording → summary → shared notes) ────────
 @study_groups_bp.route("/<int:group_id>/transcribe", methods=["POST"])
 @login_required

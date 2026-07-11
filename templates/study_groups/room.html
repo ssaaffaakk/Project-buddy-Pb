@@ -33,7 +33,7 @@ html,body{height:100%;overflow:hidden;}
 .room-body{flex:1;display:flex;overflow:hidden;}
 
 /* CHAT AREA */
-.chat-area{display:flex;flex-direction:column;flex:1;overflow:hidden;}
+.chat-area{display:flex;flex-direction:column;flex:1;overflow:hidden;position:relative;}
 .messages{flex:1;overflow-y:auto;padding:20px 24px;display:flex;flex-direction:column;gap:2px;}
 .msg-group{margin-bottom:16px;}
 .msg-author-row{display:flex;align-items:center;gap:8px;margin-bottom:4px;}
@@ -54,6 +54,13 @@ html,body{height:100%;overflow:hidden;}
 .msg-input{flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:10px 14px;color:var(--text);font-family:'Inter',sans-serif;font-size:0.85rem;resize:none;min-height:42px;max-height:120px;outline:none;transition:border-color 0.2s;}
 .msg-input:focus{border-color:rgba(124,155,255,0.35);}
 .typing-indicator{display:none;font-family:'DM Mono',monospace;font-size:0.66rem;font-style:italic;color:var(--muted);letter-spacing:0.03em;padding:0 4px 6px;}
+.room-online{display:none;align-items:center;gap:5px;font-family:'DM Mono',monospace;font-size:0.66rem;letter-spacing:0.04em;color:#7ab890;margin-left:2px;}
+.room-online .online-dot{width:7px;height:7px;border-radius:50%;background:#5a8a6a;box-shadow:0 0 6px rgba(90,138,106,0.7);flex-shrink:0;}
+.jump-latest{position:absolute;left:50%;transform:translateX(-50%);bottom:14px;z-index:20;display:none;align-items:center;gap:6px;padding:7px 15px;border-radius:99px;border:1px solid rgba(124,155,255,0.35);background:var(--bg3);color:var(--accent);font-family:'DM Mono',monospace;font-size:0.66rem;letter-spacing:0.05em;cursor:pointer;box-shadow:0 6px 20px rgba(0,0,0,0.45);transition:all 0.18s;}
+.jump-latest:hover{background:var(--card-h);border-color:rgba(124,155,255,0.55);}
+.msg-del{background:none;border:none;color:var(--muted);cursor:pointer;font-size:0.82rem;line-height:1;padding:0 2px;margin-left:6px;opacity:0;transition:opacity 0.15s,color 0.15s;flex-shrink:0;}
+.msg-group:hover .msg-del{opacity:0.55;}
+.msg-del:hover{opacity:1;color:#e07060;}
 .send-btn{padding:10px 18px;border-radius:var(--r);font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;border:none;background:linear-gradient(110deg,var(--accent) 0%,var(--violet,#A78BFF) 45%,var(--coral,#FF6B6B) 100%);color:#fff;cursor:pointer;font-weight:500;transition:all 0.2s;flex-shrink:0;}
 .send-btn:hover{box-shadow:0 0 0 1px rgba(124,155,255,0.5),0 4px 20px rgba(124,155,255,0.2);}
 .send-btn:disabled{opacity:0.4;cursor:default;box-shadow:none;}
@@ -207,6 +214,7 @@ html,body{height:100%;overflow:hidden;}
     </div>
     <div class="room-right">
       <span class="room-meta"><span id="member-count">{{ group.member_count() }}</span> {{ _('members') if group.member_count() != 1 else _('member') }}</span>
+      <span class="room-online" id="room-online"><span class="online-dot"></span><span id="online-count">0</span> {{ _('online') }}</span>
 
       {% if is_member %}
       <button id="voice-btn" class="btn-hdr btn-voice" onclick="toggleVoice()" title="{{ _('Voice Chat') }}">
@@ -283,6 +291,7 @@ html,body{height:100%;overflow:hidden;}
                 {% if msg.author.role == 'instructor' %}<span style="font-family:'DM Mono',monospace;font-size:0.58rem;color:var(--accent);margin-left:4px;">{{ _('instructor') }}</span>{% endif %}
               </span>
               <span class="msg-time">{{ msg.created_at.strftime('%H:%M') }}</span>
+              {% if mine or group.creator_id == user.id or user.role == 'admin' %}<button class="msg-del" onclick="deleteMsg({{ msg.id }})" title="{{ _('Delete') }}" aria-label="{{ _('Delete message') }}">&times;</button>{% endif %}
             </div>
             {% if msg.body %}<div class="msg-bubble {% if mine %}mine{% endif %}">{{ msg.body }}</div>{% endif %}
             {% if msg.attachment %}
@@ -301,6 +310,7 @@ html,body{height:100%;overflow:hidden;}
           </div>
         {% endfor %}
       </div>
+      <button class="jump-latest" id="jump-latest" onclick="jumpToLatest()">&#8595; {{ _('New messages') }}</button>
 
       {% if is_member %}
       <div class="input-bar">
@@ -386,6 +396,7 @@ var MY_NAME    = "{{ user.first_name }} {{ user.last_name }}";
 var MY_INITIALS= "{{ user.first_name[0] }}{{ user.last_name[0] }}";
 var MY_AVATAR  = "{{ user.avatar_url or '' }}";
 var MY_ID      = {{ user.id }};
+var CAN_MANAGE = {{ 'true' if (group.creator_id == user.id or user.role == 'admin') else 'false' }};
 var lastMsgId  = {{ messages[-1].id if messages else 0 }};
 
 function scrollBottom(smooth){
@@ -430,7 +441,7 @@ async function sendMessage(){
     var d=await r.json();
     if(d.id){
       input.value='';input.style.height='auto';clearStaged();
-      appendMessage(d,true);lastMsgId=d.id;scrollBottom(true);
+      appendMessage(d,true);lastMsgId=d.id;scrollBottom(true);hideJump();
       filesLoaded=false; // gallery will refresh next time it's opened
     }else{toast(d.error||'{{ _('Could not send.') }}','error');}
   }catch(e){toast('{{ _('Network error.') }}','error');}
@@ -456,7 +467,8 @@ function appendMessage(m,mine){
   div.id='msg-'+m.id;
   div.className='msg-group'+(mine?' msg-mine-row':'');
   var av=m.author_avatar?'<img src="'+m.author_avatar+'" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">':m.author_initials;
-  var html='<div class="msg-author-row"><div class="msg-av">'+av+'</div><span class="msg-author-name'+(mine?' mine':'')+'">'+escHtml(m.author_name)+'</span><span class="msg-time">'+m.time+'</span></div>';
+  var delBtn=(mine||CAN_MANAGE)?'<button class="msg-del" onclick="deleteMsg('+m.id+')" title="Delete" aria-label="Delete message">&times;</button>':'';
+  var html='<div class="msg-author-row"><div class="msg-av">'+av+'</div><span class="msg-author-name'+(mine?' mine':'')+'">'+escHtml(m.author_name)+'</span><span class="msg-time">'+m.time+'</span>'+delBtn+'</div>';
   if(m.body){html+='<div class="msg-bubble'+(mine?' mine':'')+'">'+escHtml(m.body)+'</div>';}
   if(m.attachment){html+=attachHtml(m.attachment,mine);}
   div.innerHTML=html;
@@ -493,11 +505,39 @@ function renderTyping(){
 }
 setInterval(renderTyping, 1200);  // prune so it fades after they stop
 
+/* ── Jump-to-latest pill ──────────────────────────────────────────────────────
+   Auto-scroll on a new message only when the reader is already near the bottom;
+   otherwise surface a pill so they aren't yanked away from older messages. */
+function isNearBottom(){
+  var el=document.getElementById('messages');
+  return el.scrollHeight - el.scrollTop - el.clientHeight < 120;
+}
+function showJump(){ var b=document.getElementById('jump-latest'); if(b) b.style.display='inline-flex'; }
+function hideJump(){ var b=document.getElementById('jump-latest'); if(b) b.style.display='none'; }
+function jumpToLatest(){ scrollBottom(true); hideJump(); }
+function onIncoming(){ if(isNearBottom()) scrollBottom(true); else showJump(); }
+(function(){
+  var feed=document.getElementById('messages');
+  if(feed) feed.addEventListener('scroll', function(){ if(isNearBottom()) hideJump(); });
+})();
+
+/* ── Delete a message (own, or any if you manage the group) ───────────────────*/
+async function deleteMsg(id){
+  if(!await pbConfirm({title:'{{ _("Delete this message?") }}', message:'{{ _("This removes it for everyone.") }}', confirmText:'{{ _("Delete") }}', danger:true})) return;
+  try{
+    var r=await fetch('/study-groups/'+GROUP_ID+'/messages/'+id+'/delete',{method:'POST'});
+    var d=await r.json();
+    if(!r.ok){ toast(d.error||'{{ _("Could not delete.") }}','error'); return; }
+    // The sg_delete broadcast removes it for everyone (including us).
+  }catch(e){ toast('{{ _("Network error.") }}','error'); }
+}
+function removeMessage(id){ var el=document.getElementById('msg-'+id); if(el) el.remove(); }
+
 async function pollMessages(){
   try{
     var r=await fetch('/study-groups/'+GROUP_ID+'/messages?after='+lastMsgId);
     var msgs=await r.json();
-    if(msgs.length){msgs.forEach(function(m){appendMessage(m,m.is_mine);});lastMsgId=msgs[msgs.length-1].id;scrollBottom(true);}
+    if(msgs.length){msgs.forEach(function(m){appendMessage(m,m.is_mine);});lastMsgId=msgs[msgs.length-1].id;onIncoming();}
   }catch(e){}
 }
 // Messages now arrive in real time over SocketIO (see the 'sg_message' handler
@@ -643,11 +683,22 @@ function ensureSocket(){
     appendMessage(m, m.author_id===MY_ID);
     if(m.id>lastMsgId) lastMsgId=m.id;
     clearTyping(m.author_id);   // they just sent — no longer "typing"
-    scrollBottom(true);
+    onIncoming();
   });
 
   // Someone else in the room is typing.
   socket.on('sg_typing',function(d){ noteTyping(d.id, d.name); });
+
+  // A message was deleted — remove it for everyone.
+  socket.on('sg_delete',function(d){ removeMessage(d.id); });
+
+  // Live presence: how many members are currently in the room.
+  socket.on('sg_presence',function(d){
+    var wrap=document.getElementById('room-online');
+    var n=document.getElementById('online-count');
+    if(n) n.textContent=d.count;
+    if(wrap) wrap.style.display = d.count>0 ? 'inline-flex' : 'none';
+  });
 
   socket.on('voice_user_joined',function(user){
     addTile(user.sid,user.name,user.initials,user.avatar,false);
