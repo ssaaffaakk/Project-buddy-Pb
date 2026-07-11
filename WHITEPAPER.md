@@ -3,7 +3,7 @@
 **Author:** Safak Surmeli  
 **Institution:** International University of Sarajevo (IUS)  
 **Date:** July 2026  
-**Version:** 2.1  
+**Version:** 3.0  
 **Classification:** Public  
 **License:** MIT  
 **Contact:** surmeliisafak@gmail.com
@@ -16,7 +16,9 @@ University students routinely form project teams through unstructured channels �
 
 ProjectBuddy is an open-source, web-based platform designed to address the persistent challenges of team formation, project coordination, and peer assessment in higher education environments. Built on a modern Python/Flask technology stack with real-time communication capabilities, ProjectBuddy integrates AI-powered assistance (SSM-1.0), full WebRTC live collaboration (voice, video, and screen sharing), a **trained machine-learning recommender**, and a gamified badge system to foster meaningful student collaboration. Unlike general-purpose tools such as Trello, Slack, or GitHub Projects, ProjectBuddy integrates the complete student collaboration lifecycle into a single, cohesive environment: from team discovery and formation, through real-time communication and in-chat file sharing, to peer feedback, skill endorsement, and public profile pages.
 
-Version 2.1 extends the platform along three axes: (1) **live collaboration rooms** that layer video, screen sharing, and a shared live-synced notepad on top of the existing voice mesh; (2) a **learned recommendation engine** — a logistic-regression model with an LSA (Latent Semantic Analysis) embedding tower, trained on the platform's own interaction signals and benchmarked leakage-free against a rule-based baseline, with a public model card; and (3) a **social and identity layer** — an expanded 120-tag interdisciplinary interest taxonomy, first-run profile onboarding (avatar and cover banner), public profile walls, and in-chat file attachments.
+Version 2.1 established three axes: (1) **live collaboration rooms** layering video, screen sharing, and a shared live-synced notepad on the voice mesh; (2) a **learned recommendation engine** — a logistic-regression model with an LSA (Latent Semantic Analysis) embedding tower, trained on the platform's own interaction signals and benchmarked leakage-free against a rule-based baseline, with a public model card; and (3) a **social and identity layer** (a 120-tag interdisciplinary interest taxonomy, first-run onboarding, public profile walls, and in-chat file attachments).
+
+**Version 3.0** broadens ProjectBuddy from a feature-complete collaboration tool into a full-stack data platform, and adds a substantial product layer. On the engineering side it introduces: a versioned, OpenAPI-documented **JSON API** (`/api/v1`) with JWT authentication and schema validation; a **Celery task queue** (with a transparent in-process fallback) for retried background delivery and scheduled jobs; a nightly **ELT pipeline** that loads a star-schema **data warehouse** under data-quality gates; an **MLOps loop** around the recommender (artifact versioning and rollback, scheduled retraining, and feature-drift monitoring); production **observability** via Prometheus metrics and optional Sentry; a feature-flagged **React + TypeScript client** over the API; and **infrastructure-as-code** with a local Prometheus/Grafana stack. On the product side it adds nine features: a **teammate finder** (user-to-user matching), **explainable applicant fit scores**, a **weekly recommendation digest**, **semantic project search with duplicate detection**, public-profile **contribution analytics**, an **instructor team-health dashboard**, a per-project **kanban board**, an **AI quiz generator** from uploaded notes, and **AI meeting notes** (Whisper transcription plus LLM summarization) for study-group voice rooms. The codebase is covered by an automated test suite (120+ backend tests plus a frontend suite) gated in continuous integration. These additions are documented in Section 9.
 
 The platform has been developed and deployed at the International University of Sarajevo, serving as both a functional tool and a research contribution to the field of Computer-Supported Collaborative Learning (CSCL).
 
@@ -69,11 +71,19 @@ The platform has been developed and deployed at the International University of 
    - 8.3 [Security Assessment](#83-security-assessment)
    - 8.4 [Architectural Quality](#84-architectural-quality)
    - 8.5 [Scalability Considerations](#85-scalability-considerations)
-9. [Limitations and Future Work](#9-limitations-and-future-work)
-   - 9.1 [Current Limitations](#91-current-limitations)
-   - 9.2 [Planned Improvements](#92-planned-improvements)
-10. [Conclusion](#10-conclusion)
-11. [References](#11-references)
+9. [Version 3.0: Platform Engineering, Data, and Feature Expansion](#9-version-30-platform-engineering-data-and-feature-expansion)
+   - 9.1 [JSON API and Task Queue](#91-json-api-and-task-queue)
+   - 9.2 [Data Engineering: ELT and the Star-Schema Warehouse](#92-data-engineering-elt-and-the-star-schema-warehouse)
+   - 9.3 [MLOps: Versioning, Retraining, and Drift](#93-mlops-versioning-retraining-and-drift)
+   - 9.4 [Product Analytics and Experimentation](#94-product-analytics-and-experimentation)
+   - 9.5 [Observability, CI/CD, and Infrastructure as Code](#95-observability-cicd-and-infrastructure-as-code)
+   - 9.6 [React + TypeScript Client](#96-react--typescript-client)
+   - 9.7 [Feature Expansion](#97-feature-expansion)
+10. [Limitations and Future Work](#10-limitations-and-future-work)
+    - 10.1 [Current Limitations](#101-current-limitations)
+    - 10.2 [Planned Improvements](#102-planned-improvements)
+11. [Conclusion](#11-conclusion)
+12. [References](#12-references)
 
 ---
 
@@ -206,15 +216,17 @@ The technology stack was selected to balance developer productivity, ecosystem m
 
 ### 3.3 Data Model
 
-The data model comprises 28 SQLAlchemy models organized into five functional domains. All models use the modern SQLAlchemy 2.0 `mapped_column` / `Mapped[type]` declarative syntax with full type annotations.
+The data model comprises 38 SQLAlchemy models organized into seven functional domains. All models use the modern SQLAlchemy 2.0 `mapped_column` / `Mapped[type]` declarative syntax with full type annotations. The final two domains — behavioural instrumentation and the analytics warehouse — were introduced in Version 3.0 and are discussed further in Sections 9.1 and 9.2.
 
 | Domain | Models | Key Relationships |
 |--------|--------|-------------------|
 | **User Identity & Social** | User, UserInterest, UserSkill, UserCourse, ProfileComment, ProfileCommentLike | User has many interests, skills, and courses; student/instructor/admin roles; users carry an avatar and cover banner and an `onboarded` flag; public profile walls (comments + likes) let any member post on any profile |
-| **Project Lifecycle** | Project, ProjectTag, ProjectSkill, ProjectMember, Application, ProjectMessage, ProjectVote | Project owned by User; members join via Application; votes enable community ranking |
+| **Project Lifecycle** | Project, ProjectTag, ProjectSkill, ProjectMember, Application, ProjectMessage, ProjectVote, ProjectTask | Project owned by User; members join via Application; votes enable community ranking; ProjectTask backs the per-project Kanban board (todo / doing / done) |
 | **Assessment** | Feedback, Endorsement, Badge, UserBadge | Feedback links giver/receiver/project with rating constraint (1–5); endorsements require shared project completion |
-| **Communication** | Chat, ChatMessage, StudyGroup, StudyGroupMember, StudyGroupMessage, StudyGroupNote, SharedFile, ChatbotSession | Admin support chat; group chat with in-message file attachments and a live-synced shared note; AI chatbot session persistence |
-| **Moderation** | Report, AdminMessage, Notification, PasswordReset | Report targets user or project (including profile-wall comments); admin can warn/ban/dismiss; notifications link to originating action |
+| **Communication & Community** | Chat, ChatMessage, StudyGroup, StudyGroupMember, StudyGroupMessage, StudyGroupNote, SharedFile, ChatbotSession, CommunityPost, CommunityComment, CommunityLike | Admin support chat; group chat with in-message file attachments and a live-synced shared note; AI chatbot session persistence; community feed with posts, comments, and likes |
+| **Moderation & Delivery** | Report, AdminMessage, Notification, PushSubscription, PasswordReset | Report targets user or project (including profile-wall comments); admin can warn/ban/dismiss; notifications link to originating action; PushSubscription stores Web-Push endpoints for the weekly digest |
+| **Instrumentation** | ActivityEvent | Append-only behavioural event log (actor, verb, target, timestamp) that feeds the ELT pipeline and product-analytics queries |
+| **Analytics Warehouse** | DwDimUser, DwDimProject, DwFactDailyActivity, DwDailyMetrics | Star-schema dimension and fact tables populated by the nightly ELT job from `ActivityEvent`; source for dashboards and A/B read-outs |
 
 ### 3.4 Application Factory Pattern
 
@@ -644,19 +656,73 @@ We evaluate ProjectBuddy against the seven CSCL affordances framework proposed b
 
 ---
 
-## 9. Limitations and Future Work
+## 9. Version 3.0: Platform Engineering, Data, and Feature Expansion
 
-### 9.1 Current Limitations
+Where Versions 1.x–2.1 built a feature-complete collaboration product, Version 3.0 hardens it into a production-grade, data-driven platform and extends it with a substantial product layer. The work is organized into six engineering tracks and a set of nine user-facing features, each implemented with the same discipline: security gating, automated tests, and — where relevant — leakage-free evaluation and honest reporting of negative results.
+
+### 9.1 JSON API and Task Queue
+
+**Versioned JSON API (`/api/v1`).** A `flask-smorest` blueprint exposes the platform's core resources — paginated and filterable project listings, project detail, personalized recommendations, the authenticated user profile, study groups, and the application action — as a versioned REST surface. Requests are validated against `marshmallow` schemas, so malformed input yields a structured `422` with per-field errors rather than an unhandled `500`. The specification is generated from the code and served as interactive Swagger UI at `/api/docs` (raw spec at `/api/openapi.json`).
+
+**Authentication and CSRF discipline.** `POST /api/v1/auth/token` exchanges credentials for an HS256 JWT. Read endpoints additionally accept the browser session cookie; **write** endpoints require the Bearer token. This split is a deliberate security property: the API blueprint is CSRF-exempt, and because a cross-site page cannot attach an `Authorization` header, token-only writes cannot be forged — the exemption never reopens CSRF.
+
+**Celery task queue.** Background delivery (web push, transactional email) and scheduled jobs run on a Celery worker with automatic retries. Crucially, when no broker is configured the queue degrades to **eager, in-process execution** identical to the pre-queue behavior — so a broker-less single-service deployment (such as the free Render tier) keeps working unchanged, while adding a worker enables true asynchronous delivery. The queue also carries the periodic jobs introduced below (nightly ELT, daily drift check, weekly retraining and digest). A defect where `REDIS_URL` was implicitly treated as a broker — which would have silently queued mail that nothing consumed — was caught and fixed before deployment.
+
+### 9.2 Data Engineering: ELT and the Star-Schema Warehouse
+
+An append-only **`ActivityEvent`** stream instruments every meaningful action (logins, signups, project views, applications, recommendation impressions and clicks, group and voice joins, chatbot use). Writes are strictly best-effort: a tracking failure can never break the request that triggered it.
+
+A nightly **ELT pipeline** (`flask run-etl`, or Celery beat) transforms this stream and the operational tables into a dimensional **star schema** — `dw_dim_user`, `dw_dim_project`, `dw_fact_daily_activity`, and `dw_daily_metrics`. The load is idempotent (dimensions are full-refreshed; facts use a windowed delete-then-insert), and every run ends with **data-quality gates**: row-parity against the source tables, completeness of the fact table against the event stream, and value-bounds checks. A failed gate raises rather than publishing untrustworthy numbers. The admin analytics view reads warehouse freshness (last load, row counts) alongside product metrics computed directly from the event stream: DAU/WAU/MAU, stickiness, an activation funnel (signup → onboarded → applied → completed), and weekly retention cohorts.
+
+### 9.3 MLOps: Versioning, Retraining, and Drift
+
+The learned recommender (Section 4.3) is now operated, not merely trained. Every training run archives a **versioned artifact** and a metrics "model card"; a CLI (`flask model-versions`, `flask rollback-recommender <version>`) lists and restores prior versions. The trainer additionally reports **per-user ranking metrics** — recall@5 and NDCG@10 from out-of-fold scores — because ROC-AUC alone is the wrong yardstick for a ranking system; and it optionally logs runs to **MLflow**. Two scheduled jobs close the loop: a **weekly retraining** task rebuilds the model on accumulated interaction data, and a **daily feature-drift check** compares the live serving population's feature distribution against the training snapshot, exposing a standardized drift score as a Prometheus gauge and on a Grafana threshold panel.
+
+### 9.4 Product Analytics and Experimentation
+
+The recommender is served under a live **A/B experiment**: users are deterministically split 50/50 by hash between the learned "ml" arm and the rule-based "rules" arm. Each dashboard recommendation card logs an impression carrying its arm and model score; clicking through logs an attributed click. Click-through rate per arm is reported on the public model card and the admin dashboard, giving an online ground truth against which the offline ranking metrics can be judged.
+
+### 9.5 Observability, CI/CD, and Infrastructure as Code
+
+A Prometheus endpoint at `/metrics` exposes request rate, latency, and status **by route pattern** (bounded label cardinality) plus domain gauges and the model-drift score; it is default-deny in production unless a `METRICS_TOKEN` is configured. Optional Sentry error monitoring initializes from `SENTRY_DSN` with PII disabled. Continuous integration (GitHub Actions) runs `ruff` linting and the `pytest` suite on both Python 3.9 (development floor) and 3.11 (production runtime), plus the frontend typecheck/test/build, with a coverage floor. A `Dockerfile` and `docker-compose.yml` reproduce the full stack (web, PostgreSQL, Redis, worker) locally; a `render.yaml` Blueprint provisions the same topology on Render as infrastructure-as-code; and a `--profile observability` compose target brings up Prometheus and Grafana with a provisioned dashboard.
+
+### 9.6 React + TypeScript Client
+
+A **feature-flagged** single-page client (`/beta/projects`), built with React 18, TypeScript, and Vite, consumes the JSON API through typed clients with debounced search and pagination. It is gated twice — by login and by the `FEATURE_SPA` flag, which is off by default in production — so a new surface ships deliberately rather than by accident. Its typecheck, unit tests (Vitest), and build are enforced in CI. The client demonstrates that the API is a genuine second door into the same domain logic the server-rendered app uses.
+
+### 9.7 Feature Expansion
+
+Nine user-facing features extend the collaboration lifecycle, each grounded in a pain point from Section 1.1:
+
+| Feature | What it does | Ties to |
+|---|---|---|
+| **Teammate Finder** | Ranks *people* whose skills, courses, and interests complement the user's, with explainable reasons; reuses the LSA embedding space (user-to-user cosine). Never exposes emails. | Information-asymmetry problem |
+| **Applicant fit score** | Project owners see a fit percentage and the reasons behind it beside each applicant, sorted best-first. | Skill-visibility gap |
+| **Weekly digest** | The recommender served on a schedule: each active student's top match is delivered as an in-app notification and web push, deduplicated to avoid spam. | Team-formation friction |
+| **Semantic search + duplicate detection** | Browse-projects search ranks by meaning (embedding cosine), and the post form advises when a semantically similar open project already exists — "join instead of duplicating." | Platform fragmentation |
+| **Contribution analytics** | Every public profile shows messages, posts, files shared, and voice sessions — making contribution history visible. | Accountability gap / free-riding |
+| **Instructor dashboard** | An instructor/admin-gated view grouping active projects by course and flagging at-risk teams (no activity in 7+ days, deadline within 5 days, overdue). | Limited instructor oversight |
+| **Kanban task board** | A per-project To-Do / In-Progress / Done board with drag-and-drop, touch-friendly move controls, and member assignment; every endpoint authorizes by project membership. | Joint task performance |
+| **AI quiz generator** | Students paste or upload notes (`.txt`/`.md`/`.pdf`); SSM-1.0 returns a validated multiple-choice practice quiz with instant client-side scoring and explanations. Notes are processed in memory and never stored. | Study support |
+| **AI meeting notes** | An opt-in recording in a study-group room is transcribed with Whisper (`whisper-large-v3`) and summarized by the LLM into the group's live-synced shared notes and broadcast to members. Audio is never stored. | Communication / resource sharing |
+
+Every feature was built to the same bar: locked to the existing design system (palette, typography, components), responsive to mobile and tablet, authorized by the appropriate gate (login, role, membership, or ownership), rate-limited on expensive LLM and search paths, XSS-safe in every client-rendered fragment, and covered by tests. A subsequent performance review of the ML-backed read paths found and fixed an N+1 / one-at-a-time embedding pattern by batching embeddings and eager-loading relationships.
+
+---
+
+## 10. Limitations and Future Work
+
+### 10.1 Current Limitations
 
 1. **Full-Mesh Voice Topology:** The peer-to-peer WebRTC mesh topology has O(n²) connection complexity, making it unsuitable for rooms with more than 6–8 participants. A selective forwarding unit (SFU) architecture would be needed for larger rooms.
 
 2. **Polling-Based Group Chat:** Study group messages use HTTP polling (3-second intervals) rather than WebSocket push. While sufficient for the current scale, this creates unnecessary server load and latency compared to SocketIO-based message delivery.
 
-3. **Single-Server Recommendation Engine:** The recommender scores all open projects on each request (O(n) projects). For very large deployments, this would need indexing, caching, or an approximate-nearest-neighbour index over the embedding space.
+3. **Single-Server Recommendation Engine:** The recommender scores all open projects on each request (O(n) projects). A v3.0 performance pass batched the embedding transforms and eager-loaded relationships to remove an N+1 pattern, but for very large deployments this path would still need indexing, caching, or an approximate-nearest-neighbour index over the embedding space.
 
 4. **Recommender Data Scarcity:** The learned recommender is trained on a small number of interaction pairs (memberships and applications). Its reported ROC-AUC, while measured leakage-free, rests on few positive examples and is therefore a fragile estimate; the semantic embedding tower adds no aggregate lift at this corpus size. Model quality is expected to improve substantially only as interaction data accumulates and the model is retrained. This is disclosed transparently on the public model card rather than obscured.
 
-5. **No Automated Testing:** The current codebase lacks a comprehensive test suite. Unit tests for business logic and integration tests for API endpoints are high-priority technical debt.
+5. **Partial Test Coverage:** Version 3.0 introduced an automated suite (120+ backend `pytest` tests plus a frontend suite) gated in CI with a coverage floor, resolving the earlier absence of testing. Coverage is concentrated on business logic, authorization gates, and the data/ML pipelines rather than being exhaustive; broad template-rendering and end-to-end (Playwright) coverage remain future work.
 
 6. **CSP `unsafe-inline`:** The nonce infrastructure exists but is not fully utilized due to inline event handlers in templates. Removing `unsafe-inline` requires a frontend refactor.
 
@@ -668,7 +734,10 @@ We evaluate ProjectBuddy against the seven CSCL affordances framework proposed b
 
 10. **Single-Institution Design:** The platform assumes a single university context. Multi-institution support would require tenant isolation.
 
-### 9.2 Planned Improvements
+### 10.2 Planned Improvements
+
+**Delivered since v2.1.** Several items previously listed here were implemented in Version 3.0 (Section 9): a comprehensive test suite and CI; OpenAPI/Swagger documentation with a versioned JSON API; contribution analytics and the instructor dashboard; AI-powered exam preparation (the quiz generator, including PDF upload); multi-language support (English, Turkish, Bosnian); and the MLOps, data-warehouse, and observability infrastructure. The roadmap below reflects what remains outstanding.
+
 
 1. **SFU-Based Voice Architecture:** Migrate from full-mesh WebRTC to a Selective Forwarding Unit (e.g., mediasoup or Janus) to support voice rooms with 20+ concurrent participants while reducing client-side bandwidth requirements.
 
@@ -676,37 +745,31 @@ We evaluate ProjectBuddy against the seven CSCL affordances framework proposed b
 
 3. **Deeper Recommender Modelling:** The trained recommender (Section 4.3) ships in v2.1 with a logistic-regression + LSA-embedding hybrid. As interaction volume grows, planned work includes contrastive fine-tuning of the embedding towers on real interaction pairs, transformer-based embeddings (served via a lightweight ONNX runtime to avoid a torch dependency), and collaborative-filtering signals from completion rates and feedback scores.
 
-4. **Contribution Analytics Dashboard:** Implement per-project activity dashboards showing individual member contributions (messages sent, files shared, time in voice chat) to support instructor oversight and fair assessment.
+4. **End-to-End Testing and Higher Coverage:** Add Playwright end-to-end tests for critical user flows and raise the coverage floor toward 80%, complementing the existing unit and integration suite.
 
-5. **Comprehensive Test Suite:** Develop unit tests (pytest) for all service modules, integration tests for API endpoints, and end-to-end tests (Selenium/Playwright) for critical user flows. Target 80%+ code coverage.
+5. **CSP Hardening:** Refactor inline event handlers to external scripts with nonce attributes, remove `unsafe-inline` from CSP.
 
-6. **CSP Hardening:** Refactor inline event handlers to external scripts with nonce attributes, remove `unsafe-inline` from CSP.
+6. **Email Verification:** Confirmation link on registration to prevent impersonation.
 
-7. **Email Verification:** Confirmation link on registration to prevent impersonation.
+7. **WCAG 2.1 AA Compliance:** Conduct a formal accessibility audit and remediate identified issues including keyboard navigation, screen reader compatibility, and color contrast ratios.
 
-8. **WCAG 2.1 AA Compliance:** Conduct a formal accessibility audit and remediate identified issues including keyboard navigation, screen reader compatibility, and color contrast ratios.
+8. **Mobile Application:** Develop a React Native or Flutter companion application for native push notifications, offline access, and optimized voice chat on mobile networks.
 
-9. **Mobile Application:** Develop a React Native or Flutter companion application for native push notifications, offline access, and optimized voice chat on mobile networks.
-
-10. **AI-Powered Exam Preparation:** Let students upload course material (PDF/notes) and have SSM-1.0 generate practice quizzes (multiple-choice and open-ended) with scoring and explanations, plus an oral-practice mode that uses the existing live-room voice channel for spoken-answer drills.
+9. **Persistent File Storage in Production:** Route avatar and banner uploads through the S3 storage abstraction by default so user-uploaded imagery survives redeploys on ephemeral-disk hosts.
 
 10. **LTI Integration:** Implement Learning Tools Interoperability (LTI 1.3) to enable seamless embedding within institutional LMS platforms (Moodle, Canvas) and automated grade passback.
 
-11. **Multi-Language Support:** Internationalize the platform with i18n support, starting with English, Turkish, and Bosnian as the primary languages of the IUS student population.
+11. **Team-Success Prediction:** Train a model on the accumulating warehouse data to predict whether a project will complete on time from team composition and activity, surfacing at-risk teams to instructors ahead of the rule-based flags in Section 9.7.
 
-12. **API Documentation:** OpenAPI/Swagger specification for all JSON endpoints.
-
-13. **Mid-Project Check-Ins:** Periodic teammate pulse surveys during active projects to surface issues before completion.
-
-14. **Instructor Dashboard:** Per-course view of team formation, progress, and peer feedback for course supervisors.
+12. **Mid-Project Check-Ins:** Periodic teammate pulse surveys during active projects to surface issues before completion.
 
 ---
 
-## 10. Conclusion
+## 11. Conclusion
 
-This white paper has presented ProjectBuddy, an open-source web-based platform that addresses the fundamental challenges of collaborative project-based learning in higher education. By integrating intelligent team formation, real-time multi-modal communication, structured peer assessment, skill endorsement, AI-powered assistance, and administrative tooling into a single cohesive environment, ProjectBuddy represents a significant contribution to the Computer-Supported Collaborative Learning (CSCL) technology landscape.
+This white paper has presented ProjectBuddy, an open-source web-based platform that addresses the fundamental challenges of collaborative project-based learning in higher education. By integrating intelligent team formation, real-time multi-modal communication, structured peer assessment, skill endorsement, AI-powered assistance, and administrative tooling into a single cohesive environment, ProjectBuddy represents a significant contribution to the Computer-Supported Collaborative Learning (CSCL) technology landscape. Version 3.0 further demonstrates that a student-built product can be operated with production-grade engineering practice — a versioned API, a data warehouse under quality gates, an MLOps loop with drift monitoring and online experimentation, observability, and CI — without abandoning the honest reporting of negative results (for instance, the recommender's fragile small-sample estimates and the semantic tower's lack of aggregate lift, both disclosed on the public model card).
 
-The platform's technical architecture demonstrates that modern web technologies — Flask, SQLAlchemy 2.0, WebRTC, Redis, and large language models — can be composed into a robust, secure, and maintainable system suitable for university-scale deployment. The defense-in-depth security approach, with its comprehensive header suite, rate limiting, CSRF protection, and multi-layer file validation, establishes a security baseline appropriate for handling student data in an educational context.
+The platform's technical architecture demonstrates that modern web technologies — Flask, SQLAlchemy 2.0, WebRTC, Redis, scikit-learn, and large language models — can be composed into a robust, secure, and maintainable system suitable for university-scale deployment. The defense-in-depth security approach, with its comprehensive header suite, rate limiting, CSRF protection, and multi-layer file validation, establishes a security baseline appropriate for handling student data in an educational context.
 
 The platform's core contribution is not any single feature but the *combination* of structured listings, gated reputation mechanisms, and consolidated collaboration tools into a single system. A project listing alone is a job board; peer feedback alone is a survey; chat alone is Discord. The value emerges from connecting these elements into a lifecycle: **post → match → form → collaborate → complete → review → carry reputation forward**.
 
@@ -716,7 +779,7 @@ ProjectBuddy is deployed and actively used at the International University of Sa
 
 ---
 
-## 11. References
+## 12. References
 
 [1] Dillenbourg, P. (1999). *Collaborative Learning: Cognitive and Computational Approaches.* Elsevier Science. ISBN: 978-0-08-043073-7.
 

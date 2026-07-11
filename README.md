@@ -226,7 +226,7 @@ Tech Stack
 |MLOps       |Model versioning/rollback · scheduled retraining · drift monitoring|
 |Frontend (beta)|React 18 + TypeScript + Vite (feature-flagged SPA on /api/v1)|
 |IaC         |render.yaml Blueprint · Prometheus + Grafana compose profile   |
-|Testing     |pytest (110+ tests) + vitest · coverage gate in CI            |
+|Testing     |pytest (120+ tests) + vitest · coverage gate in CI            |
 |CI/CD       |GitHub Actions (ruff + pytest 3.9/3.11 + frontend build) · Docker|
 
 Project Structure
@@ -235,31 +235,55 @@ ProjectBuddy/
 ├── app.py                  # App factory, security headers, scheduler startup
 ├── config.py               # Environment configuration (Dev / Test / Prod)
 ├── extensions.py           # Flask extensions + admin_required decorator
-├── models.py               # 25 SQLAlchemy 2.0 models
+├── models.py               # 38 SQLAlchemy 2.0 models (incl. ActivityEvent + dw_* warehouse)
 ├── wsgi.py                 # Production entry point (gunicorn + eventlet)
 ├── requirements.txt        # Python dependencies
 ├── .env.example            # Environment variable template
 │
 ├── routes/                 # Blueprint route handlers
 │   ├── auth.py             # Register, login, GitHub OAuth, password reset
-│   ├── main.py             # Dashboard, profiles, project UI
+│   ├── main.py             # Dashboard, profiles, teammate finder, quiz, kanban
 │   ├── projects.py         # Project CRUD, applications, feedback, endorsements
 │   ├── users.py            # User search, public profiles
 │   ├── chat.py             # User ↔ admin support chat
 │   ├── community.py        # Community feed, posts, comments, likes
-│   ├── study_groups.py     # Study groups, file sharing
+│   ├── study_groups.py     # Study groups, file sharing, AI meeting notes
 │   ├── voice.py            # WebRTC signaling (SocketIO events)
-│   ├── chatbot.py          # AI assistant (Groq / Anthropic / mock)
-│   ├── admin.py            # Admin dashboard and moderation
+│   ├── chatbot.py          # AI assistant (RAG + tool calling)
+│   ├── admin.py            # Admin dashboard, moderation, instructor view
+│   ├── api_v1.py           # JSON API (flask-smorest, OpenAPI/Swagger, JWT)
 │   └── email.py            # Transactional email (SMTP)
 │
 ├── services/
+│   ├── recommendation_service.py # Teammate/project recommender (rule + ML, A/B)
+│   ├── teammate_service.py       # "Find teammates" candidate ranking
+│   ├── applicant_fit.py          # Applicant fit score for project owners
+│   ├── project_search.py         # Semantic search + similar-project warning
+│   ├── contribution_stats.py     # Per-member contribution breakdown
+│   ├── instructor_view.py        # Course-level team-health oversight
+│   ├── quiz_service.py           # AI quiz generator (notes + file upload)
+│   ├── meeting_notes.py          # AI meeting notes from voice-room audio
+│   ├── assistant_tools.py        # Tool definitions for the RAG assistant
+│   ├── digest.py                 # Weekly digest → Web-Push notifications
+│   ├── push_service.py           # Web-Push (VAPID) delivery
+│   ├── analytics.py              # SQL-first DAU/WAU/MAU, funnel, retention
+│   ├── etl.py                    # Nightly ELT → dw_* star schema + quality gates
+│   ├── metrics.py                # Prometheus instrumentation helpers
+│   ├── db_profiler.py            # Slow-query logging
+│   ├── api_auth.py               # JWT issue/verify for /api/v1
+│   ├── i18n.py                   # EN / TR / BS translation layer
 │   ├── badge_service.py          # Badge award logic (event-driven)
-│   ├── recommendation_service.py # Interest-based project recommendations
 │   ├── deadline_checker.py       # Auto-complete overdue projects (scheduled)
 │   ├── file_storage.py           # Local / S3 file storage abstraction
 │   └── mock_data.py              # Seed realistic demo data
 │
+├── tasks.py                # Celery tasks (eager in-process fallback)
+├── frontend/               # React 18 + TypeScript + Vite explorer (beta SPA)
+├── ops/                    # Prometheus + Grafana compose profile
+├── scripts/                # CLI: recommender training, evals, admin, db init
+├── render.yaml             # Render Blueprint (IaC)
+├── Dockerfile              # Web image · docker-compose.yml (web + Postgres + Redis)
+├── .github/workflows/      # CI (ruff + pytest 3.9/3.11 + frontend build)
 ├── templates/              # Jinja2 HTML templates (CSP nonce-aware)
 ├── static/                 # CSS, JS, images
 ├── migrations/             # Alembic database migrations
