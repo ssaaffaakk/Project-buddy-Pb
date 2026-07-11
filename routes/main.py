@@ -1275,6 +1275,37 @@ def set_language(lang):
     return redirect(request.referrer or url_for("main.dashboard"))
 
 
+# ── QUIZ GENERATOR (study tool) ───────────────────────────────────────────────
+@main_bp.route("/quiz")
+@login_required
+def quiz_page():
+    return render_template("user/quiz.html")
+
+
+@main_bp.route("/quiz/generate", methods=["POST"])
+@login_required
+@limiter.limit("6 per minute; 40 per day")
+def quiz_generate():
+    """Generate a practice quiz from pasted notes. LLM-backed, rate-limited,
+    input length-capped; notes are never persisted."""
+    from services.quiz_service import generate_quiz, QuizError
+    data = request.get_json(silent=True) or {}
+    material = (data.get("material") or "")
+    try:
+        count = int(data.get("count", 5))
+    except (TypeError, ValueError):
+        count = 5
+    try:
+        questions = generate_quiz(material, n=count)
+    except QuizError as e:
+        return jsonify({"error": str(e)}), 400
+    except Exception:
+        current_app.logger.exception("quiz generation failed")
+        return jsonify({"error": "Something went wrong generating the quiz."}), 500
+    analytics.track("quiz_generated", current_user.id, value=len(questions), commit=True)
+    return jsonify({"questions": questions})
+
+
 # ── INSTRUCTOR DASHBOARD ──────────────────────────────────────────────────────
 @main_bp.route("/instructor")
 @login_required

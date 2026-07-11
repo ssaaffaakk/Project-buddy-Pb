@@ -570,6 +570,8 @@ def _register_context_processors(app: Flask) -> None:
             active = "study_groups"
         elif path.startswith("/chatbot"):
             active = "chatbot"
+        elif path == "/quiz":
+            active = "quiz"
         elif path == "/post-project-page":
             active = "post_project"
         elif path == "/my-projects":

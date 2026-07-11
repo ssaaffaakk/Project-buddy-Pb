@@ -1,0 +1,174 @@
+{% extends 'base_app.html' %}
+{% block title %}ProjectBuddy — Quiz Generator{% endblock %}
+
+{% block extra_style %}
+<style nonce="{{ csp_nonce }}">
+.quiz-intro{color:var(--soft);font-size:0.88rem;line-height:1.6;margin-bottom:22px;max-width:640px;}
+.quiz-setup{background:var(--card);border:1px solid var(--border);border-top-color:rgba(255,255,255,0.08);
+  border-radius:var(--r);padding:22px 24px;margin-bottom:24px;position:relative;overflow:hidden;}
+.quiz-setup::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(124,155,255,0.14),transparent);}
+.quiz-setup textarea{min-height:180px;font-size:0.86rem;line-height:1.6;}
+.quiz-row{display:flex;align-items:center;gap:14px;margin-top:14px;flex-wrap:wrap;}
+.quiz-count{display:flex;align-items:center;gap:8px;font-family:'DM Mono',monospace;
+  font-size:0.7rem;letter-spacing:0.05em;text-transform:uppercase;color:var(--muted);}
+.quiz-count select{width:auto;min-height:0;padding:6px 28px 6px 10px;}
+.quiz-char{font-family:'DM Mono',monospace;font-size:0.66rem;color:var(--muted);margin-left:auto;}
+.btn-quiz{padding:11px 22px;border:none;border-radius:var(--r);cursor:pointer;
+  background:linear-gradient(110deg,var(--accent) 0%,var(--violet) 45%,var(--coral) 100%);color:#fff;
+  font-family:'DM Mono',monospace;font-size:0.7rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;
+  transition:all .2s;}
+.btn-quiz:hover:not(:disabled){box-shadow:0 4px 24px rgba(124,155,255,0.3);transform:translateY(-1px);}
+.btn-quiz:disabled{opacity:0.5;cursor:default;}
+.quiz-score{background:linear-gradient(155deg,rgba(124,155,255,0.1),rgba(255,255,255,0.01));
+  border:1px solid rgba(124,155,255,0.25);border-radius:var(--r);padding:18px 22px;margin-bottom:20px;
+  display:flex;align-items:baseline;gap:14px;}
+.quiz-score .pct{font-family:'DM Serif Display',serif;font-size:2rem;color:var(--accent);line-height:1;}
+.quiz-score .lbl{font-family:'DM Mono',monospace;font-size:0.7rem;letter-spacing:0.05em;
+  text-transform:uppercase;color:var(--soft);}
+.q-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);
+  padding:20px 22px;margin-bottom:14px;}
+.q-num{font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.08em;text-transform:uppercase;
+  color:var(--muted);margin-bottom:8px;}
+.q-text{font-size:0.95rem;color:var(--text);line-height:1.5;margin-bottom:16px;}
+.q-opt{display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:8px;cursor:pointer;
+  border:1px solid var(--border);background:rgba(255,255,255,0.02);margin-bottom:8px;transition:all .15s;}
+.q-opt:hover{border-color:rgba(124,155,255,0.3);}
+.q-opt.selected{border-color:var(--accent);background:rgba(124,155,255,0.08);}
+.q-opt.correct{border-color:rgba(90,138,106,0.5);background:rgba(90,138,106,0.12);}
+.q-opt.wrong{border-color:rgba(192,57,43,0.5);background:rgba(192,57,43,0.1);}
+.q-opt.locked{cursor:default;}
+.q-mark{width:22px;height:22px;border-radius:50%;border:1.5px solid var(--border);flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-family:'DM Mono',monospace;color:var(--muted);}
+.q-opt.selected .q-mark{border-color:var(--accent);color:var(--accent);}
+.q-opt.correct .q-mark{border-color:#7ab890;color:#7ab890;}
+.q-opt.wrong .q-mark{border-color:#e07060;color:#e07060;}
+.q-opt-text{font-size:0.86rem;color:var(--soft);}
+.q-explain{margin-top:10px;padding:11px 14px;border-radius:8px;background:rgba(124,155,255,0.06);
+  border:1px solid rgba(124,155,255,0.15);font-size:0.8rem;color:var(--soft);line-height:1.55;display:none;}
+.q-explain.show{display:block;}
+.q-explain b{color:var(--accent);font-weight:600;}
+.quiz-actions{display:flex;gap:10px;margin-top:8px;}
+.quiz-spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,0.3);
+  border-top-color:#fff;border-radius:50%;animation:qspin .7s linear infinite;vertical-align:middle;margin-right:8px;}
+@keyframes qspin{to{transform:rotate(360deg);}}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header fx-up">
+  <div>
+    <div class="page-title">Quiz Generator</div>
+    <div class="page-sub">Turn your notes into a practice quiz</div>
+  </div>
+</div>
+
+<p class="quiz-intro fx-up">
+  Paste your lecture notes or course material below and SSM-1.0 will build a practice
+  quiz — with instant scoring and explanations. Your notes are never stored.
+</p>
+
+<div class="quiz-setup fx-up">
+  <textarea id="material" maxlength="12000"
+    placeholder="{{ _('Paste your notes here (at least 60 characters)…') }}"></textarea>
+  <div class="quiz-row">
+    <label class="quiz-count">{{ _('Questions') }}
+      <select id="count">
+        <option value="3">3</option>
+        <option value="5" selected>5</option>
+        <option value="8">8</option>
+        <option value="10">10</option>
+      </select>
+    </label>
+    <button class="btn-quiz" id="gen-btn" onclick="generateQuiz()">{{ _('Generate quiz') }}</button>
+    <span class="quiz-char"><span id="char-count">0</span> / 12000</span>
+  </div>
+</div>
+
+<div id="quiz-output"></div>
+{% endblock %}
+
+{% block extra_script %}
+<script nonce="{{ csp_nonce }}">
+var QUIZ = [];
+var material = document.getElementById('material');
+material.addEventListener('input', function(){
+  document.getElementById('char-count').textContent = material.value.length;
+});
+
+async function generateQuiz(){
+  var text = material.value.trim();
+  if (text.length < 60){ showToast('Paste at least 60 characters of notes.', 'warning'); return; }
+  var btn = document.getElementById('gen-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="quiz-spinner"></span>{{ _("Generating…") }}';
+  document.getElementById('quiz-output').innerHTML = '';
+  try {
+    var r = await fetch('/quiz/generate', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({material: text, count: document.getElementById('count').value})
+    });
+    var d = await r.json();
+    if (!r.ok){ showToast(d.error || 'Could not generate the quiz.', 'error'); return; }
+    QUIZ = d.questions; renderQuiz();
+  } catch(e){ showToast('Network error. Please try again.', 'error'); }
+  finally { btn.disabled = false; btn.textContent = '{{ _("Generate quiz") }}'; }
+}
+
+function renderQuiz(){
+  var out = document.getElementById('quiz-output');
+  var html = '<div class="q-list">';
+  QUIZ.forEach(function(q, qi){
+    html += '<div class="q-card" data-qi="' + qi + '">' +
+      '<div class="q-num">{{ _("Question") }} ' + (qi+1) + ' / ' + QUIZ.length + '</div>' +
+      '<div class="q-text">' + window._esc(q.q) + '</div>';
+    q.options.forEach(function(opt, oi){
+      html += '<div class="q-opt" data-qi="' + qi + '" data-oi="' + oi + '" onclick="pickOption(' + qi + ',' + oi + ')">' +
+        '<span class="q-mark">' + String.fromCharCode(65+oi) + '</span>' +
+        '<span class="q-opt-text">' + window._esc(opt) + '</span></div>';
+    });
+    html += '<div class="q-explain" id="exp-' + qi + '"></div></div>';
+  });
+  html += '</div><div class="quiz-actions">' +
+    '<button class="btn-quiz" onclick="submitQuiz()">{{ _("Check answers") }}</button></div>';
+  out.innerHTML = html;
+  window.scrollTo({top: out.offsetTop - 20, behavior:'smooth'});
+}
+
+var ANSWERS = {};
+function pickOption(qi, oi){
+  if (document.querySelector('.q-card[data-qi="' + qi + '"] .q-opt.locked')) return; // already graded
+  ANSWERS[qi] = oi;
+  document.querySelectorAll('.q-opt[data-qi="' + qi + '"]').forEach(function(el){
+    el.classList.toggle('selected', parseInt(el.dataset.oi,10) === oi);
+  });
+}
+
+function submitQuiz(){
+  if (Object.keys(ANSWERS).length < QUIZ.length){
+    showToast('Answer every question first.', 'warning'); return;
+  }
+  var correct = 0;
+  QUIZ.forEach(function(q, qi){
+    var picked = ANSWERS[qi];
+    if (picked === q.answer) correct++;
+    document.querySelectorAll('.q-opt[data-qi="' + qi + '"]').forEach(function(el){
+      var oi = parseInt(el.dataset.oi,10);
+      el.classList.add('locked'); el.classList.remove('selected');
+      if (oi === q.answer) el.classList.add('correct');
+      else if (oi === picked) el.classList.add('wrong');
+    });
+    var exp = document.getElementById('exp-' + qi);
+    if (q.explanation){ exp.innerHTML = '<b>{{ _("Why:") }}</b> ' + window._esc(q.explanation); exp.classList.add('show'); }
+  });
+  var pct = Math.round(correct / QUIZ.length * 100);
+  var out = document.getElementById('quiz-output');
+  var banner = document.createElement('div');
+  banner.className = 'quiz-score fx-up';
+  banner.innerHTML = '<span class="pct">' + pct + '%</span>' +
+    '<span class="lbl">' + correct + ' / ' + QUIZ.length + ' {{ _("correct") }}</span>';
+  out.insertBefore(banner, out.firstChild);
+  window.scrollTo({top: out.offsetTop - 20, behavior:'smooth'});
+}
+</script>
+{% endblock %}
