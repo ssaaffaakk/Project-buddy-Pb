@@ -73,7 +73,7 @@ Community Feed
 	∙	Notifications for comments and mentions
 Study Groups
 	∙	Create public or private study groups by topic
-	∙	Real-time group chat
+	∙	Real-time group chat (SocketIO) — live typing indicators, online presence, jump-to-latest, and message delete
 	∙	Voice rooms — WebRTC peer-to-peer voice calls inside study groups (no external service needed)
 	∙	Share files within the group
 AI Chatbot
@@ -226,7 +226,7 @@ Tech Stack
 |MLOps       |Model versioning/rollback · scheduled retraining · drift monitoring|
 |Frontend (beta)|React 18 + TypeScript + Vite (feature-flagged SPA on /api/v1)|
 |IaC         |render.yaml Blueprint · Prometheus + Grafana compose profile   |
-|Testing     |pytest (120+ tests) + vitest · coverage gate in CI            |
+|Testing     |pytest (130+ tests) + vitest · coverage gate in CI            |
 |CI/CD       |GitHub Actions (ruff + pytest 3.9/3.11 + frontend build) · Docker|
 
 Project Structure
