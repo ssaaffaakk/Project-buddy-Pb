@@ -35,6 +35,8 @@ REQUEST_LATENCY = Histogram(
 USERS_TOTAL = Gauge("pb_users_total", "Registered users")
 PROJECTS_OPEN = Gauge("pb_projects_open", "Projects currently open")
 ACTIVITY_EVENTS_TOTAL = Gauge("pb_activity_events_total", "Analytics events recorded")
+MODEL_DRIFT_SCORE = Gauge("pb_model_drift_score",
+                          "Recommender feature drift (max standardized mean shift)")
 
 
 def _endpoint_label():
@@ -50,6 +52,10 @@ def _refresh_domain_gauges():
     USERS_TOTAL.set(User.query.count())
     PROJECTS_OPEN.set(Project.query.filter_by(status="open").count())
     ACTIVITY_EVENTS_TOTAL.set(ActivityEvent.query.count())
+    from services.ml.drift import load_drift
+    report = load_drift()
+    if report:
+        MODEL_DRIFT_SCORE.set(report.get("score", 0.0))
 
 
 def init_metrics(app):
@@ -77,6 +83,11 @@ def init_metrics(app):
     @app.route("/metrics")
     def metrics():
         token = os.environ.get("METRICS_TOKEN", "")
+        if not token and not app.debug:
+            # Production is default-deny: without a configured token the
+            # endpoint is closed, not open. Only dev leaves it unauthenticated.
+            return Response("forbidden: METRICS_TOKEN not configured",
+                            status=403, mimetype="text/plain")
         if token:
             supplied = (request.args.get("token")
                         or request.headers.get("X-Metrics-Token", ""))

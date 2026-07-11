@@ -94,10 +94,10 @@ class Project(db.Model):
     id: Mapped[int] = mapped_column(primary_key=True)
     title: Mapped[str] = mapped_column(String(200))
     description: Mapped[str] = mapped_column(Text)
-    owner_id: Mapped[int] = mapped_column(db.ForeignKey("users.id"))
+    owner_id: Mapped[int] = mapped_column(db.ForeignKey("users.id"), index=True)
     course: Mapped[Optional[str]] = mapped_column(String(100))
     team_size: Mapped[int] = mapped_column(Integer)
-    status: Mapped[str] = mapped_column(String(20), default="open")
+    status: Mapped[str] = mapped_column(String(20), default="open", index=True)
     deadline: Mapped[Optional[datetime]] = mapped_column(DateTime)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
     completed_at: Mapped[Optional[datetime]] = mapped_column(DateTime)
@@ -136,7 +136,7 @@ class ProjectTag(db.Model):
     __tablename__ = "project_tags"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    project_id: Mapped[int] = mapped_column(db.ForeignKey("projects.id"))
+    project_id: Mapped[int] = mapped_column(db.ForeignKey("projects.id"), index=True)
     tag: Mapped[str] = mapped_column(String(50))
 
 
@@ -144,7 +144,7 @@ class ProjectSkill(db.Model):
     __tablename__ = "project_skills"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    project_id: Mapped[int] = mapped_column(db.ForeignKey("projects.id"))
+    project_id: Mapped[int] = mapped_column(db.ForeignKey("projects.id"), index=True)
     skill: Mapped[str] = mapped_column(String(80))
 
 
@@ -152,8 +152,8 @@ class ProjectMember(db.Model):
     __tablename__ = "project_members"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    project_id: Mapped[int] = mapped_column(db.ForeignKey("projects.id"))
-    user_id: Mapped[int] = mapped_column(db.ForeignKey("users.id"))
+    project_id: Mapped[int] = mapped_column(db.ForeignKey("projects.id"), index=True)
+    user_id: Mapped[int] = mapped_column(db.ForeignKey("users.id"), index=True)
     role: Mapped[str] = mapped_column(String(50), default="member")
     joined_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
     removed: Mapped[bool] = mapped_column(Boolean, default=False)
@@ -167,8 +167,8 @@ class Application(db.Model):
     __tablename__ = "applications"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    project_id: Mapped[int] = mapped_column(db.ForeignKey("projects.id"))
-    applicant_id: Mapped[int] = mapped_column(db.ForeignKey("users.id"))
+    project_id: Mapped[int] = mapped_column(db.ForeignKey("projects.id"), index=True)
+    applicant_id: Mapped[int] = mapped_column(db.ForeignKey("users.id"), index=True)
     message: Mapped[Optional[str]] = mapped_column(Text)
     status: Mapped[str] = mapped_column(String(20), default="pending")
     created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
@@ -182,7 +182,7 @@ class ProjectMessage(db.Model):
     __tablename__ = "project_messages"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    project_id: Mapped[int] = mapped_column(db.ForeignKey("projects.id"))
+    project_id: Mapped[int] = mapped_column(db.ForeignKey("projects.id"), index=True)
     sender_id: Mapped[int] = mapped_column(db.ForeignKey("users.id"))
     content: Mapped[str] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
@@ -209,7 +209,7 @@ class Feedback(db.Model):
     id: Mapped[int] = mapped_column(primary_key=True)
     project_id: Mapped[Optional[int]] = mapped_column(db.ForeignKey("projects.id"))
     giver_id: Mapped[int] = mapped_column(db.ForeignKey("users.id"))
-    receiver_id: Mapped[int] = mapped_column(db.ForeignKey("users.id"))
+    receiver_id: Mapped[int] = mapped_column(db.ForeignKey("users.id"), index=True)
     rating: Mapped[int] = mapped_column(Integer, CheckConstraint("rating BETWEEN 1 AND 5"))
     comment: Mapped[Optional[str]] = mapped_column(Text)
     is_instructor_rating: Mapped[bool] = mapped_column(Boolean, default=False)
@@ -224,7 +224,7 @@ class Endorsement(db.Model):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     giver_id: Mapped[int] = mapped_column(db.ForeignKey("users.id"))
-    receiver_id: Mapped[int] = mapped_column(db.ForeignKey("users.id"))
+    receiver_id: Mapped[int] = mapped_column(db.ForeignKey("users.id"), index=True)
     skill: Mapped[str] = mapped_column(String(80))
     created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
 
@@ -318,7 +318,7 @@ class CommunityComment(db.Model):
     __tablename__ = "community_comments"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    post_id: Mapped[int] = mapped_column(db.ForeignKey("community_posts.id"))
+    post_id: Mapped[int] = mapped_column(db.ForeignKey("community_posts.id"), index=True)
     author_id: Mapped[int] = mapped_column(db.ForeignKey("users.id"))
     body: Mapped[str] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
@@ -382,7 +382,7 @@ class Notification(db.Model):
     __tablename__ = "notifications"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    user_id: Mapped[int] = mapped_column(db.ForeignKey("users.id"))
+    user_id: Mapped[int] = mapped_column(db.ForeignKey("users.id"), index=True)
     type: Mapped[Optional[str]] = mapped_column(String(30))  # 'comment' | 'apply' | 'accepted' | 'rejected' | 'mention'
     message: Mapped[str] = mapped_column(String(300))
     link: Mapped[Optional[str]] = mapped_column(String(200))
@@ -424,7 +424,7 @@ class SharedFile(db.Model):
     __tablename__ = "shared_files"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    group_id: Mapped[int] = mapped_column(db.ForeignKey("study_groups.id"))
+    group_id: Mapped[int] = mapped_column(db.ForeignKey("study_groups.id"), index=True)
     uploader_id: Mapped[int] = mapped_column(db.ForeignKey("users.id"))
     filename: Mapped[str] = mapped_column(String(255))
     stored_name: Mapped[str] = mapped_column(String(255))
@@ -478,7 +478,7 @@ class StudyGroupMessage(db.Model):
     __tablename__ = "study_group_messages"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    group_id: Mapped[int] = mapped_column(db.ForeignKey("study_groups.id"))
+    group_id: Mapped[int] = mapped_column(db.ForeignKey("study_groups.id"), index=True)
     author_id: Mapped[int] = mapped_column(db.ForeignKey("users.id"))
     body: Mapped[str] = mapped_column(Text)
     # Optional file dropped straight into the chat (rendered inline in the stream)
@@ -535,6 +535,79 @@ class ProfileCommentLike(db.Model):
     __table_args__ = (db.UniqueConstraint("comment_id", "user_id"),)
 
 
+# ── DATA WAREHOUSE (star schema — written only by services/etl.py) ───────────
+# Internal analytics tables. No user-facing route reads them; the admin
+# dashboard shows only freshness/row counts. Rebuilt nightly (idempotent).
+
+class DwDimUser(db.Model):
+    """User dimension — one denormalized row per user."""
+    __tablename__ = "dw_dim_user"
+
+    user_id: Mapped[int] = mapped_column(primary_key=True, autoincrement=False)
+    full_name: Mapped[str] = mapped_column(String(161))
+    role: Mapped[str] = mapped_column(String(20))
+    department: Mapped[Optional[str]] = mapped_column(String(100))
+    signup_date: Mapped[Optional[datetime]] = mapped_column(db.Date)
+    onboarded: Mapped[bool] = mapped_column(Boolean, default=False)
+    is_banned: Mapped[bool] = mapped_column(Boolean, default=False)
+    n_interests: Mapped[int] = mapped_column(Integer, default=0)
+    n_skills: Mapped[int] = mapped_column(Integer, default=0)
+    loaded_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+
+class DwDimProject(db.Model):
+    """Project dimension — one denormalized row per project."""
+    __tablename__ = "dw_dim_project"
+
+    project_id: Mapped[int] = mapped_column(primary_key=True, autoincrement=False)
+    title: Mapped[str] = mapped_column(String(200))
+    owner_id: Mapped[int] = mapped_column(Integer)
+    status: Mapped[str] = mapped_column(String(20))
+    course: Mapped[Optional[str]] = mapped_column(String(100))
+    team_size: Mapped[int] = mapped_column(Integer)
+    created_date: Mapped[Optional[datetime]] = mapped_column(db.Date)
+    completed_date: Mapped[Optional[datetime]] = mapped_column(db.Date)
+    n_tags: Mapped[int] = mapped_column(Integer, default=0)
+    n_skills: Mapped[int] = mapped_column(Integer, default=0)
+    n_members: Mapped[int] = mapped_column(Integer, default=0)
+    loaded_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+
+class DwFactDailyActivity(db.Model):
+    """Fact table — one row per (day, user) with event counts by type."""
+    __tablename__ = "dw_fact_daily_activity"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    date: Mapped[datetime] = mapped_column(db.Date, index=True)
+    user_id: Mapped[int] = mapped_column(Integer, index=True)
+    events_total: Mapped[int] = mapped_column(Integer, default=0)
+    logins: Mapped[int] = mapped_column(Integer, default=0)
+    project_views: Mapped[int] = mapped_column(Integer, default=0)
+    applications: Mapped[int] = mapped_column(Integer, default=0)
+    rec_impressions: Mapped[int] = mapped_column(Integer, default=0)
+    rec_clicks: Mapped[int] = mapped_column(Integer, default=0)
+    chatbot_messages: Mapped[int] = mapped_column(Integer, default=0)
+    voice_joins: Mapped[int] = mapped_column(Integer, default=0)
+
+    __table_args__ = (db.UniqueConstraint("date", "user_id", name="uq_dw_fact_day_user"),)
+
+
+class DwDailyMetrics(db.Model):
+    """Daily platform KPI snapshot — one row per day."""
+    __tablename__ = "dw_daily_metrics"
+
+    date: Mapped[datetime] = mapped_column(db.Date, primary_key=True)
+    dau: Mapped[int] = mapped_column(Integer, default=0)
+    signups: Mapped[int] = mapped_column(Integer, default=0)
+    applications: Mapped[int] = mapped_column(Integer, default=0)
+    projects_created: Mapped[int] = mapped_column(Integer, default=0)
+    posts: Mapped[int] = mapped_column(Integer, default=0)
+    rec_impressions: Mapped[int] = mapped_column(Integer, default=0)
+    rec_clicks: Mapped[int] = mapped_column(Integer, default=0)
+    rec_ctr: Mapped[float] = mapped_column(db.Float, default=0.0)
+    loaded_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+
 # ── AI CHATBOT ────────────────────────────────────────────────────────────────
 
 class ChatbotSession(db.Model):
@@ -542,7 +615,7 @@ class ChatbotSession(db.Model):
     __tablename__ = "chatbot_sessions"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    user_id: Mapped[int] = mapped_column(db.ForeignKey("users.id"))
+    user_id: Mapped[int] = mapped_column(db.ForeignKey("users.id"), index=True)
     role: Mapped[str] = mapped_column(String(10))  # "user" | "assistant"
     content: Mapped[str] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))

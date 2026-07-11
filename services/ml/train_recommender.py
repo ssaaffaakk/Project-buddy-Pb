@@ -38,9 +38,46 @@ from services.ml import embeddings
 ARTIFACT_DIR = os.path.join(os.path.dirname(__file__), "artifacts")
 MODEL_PATH = os.path.join(ARTIFACT_DIR, "recommender.joblib")
 METRICS_PATH = os.path.join(ARTIFACT_DIR, "recommender_metrics.json")
+VERSIONS_DIR = os.path.join(ARTIFACT_DIR, "versions")
+KEEP_VERSIONS = 5       # rollback depth
 
 NEGATIVE_RATIO = 3      # sampled negatives per positive
 RANDOM_SEED = 42
+
+
+def _save_version(stamp):
+    """Archive the just-trained artifacts under versions/<stamp>/ and prune
+    to the newest KEEP_VERSIONS — this is what `flask rollback-recommender`
+    restores from."""
+    import shutil
+    vdir = os.path.join(VERSIONS_DIR, stamp)
+    os.makedirs(vdir, exist_ok=True)
+    shutil.copy2(MODEL_PATH, os.path.join(vdir, "recommender.joblib"))
+    shutil.copy2(METRICS_PATH, os.path.join(vdir, "recommender_metrics.json"))
+    versions = sorted(os.listdir(VERSIONS_DIR), reverse=True)
+    for old in versions[KEEP_VERSIONS:]:
+        shutil.rmtree(os.path.join(VERSIONS_DIR, old), ignore_errors=True)
+
+
+def list_versions():
+    """Archived model versions, newest first."""
+    if not os.path.isdir(VERSIONS_DIR):
+        return []
+    return sorted(os.listdir(VERSIONS_DIR), reverse=True)
+
+
+def rollback(version):
+    """Restore an archived version as the serving model. Returns the version."""
+    import shutil
+    vdir = os.path.join(VERSIONS_DIR, version)
+    src_model = os.path.join(vdir, "recommender.joblib")
+    if not os.path.exists(src_model):
+        raise FileNotFoundError(
+            f"version {version!r} not found — available: {list_versions()}"
+        )
+    shutil.copy2(src_model, MODEL_PATH)
+    shutil.copy2(os.path.join(vdir, "recommender_metrics.json"), METRICS_PATH)
+    return version
 
 
 def _load_profiles():
@@ -252,7 +289,18 @@ def train(verbose=True):
         key=lambda d: abs(d["weight"]), reverse=True,
     )
 
+    # Per-feature training distribution — the drift check (services/ml/drift.py)
+    # compares the current serving population against these.
+    feature_stats = {
+        name: {"mean": round(float(X[:, i].mean()), 6),
+               "std": round(float(X[:, i].std()), 6)}
+        for i, name in enumerate(FEATURE_NAMES)
+    }
+
+    stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     metrics = {
+        "version": stamp,
+        "feature_stats": feature_stats,
         "trained_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "model": "LogisticRegression (balanced) + StandardScaler",
         "n_samples": int(len(y)),
@@ -278,6 +326,7 @@ def train(verbose=True):
     joblib.dump(pipe, MODEL_PATH)
     with open(METRICS_PATH, "w") as f:
         json.dump(metrics, f, indent=2)
+    _save_version(stamp)
 
     _log_mlflow(metrics)
 

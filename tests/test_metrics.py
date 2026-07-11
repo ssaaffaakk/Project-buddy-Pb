@@ -24,6 +24,16 @@ def test_metrics_endpoint_labels_by_route_pattern(client, make_user, make_projec
     assert f'endpoint="/project/{pid}"' not in body
 
 
+def test_metrics_denied_in_production_mode_without_token(client, app, monkeypatch):
+    """Default-deny: no METRICS_TOKEN + non-debug → closed, not open."""
+    monkeypatch.delenv("METRICS_TOKEN", raising=False)
+    app.debug = False
+    try:
+        assert client.get("/metrics").status_code == 403
+    finally:
+        app.debug = True
+
+
 def test_metrics_token_guard(client, monkeypatch):
     monkeypatch.setitem(os.environ, "METRICS_TOKEN", "s3cret")
     assert client.get("/metrics").status_code == 403

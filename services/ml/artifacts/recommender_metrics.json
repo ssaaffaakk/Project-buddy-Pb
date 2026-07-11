@@ -1,5 +1,64 @@
 {
-  "trained_at": "2026-07-11T10:51:19+00:00",
+  "version": "20260711T130441Z",
+  "feature_stats": {
+    "interest_topic_overlap": {
+      "mean": 3.240385,
+      "std": 1.24418
+    },
+    "interest_topic_jaccard": {
+      "mean": 0.244782,
+      "std": 0.09923
+    },
+    "skill_overlap": {
+      "mean": 0.432692,
+      "std": 0.948323
+    },
+    "skill_jaccard": {
+      "mean": 0.06347,
+      "std": 0.146783
+    },
+    "course_match": {
+      "mean": 0.0,
+      "std": 0.0
+    },
+    "user_n_interests": {
+      "mean": 4.903846,
+      "std": 0.686676
+    },
+    "user_n_skills": {
+      "mean": 1.076923,
+      "std": 1.707969
+    },
+    "proj_n_tags": {
+      "mean": 5.0,
+      "std": 0.0
+    },
+    "proj_n_skills": {
+      "mean": 5.355769,
+      "std": 3.570494
+    },
+    "proj_team_size": {
+      "mean": 4.432692,
+      "std": 0.968389
+    },
+    "proj_member_count": {
+      "mean": 1.932692,
+      "std": 0.811746
+    },
+    "proj_age_days": {
+      "mean": 28.965852,
+      "std": 13.028762
+    },
+    "proj_vote_score": {
+      "mean": 2.471154,
+      "std": 2.265785
+    },
+    "semantic_sim": {
+      "mean": 0.047089,
+      "std": 0.045757
+    }
+  },
+  "trained_at": "2026-07-11T13:04:41+00:00",
   "model": "LogisticRegression (balanced) + StandardScaler",
   "n_samples": 104,
   "n_features": 14,
@@ -20,29 +79,29 @@
     "semantic_sim"
   ],
   "cv_folds": 5,
-  "roc_auc": 0.8476,
-  "pr_auc": 0.5076,
+  "roc_auc": 0.8639,
+  "pr_auc": 0.5427,
   "random_pr_auc": 0.25,
   "ranking": {
     "recall_at_5": 1.0,
-    "ndcg_at_10": 0.8364,
+    "ndcg_at_10": 0.8307,
     "n_users_evaluated": 9
   },
   "comparison": [
     {
       "name": "Rule-based overlap (baseline)",
-      "roc_auc": 0.8452,
-      "pr_auc": 0.5041
+      "roc_auc": 0.8624,
+      "pr_auc": 0.5391
     },
     {
       "name": "Semantic embeddings only (retriever)",
-      "roc_auc": 0.5799,
-      "pr_auc": 0.3189
+      "roc_auc": 0.5991,
+      "pr_auc": 0.3256
     },
     {
       "name": "Full model (overlap + embeddings)",
-      "roc_auc": 0.8476,
-      "pr_auc": 0.5076
+      "roc_auc": 0.8639,
+      "pr_auc": 0.5427
     }
   ],
   "embedding": {
@@ -53,47 +112,51 @@
   "feature_weights": [
     {
       "feature": "user_n_skills",
-      "weight": 1.8969
+      "weight": 1.8793
     },
     {
       "feature": "skill_overlap",
-      "weight": -1.1711
+      "weight": -1.328
     },
     {
       "feature": "proj_vote_score",
-      "weight": 1.1706
+      "weight": 1.0837
     },
     {
       "feature": "skill_jaccard",
-      "weight": 0.8153
+      "weight": 0.8848
     },
     {
       "feature": "proj_team_size",
-      "weight": -0.5839
+      "weight": -0.6086
     },
     {
       "feature": "interest_topic_jaccard",
-      "weight": -0.4099
-    },
-    {
-      "feature": "proj_n_skills",
-      "weight": 0.2799
-    },
-    {
-      "feature": "proj_age_days",
-      "weight": 0.2746
+      "weight": -0.4727
     },
     {
       "feature": "interest_topic_overlap",
-      "weight": 0.2537
+      "weight": 0.3814
+    },
+    {
+      "feature": "proj_n_skills",
+      "weight": 0.3037
+    },
+    {
+      "feature": "proj_age_days",
+      "weight": 0.272
+    },
+    {
+      "feature": "user_n_interests",
+      "weight": 0.2685
     },
     {
       "feature": "semantic_sim",
-      "weight": -0.0776
+      "weight": -0.0807
     },
     {
       "feature": "proj_member_count",
-      "weight": 0.0744
+      "weight": 0.0274
     }
   ],
   "n_users": 41,

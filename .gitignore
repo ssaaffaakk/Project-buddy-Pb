@@ -66,8 +66,17 @@ static/images/*.png
 *.swp
 *.swo
 
+# ── ML artifacts (generated — only the serving artifacts are tracked) ─────────
+services/ml/artifacts/versions/
+services/ml/artifacts/drift.json
+mlruns/
+backups/
+
 # ── Coverage / testing ────────────────────────────────────────────────────────
 .coverage
 htmlcov/
 .pytest_cache/
 .claude/
+
+# ── Frontend (React SPA) ──────────────────────────────────────────────────────
+frontend/node_modules/

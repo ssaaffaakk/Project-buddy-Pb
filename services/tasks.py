@@ -72,6 +72,41 @@ def check_deadlines_task():
         flag_overdue_projects()
 
 
+@celery.task(name="tasks.retrain_recommender")
+def retrain_recommender_task():
+    """Weekly retrain on accumulated data. train() raises when there isn't
+    enough signal — logged and skipped, never retried in a loop."""
+    with _flask_context():
+        from services.ml.train_recommender import train
+        try:
+            metrics = train(verbose=False)
+            logger.info("recommender retrained: version=%s roc_auc=%s",
+                        metrics.get("version"), metrics.get("roc_auc"))
+        except RuntimeError as e:
+            logger.info("recommender retrain skipped: %s", e)
+
+
+@celery.task(name="tasks.check_model_drift")
+def check_model_drift_task():
+    """Daily feature-drift check against the training snapshot."""
+    with _flask_context():
+        from services.ml.drift import compute_drift
+        compute_drift()
+
+
+@celery.task(name="tasks.run_etl", bind=True, max_retries=1, default_retry_delay=600)
+def run_etl_task(self):
+    """Nightly warehouse load (services/etl.py). A data-quality failure raises
+    so the run is retried once and logged loudly — bad numbers never land
+    silently."""
+    with _flask_context():
+        from services.etl import run_pipeline
+        try:
+            return run_pipeline()
+        except Exception as exc:
+            raise self.retry(exc=exc)
+
+
 # ── Dispatch helpers (what routes actually call) ──────────────────────────────
 
 def _run_in_thread(task, args):

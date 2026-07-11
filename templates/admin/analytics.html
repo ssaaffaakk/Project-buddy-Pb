@@ -264,6 +264,30 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;displ
   </div>
   {% endif %}
 
+  {% if warehouse %}
+  <div class="section-row full">
+    <div class="section-card">
+      <div class="section-title">Data Warehouse (nightly ELT)</div>
+      <div class="dept-row">
+        <div class="dept-label">Last load</div>
+        <div class="dept-count" style="width:auto;">
+          {{ warehouse.last_loaded_at.strftime('%b %d, %Y · %H:%M UTC') if warehouse.last_loaded_at else 'never — run `flask run-etl`' }}
+        </div>
+      </div>
+      <div class="dept-row">
+        <div class="dept-label">Rows</div>
+        <div class="dept-count" style="width:auto;">
+          {{ warehouse.dim_user_rows }} dim_user · {{ warehouse.dim_project_rows }} dim_project ·
+          {{ warehouse.fact_rows }} fact_daily_activity · {{ warehouse.metric_days }} metric days
+        </div>
+      </div>
+      <p style="color:var(--muted);font-size:0.72rem;margin-top:10px;">
+        Star schema loaded by services/etl.py with data-quality gates (row parity, completeness, bounds).
+      </p>
+    </div>
+  </div>
+  {% endif %}
+
   <!-- ROW 1: Monthly Signups chart + Project Status doughnut -->
   <div class="section-row">
 

@@ -63,12 +63,53 @@ def create_app(config_class=None):
     from services.metrics import init_metrics
     init_metrics(app)
 
+    # Slow-query logging (statements only — never parameters)
+    from services.db_profiler import init_db_profiler
+    init_db_profiler(app)
+
     # CLI: retrain the teammate/project recommender  →  flask train-recommender
     @app.cli.command("train-recommender")
     def train_recommender_cmd():
         """Retrain the ML recommender on current data and save the artifact."""
         from services.ml.train_recommender import train
         train()
+
+    # CLI: run the ELT pipeline into the dw_* star schema  →  flask run-etl
+    @app.cli.command("run-etl")
+    def run_etl_cmd():
+        """Load the data warehouse (dims + facts + daily metrics) and run
+        data-quality checks. Also scheduled nightly via Celery beat."""
+        from services.etl import run_pipeline
+        summary = run_pipeline()
+        print(f"ETL OK: {summary}")
+
+    # CLI: model registry — list archived versions / roll back / drift check
+    @app.cli.command("model-versions")
+    def model_versions_cmd():
+        """List archived recommender versions (newest first)."""
+        from services.ml.train_recommender import list_versions
+        versions = list_versions()
+        print("\n".join(versions) if versions else "no archived versions yet")
+
+    import click
+
+    @app.cli.command("rollback-recommender")
+    @click.argument("version")
+    def rollback_recommender_cmd(version):
+        """Restore an archived model version as the serving model."""
+        from services.ml.train_recommender import rollback
+        print(f"restored version {rollback(version)} — serving it now")
+
+    @app.cli.command("check-drift")
+    def check_drift_cmd():
+        """Compare live feature distribution against the training snapshot."""
+        from services.ml.drift import compute_drift
+        report = compute_drift()
+        if report:
+            print(f"drift {report['status']}: score={report['score']} "
+                  f"over {report['n_pairs']} pairs")
+        else:
+            print("drift check skipped (no baseline or no population)")
 
     @app.route("/favicon.ico")
     def favicon():

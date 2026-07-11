@@ -12,6 +12,7 @@ Render's single free web service — keeps working unchanged.
 """
 
 from celery import Celery
+from celery.schedules import crontab
 
 celery = Celery("projectbuddy")
 
@@ -31,6 +32,21 @@ def init_celery(app):
             "deadline-check-hourly": {
                 "task": "tasks.check_deadlines",
                 "schedule": 3600.0,
+            },
+            # Nightly warehouse load (03:00 UTC — off-peak for a EU campus)
+            "etl-nightly": {
+                "task": "tasks.run_etl",
+                "schedule": crontab(hour=3, minute=0),
+            },
+            # Daily model drift check against the training feature snapshot
+            "drift-check-daily": {
+                "task": "tasks.check_model_drift",
+                "schedule": crontab(hour=5, minute=0),
+            },
+            # Weekly retrain on accumulated interaction data (Sunday 04:00 UTC)
+            "retrain-weekly": {
+                "task": "tasks.retrain_recommender",
+                "schedule": crontab(day_of_week=0, hour=4, minute=0),
             },
         },
     )
