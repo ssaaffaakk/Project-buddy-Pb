@@ -153,6 +153,12 @@ def on_join_voice(data):
     if not group_id:
         return
 
+    # Authorization: only members of the group may join its voice call.
+    # (Matches the is_member() gate the REST endpoints already enforce.)
+    if not _verify_member(group_id):
+        emit('voice_error', {'message': 'You must be a member of this group to join its voice call.'})
+        return
+
     room = f'voice_{group_id}'
     join_room(room)
 
@@ -200,13 +206,25 @@ def on_disconnect():
 
 # ── WebRTC relay ─────────────────────────────────────────────────────────────
 
+def _relay_allowed(to_sid: str) -> bool:
+    """True only if the sender and target are participants of the same voice room.
+
+    Stops a peer from injecting/relaying signalling into a call it isn't part of,
+    or bridging two separate rooms via a guessed/leaked SID.
+    """
+    if not to_sid:
+        return False
+    group_id, participants = _find_group_for_sid(request.sid)
+    return group_id is not None and to_sid in participants
+
+
 @socketio.on('webrtc_offer')
 def on_offer(data):
     """Relay SDP offer from one peer to another."""
     if not current_user.is_authenticated:
         return
     to_sid = data.get('to_sid')
-    if not to_sid or 'offer' not in data:
+    if 'offer' not in data or not _relay_allowed(to_sid):
         return
     emit('webrtc_offer',
          {'offer': data['offer'], 'from_sid': request.sid},
@@ -219,7 +237,7 @@ def on_answer(data):
     if not current_user.is_authenticated:
         return
     to_sid = data.get('to_sid')
-    if not to_sid or 'answer' not in data:
+    if 'answer' not in data or not _relay_allowed(to_sid):
         return
     emit('webrtc_answer',
          {'answer': data['answer'], 'from_sid': request.sid},
@@ -232,7 +250,7 @@ def on_ice(data):
     if not current_user.is_authenticated:
         return
     to_sid = data.get('to_sid')
-    if not to_sid or 'candidate' not in data:
+    if 'candidate' not in data or not _relay_allowed(to_sid):
         return
     emit('webrtc_ice',
          {'candidate': data['candidate'], 'from_sid': request.sid},
