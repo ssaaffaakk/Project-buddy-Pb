@@ -110,6 +110,29 @@ class MeSchema(Schema):
     skills = fields.Function(lambda u: [s.skill for s in u.skills])
 
 
+# ── Teammates ─────────────────────────────────────────────────────────────────
+
+class TeammateUserSchema(Schema):
+    id = fields.Int()
+    name = fields.Str()
+    department = fields.Str(allow_none=True)
+    avatar_url = fields.Str(allow_none=True)
+    role = fields.Str()
+    initials = fields.Str()
+
+
+class TeammateSchema(Schema):
+    user = fields.Nested(TeammateUserSchema)
+    match_percent = fields.Int()
+    reasons = fields.List(fields.Str())
+    shared_skills = fields.List(fields.Str())
+    shared_courses = fields.List(fields.Str())
+
+
+class TeammatesResponseSchema(Schema):
+    items = fields.List(fields.Nested(TeammateSchema))
+
+
 # ── Study groups ──────────────────────────────────────────────────────────────
 
 class StudyGroupSchema(Schema):

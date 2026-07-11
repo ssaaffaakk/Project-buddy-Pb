@@ -1098,6 +1098,21 @@ def set_language(lang):
     return redirect(request.referrer or url_for("main.dashboard"))
 
 
+# ── TEAMMATE FINDER ───────────────────────────────────────────────────────────
+@main_bp.route("/teammates")
+@login_required
+def teammates_page():
+    """Find people whose skills/interests complement the current user."""
+    from services.teammate_service import find_teammates
+    try:
+        matches = find_teammates(current_user.id, limit=12)
+    except Exception:
+        current_app.logger.exception("teammate finder failed")
+        matches = []
+    analytics.track("teammates_view", current_user.id, commit=True)
+    return render_template("user/teammates.html", matches=matches)
+
+
 # ── BETA: React projects explorer (feature-flagged) ──────────────────────────
 @main_bp.route("/beta/projects")
 @login_required

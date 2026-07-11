@@ -16,7 +16,7 @@ from schemas import (
     ApplyArgsSchema, MeSchema, MessageSchema, ProjectDetailSchema,
     ProjectListArgsSchema, ProjectPageSchema, PaginationArgsSchema,
     RecommendationsResponseSchema, StudyGroupPageSchema,
-    TokenRequestSchema, TokenResponseSchema,
+    TeammatesResponseSchema, TokenRequestSchema, TokenResponseSchema,
 )
 from services import analytics
 from services.api_auth import auth_required, issue_token
@@ -160,6 +160,18 @@ def get_recommendations():
     ranked, variant = get_recommendations_with_variant(g.api_user.id)
     items = [{"project": project, "fit_percent": score} for project, score in ranked[:10]]
     return {"items": items, "variant": variant}
+
+
+# ── Teammates ─────────────────────────────────────────────────────────────────
+
+@blp.route("/teammates", methods=["GET"])
+@blp.doc(security=_BEARER)
+@blp.response(200, TeammatesResponseSchema)
+@auth_required()
+def get_teammates():
+    """People whose skills/interests complement the current user (no emails)."""
+    from services.teammate_service import find_teammates
+    return {"items": find_teammates(g.api_user.id, limit=12)}
 
 
 # ── Study groups ──────────────────────────────────────────────────────────────
