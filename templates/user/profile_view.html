@@ -3,69 +3,51 @@
 
 {% block extra_style %}
 <style nonce="{{ csp_nonce }}">
-.main{margin-left:220px;flex:1;padding:40px;position:relative;z-index:2;}
+.main{margin-left:220px;flex:1;position:relative;z-index:2;}
 
+/* TOP BAR (back) */
+.pv-topbar{padding:22px 40px 0;}
 .back-link{display:inline-flex;align-items:center;gap:6px;color:var(--accent);text-decoration:none;
-  font-size:0.85rem;font-weight:500;margin-bottom:24px;transition:all 0.2s;}
+  font-size:0.85rem;font-weight:500;transition:all 0.2s;}
 .back-link:hover{gap:10px;}
 
-/* COVER BANNER */
-.pv-cover{height:150px;border-radius:16px 16px 0 0;border:1px solid rgba(255,255,255,0.09);border-bottom:none;overflow:hidden;position:relative;}
-.pv-cover::before{content:'';position:absolute;inset:0;pointer-events:none;
-  background:radial-gradient(ellipse 60% 80% at 20% 40%,rgba(124,155,255,0.14) 0%,transparent 60%),
-             radial-gradient(ellipse 50% 70% at 82% 30%,rgba(255,107,107,0.08) 0%,transparent 60%);}
-.profile-header.pv-under{border-radius:0 0 16px 16px;border-top:none;}
-.profile-header.pv-under::before{display:none;}
-.profile-header.pv-under .profile-avatar{margin-top:-58px;border:4px solid var(--bg);width:92px;height:92px;}
+/* COVER — full-bleed, matches the own-profile treatment */
+.cover{height:180px;position:relative;overflow:hidden;background:linear-gradient(135deg,#0A1024,#111B3E,#080D1E);}
+.cover::before{content:'';position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(ellipse 60% 80% at 20% 50%,rgba(124,155,255,0.12) 0%,transparent 60%),
+             radial-gradient(ellipse 50% 70% at 80% 30%,rgba(255,107,107,0.07) 0%,transparent 60%);}
+.cover::after{content:'';position:absolute;inset:0;pointer-events:none;
+  background-image:repeating-linear-gradient(0deg,transparent,transparent 39px,rgba(124,155,255,0.04) 39px,rgba(124,155,255,0.04) 40px),
+                   repeating-linear-gradient(90deg,transparent,transparent 39px,rgba(124,155,255,0.04) 39px,rgba(124,155,255,0.04) 40px);}
 
-/* PROFILE WALL */
-.pv-wall{margin-top:36px;}
-.pv-wall-head{display:flex;align-items:baseline;gap:10px;margin-bottom:16px;}
-.pv-wall-head h3{font-family:'DM Serif Display',serif;font-size:1.1rem;font-weight:400;}
-.pv-wall-head .cnt{font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--muted);}
-.wall-form{display:flex;gap:10px;margin-bottom:22px;align-items:flex-end;}
-.wall-input{flex:1;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:12px 14px;color:var(--text);font-family:'Inter',sans-serif;font-size:0.85rem;resize:none;min-height:44px;max-height:140px;outline:none;transition:border-color 0.2s;}
-.wall-input:focus{border-color:rgba(124,155,255,0.35);}
-.wall-post{padding:12px 20px;border-radius:var(--r);border:none;background:linear-gradient(110deg,var(--accent) 0%,var(--violet,#A78BFF) 45%,var(--coral,#FF6B6B) 100%);color:#fff;font-family:'DM Mono',monospace;font-size:0.66rem;letter-spacing:0.08em;text-transform:uppercase;font-weight:600;cursor:pointer;transition:all 0.2s;flex-shrink:0;}
-.wall-post:hover{box-shadow:0 0 0 1px rgba(124,155,255,0.5),0 4px 18px rgba(124,155,255,0.2);}
-.wall-post:disabled{opacity:0.4;cursor:default;box-shadow:none;}
-.wall-list{display:flex;flex-direction:column;gap:12px;}
-.wc{display:flex;gap:12px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:14px;}
-.wc-av{width:38px;height:38px;border-radius:50%;flex-shrink:0;overflow:hidden;background:linear-gradient(135deg,var(--accent),#4A5BA8);display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:0.7rem;color:#fff;text-decoration:none;}
-.wc-av img{width:100%;height:100%;object-fit:cover;}
-.wc-main{flex:1;min-width:0;}
-.wc-top{display:flex;align-items:center;gap:8px;margin-bottom:3px;}
-.wc-name{font-size:0.85rem;font-weight:600;color:var(--text);text-decoration:none;}
-.wc-name:hover{color:var(--accent);}
-.wc-time{font-family:'DM Mono',monospace;font-size:0.58rem;color:var(--muted);}
-.wc-body{font-size:0.85rem;color:var(--soft);line-height:1.55;word-break:break-word;white-space:pre-wrap;}
-.wc-actions{display:flex;gap:16px;margin-top:9px;}
-.wc-act{display:inline-flex;align-items:center;gap:5px;background:none;border:none;color:var(--muted);font-family:'DM Mono',monospace;font-size:0.6rem;letter-spacing:0.04em;text-transform:uppercase;cursor:pointer;transition:color 0.2s;padding:0;}
-.wc-act:hover{color:var(--soft);}
-.wc-act.liked{color:var(--coral,#FF6B6B);}
-.wc-act.del:hover{color:#e07060;}
-.wall-empty{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--muted);text-align:center;padding:24px 0;font-style:italic;}
+/* HEADER */
+.ph{padding:0 40px 24px;position:relative;border-bottom:1px solid var(--border);}
+.avatar-big{width:88px;height:88px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#4A5BA8);
+  display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:1.55rem;
+  font-weight:500;color:var(--bg);border:3px solid var(--bg);position:absolute;top:-44px;
+  box-shadow:0 8px 24px rgba(0,0,0,0.45);}
+.avatar-big img{width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;}
+.ph-info{padding-top:54px;display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:16px;}
+.ph-info h1{font-family:'DM Serif Display',serif;font-size:1.8rem;font-weight:400;letter-spacing:-0.02em;}
+.ph-sub{font-family:'DM Mono',monospace;font-size:0.7rem;letter-spacing:0.06em;color:var(--soft);
+  text-transform:uppercase;margin-top:5px;}
+.ph-tags{display:flex;gap:6px;margin-top:12px;flex-wrap:wrap;}
 
-/* PROFILE HEADER */
-.profile-header{background:linear-gradient(155deg,rgba(255,255,255,0.05),rgba(255,255,255,0.012));border:1px solid rgba(255,255,255,0.09);border-radius:16px;padding:24px;margin-bottom:32px;display:flex;gap:24px;align-items:start;-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);position:relative;overflow:hidden;}
-.profile-header::before{content:'';position:absolute;top:0;left:0;right:0;height:1.5px;background:linear-gradient(90deg,transparent,rgba(124,155,255,0.6),transparent);opacity:.6;}
-.profile-avatar{width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#4A5BA8);
-  display:flex;align-items:center;justify-content:center;font-size:2rem;font-weight:600;color:var(--bg);flex-shrink:0;box-shadow:0 0 24px rgba(124,155,255,0.2);}
-.profile-info{flex:1;}
-.profile-name{font-family:'DM Serif Display',serif;font-size:1.4rem;font-weight:400;margin-bottom:4px;}
-.profile-role{font-family:'DM Mono',monospace;font-size:0.7rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);margin-bottom:12px;}
-.profile-bio{font-size:0.85rem;color:var(--soft);line-height:1.6;margin-bottom:16px;}
-.profile-stats{display:flex;gap:24px;margin:16px 0;}
-.stat-item{display:flex;flex-direction:column;gap:4px;}
-.stat-label{font-family:'DM Mono',monospace;font-size:0.65rem;letter-spacing:0.06em;color:var(--muted);text-transform:uppercase;}
-.stat-value{font-family:'DM Serif Display',serif;font-size:1.1rem;font-weight:600;color:var(--accent);}
-.btn-primary{padding:10px 16px;background:linear-gradient(110deg,var(--accent) 0%,var(--violet,#A78BFF) 45%,var(--coral,#FF6B6B) 100%);color:#fff;border:none;border-radius:var(--r);
-  font-family:'DM Mono',monospace;font-size:0.7rem;font-weight:600;text-transform:uppercase;cursor:pointer;transition:all 0.2s;}
-.btn-primary:hover{box-shadow:0 0 0 1px rgba(124,155,255,0.5),0 4px 24px rgba(124,155,255,0.2);transform:translateY(-1px);}
+/* STATS BAR — full-width divided cells */
+.stats-bar{display:flex;border-bottom:1px solid var(--border);}
+.sbi{flex:1;padding:18px 28px;border-right:1px solid var(--border);cursor:default;transition:background 0.18s;}
+.sbi:last-child{border-right:none;}
+.sbi:hover{background:rgba(255,255,255,0.02);}
+.sbi-n{font-family:'DM Mono',monospace;font-size:1.8rem;font-weight:400;color:var(--accent);line-height:1;}
+.sbi-l{font-family:'DM Mono',monospace;font-size:0.64rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--soft);margin-top:4px;}
+
+/* BODY (padded content below the full-bleed shell) */
+.pv-body{padding:28px 40px 48px;}
+.pv-bio{font-size:0.9rem;color:var(--soft);line-height:1.7;max-width:680px;margin-bottom:26px;}
 
 /* CONTRIBUTION ACTIVITY */
 .contrib-card{background:var(--card);border:1px solid var(--border);border-top-color:rgba(255,255,255,0.08);
-  border-radius:var(--r);padding:20px 22px;margin-bottom:24px;position:relative;overflow:hidden;}
+  border-radius:var(--r);padding:20px 22px;margin-bottom:28px;position:relative;overflow:hidden;}
 .contrib-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;
   background:linear-gradient(90deg,transparent,rgba(124,155,255,0.14),transparent);}
 .contrib-head{margin-bottom:16px;}
@@ -129,227 +111,260 @@
 .btn-submit{padding:10px 16px;background:linear-gradient(110deg,var(--accent) 0%,var(--violet,#A78BFF) 45%,var(--coral,#FF6B6B) 100%);color:#fff;border:none;border-radius:var(--r);
   font-family:'DM Mono',monospace;font-size:0.7rem;font-weight:600;text-transform:uppercase;cursor:pointer;transition:all 0.2s;}
 .btn-submit:hover{box-shadow:0 0 0 1px rgba(124,155,255,0.5),0 4px 20px rgba(124,155,255,0.2);transform:translateY(-1px);}
+
+/* PROFILE WALL */
+.pv-wall{margin-top:36px;}
+.pv-wall-head{display:flex;align-items:baseline;gap:10px;margin-bottom:16px;}
+.pv-wall-head h3{font-family:'DM Serif Display',serif;font-size:1.1rem;font-weight:400;}
+.pv-wall-head .cnt{font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--muted);}
+.wall-form{display:flex;gap:10px;margin-bottom:22px;align-items:flex-end;}
+.wall-input{flex:1;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:12px 14px;color:var(--text);font-family:'Inter',sans-serif;font-size:0.85rem;resize:none;min-height:44px;max-height:140px;outline:none;transition:border-color 0.2s;}
+.wall-input:focus{border-color:rgba(124,155,255,0.35);}
+.wall-post{padding:12px 20px;border-radius:var(--r);border:none;background:linear-gradient(110deg,var(--accent) 0%,var(--violet,#A78BFF) 45%,var(--coral,#FF6B6B) 100%);color:#fff;font-family:'DM Mono',monospace;font-size:0.66rem;letter-spacing:0.08em;text-transform:uppercase;font-weight:600;cursor:pointer;transition:all 0.2s;flex-shrink:0;}
+.wall-post:hover{box-shadow:0 0 0 1px rgba(124,155,255,0.5),0 4px 18px rgba(124,155,255,0.2);}
+.wall-post:disabled{opacity:0.4;cursor:default;box-shadow:none;}
+.wall-list{display:flex;flex-direction:column;gap:12px;}
+.wc{display:flex;gap:12px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:14px;}
+.wc-av{width:38px;height:38px;border-radius:50%;flex-shrink:0;overflow:hidden;background:linear-gradient(135deg,var(--accent),#4A5BA8);display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:0.7rem;color:#fff;text-decoration:none;}
+.wc-av img{width:100%;height:100%;object-fit:cover;}
+.wc-main{flex:1;min-width:0;}
+.wc-top{display:flex;align-items:center;gap:8px;margin-bottom:3px;}
+.wc-name{font-size:0.85rem;font-weight:600;color:var(--text);text-decoration:none;}
+.wc-name:hover{color:var(--accent);}
+.wc-time{font-family:'DM Mono',monospace;font-size:0.58rem;color:var(--muted);}
+.wc-body{font-size:0.85rem;color:var(--soft);line-height:1.55;word-break:break-word;white-space:pre-wrap;}
+.wc-actions{display:flex;gap:16px;margin-top:9px;}
+.wc-act{display:inline-flex;align-items:center;gap:5px;background:none;border:none;color:var(--muted);font-family:'DM Mono',monospace;font-size:0.6rem;letter-spacing:0.04em;text-transform:uppercase;cursor:pointer;transition:color 0.2s;padding:0;}
+.wc-act:hover{color:var(--soft);}
+.wc-act.liked{color:var(--coral,#FF6B6B);}
+.wc-act.del:hover{color:#e07060;}
+.wall-empty{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--muted);text-align:center;padding:24px 0;font-style:italic;}
+
+/* Responsive: tighten the full-bleed padding on small screens */
+@media(max-width:768px){
+  .pv-topbar{padding:14px 18px 0;}
+  .ph{padding:0 18px 20px;}
+  .pv-body{padding:24px 18px 40px;}
+  .stats-bar{flex-wrap:wrap;}
+  .sbi{flex:1 1 50%;border-bottom:1px solid var(--border);}
+  .sbi:nth-child(2){border-right:none;}
+}
 </style>
 {% endblock %}
 
 {% block content %}
-  {# Go back to wherever the user actually came from (teammates, search,
-     community…) instead of always dumping them on their own profile.
-     history.back() when we arrived from within the site; else fall back. #}
-  <a href="/dashboard" class="back-link"
-     onclick="if(document.referrer.indexOf(location.origin)===0&&document.referrer!==location.href){history.back();return false;}">← {{ _('Back') }}</a>
+  <div class="pv-topbar">
+    {# Go back to wherever the user came from (teammates, search, community…)
+       instead of always dumping them on their own profile. #}
+    <a href="/dashboard" class="back-link"
+       onclick="if(document.referrer.indexOf(location.origin)===0&&document.referrer!==location.href){history.back();return false;}">← {{ _('Back') }}</a>
+  </div>
 
   <!-- COVER BANNER -->
-  <div class="pv-cover" style="{{ banner_style(profile_user.banner_url) }}"></div>
+  <div class="cover" style="{{ banner_style(profile_user.banner_url) }}"></div>
 
   <!-- PROFILE HEADER -->
-  <div class="profile-header pv-under">
-    <div class="profile-avatar" style="overflow:hidden;">
+  <div class="ph">
+    <div class="avatar-big" style="overflow:hidden;">
       {% if profile_user.avatar_url %}
-        <img src="{{ profile_user.avatar_url }}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;">
+        <img src="{{ profile_user.avatar_url }}" alt="">
       {% else %}{{ profile_user.first_name[0] }}{{ profile_user.last_name[0] }}{% endif %}
     </div>
-    <div class="profile-info">
-      <div class="profile-name">{{ profile_user.first_name }} {{ profile_user.last_name }}</div>
-      <div class="profile-role">{{ profile_user.role }} • {{ profile_user.department or '' }}</div>
-      {% if profile_user.bio %}
-        <div class="profile-bio">{{ profile_user.bio }}</div>
-      {% endif %}
-      {% if profile_user.role != 'admin' %}
-      <div class="profile-stats">
-        <div class="stat-item">
-          <div class="stat-label">{{ _('Projects') }}</div>
-          <div class="stat-value">{{ user_stats.projects_count }}</div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-label">{{ _('Rating') }}</div>
-          <div class="stat-value">{{ user_stats.avg_rating or '—' }}</div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-label">{{ _('Reviews') }}</div>
-          <div class="stat-value">{{ user_stats.reviews_count }}</div>
-        </div>
-      </div>
-      {% else %}
-      <div class="profile-stats">
-        <div class="stat-item" style="color:var(--muted);">
-          <p style="font-size:0.85rem;margin-top:12px;">{{ _('Administrator account. Limited profile information available.') }}</p>
-        </div>
-      </div>
-      {% endif %}
-    </div>
-  </div>
-
-  {% if profile_user.role != 'admin' and contributions %}
-  <div class="contrib-card">
-    <div class="contrib-head">
-      <span class="contrib-title">{{ _('Contribution activity') }}</span>
-      <span class="contrib-sub">{{ _('Visible collaboration across the platform') }}</span>
-    </div>
-    <div class="contrib-grid">
-      <div class="contrib-item">
-        <div class="contrib-num">{{ contributions.messages }}</div>
-        <div class="contrib-lbl">{{ _('Messages') }}</div>
-      </div>
-      <div class="contrib-item">
-        <div class="contrib-num">{{ contributions.posts }}</div>
-        <div class="contrib-lbl">{{ _('Posts & comments') }}</div>
-      </div>
-      <div class="contrib-item">
-        <div class="contrib-num">{{ contributions.files }}</div>
-        <div class="contrib-lbl">{{ _('Files shared') }}</div>
-      </div>
-      <div class="contrib-item">
-        <div class="contrib-num">{{ contributions.voice_sessions }}</div>
-        <div class="contrib-lbl">{{ _('Voice sessions') }}</div>
-      </div>
-    </div>
-  </div>
-  {% endif %}
-
-  {% if profile_user.role != 'admin' %}
-  <div class="tabs">
-    <button class="tab-btn active" onclick="switchTab(event, 'reviews-tab')">{{ _('Reviews') }}</button>
-    <button class="tab-btn" onclick="switchTab(event, 'skills-tab')">{{ _('Skills & Endorsements') }}</button>
-  </div>
-  {% endif %}
-
-  {% if profile_user.role != 'admin' %}
-  <div id="reviews-tab" class="tab-content active">
-    {% if can_leave_review %}
-      <div class="review-form">
-        <h3 style="font-family:'DM Serif Display',serif;font-size:1.1rem;margin-bottom:16px;">{{ _('Leave a Review') }}</h3>
-        <form method="POST" action="/user/{{ profile_user.id }}/review">
-          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-          <div class="form-group">
-            <label class="form-label">{{ _('Rating') }}</label>
-            <div class="rating-selector" id="rating-selector">
-              <button type="button" class="rating-btn" data-rating="1">1</button>
-              <button type="button" class="rating-btn" data-rating="2">2</button>
-              <button type="button" class="rating-btn" data-rating="3">3</button>
-              <button type="button" class="rating-btn" data-rating="4">4</button>
-              <button type="button" class="rating-btn" data-rating="5">5</button>
-            </div>
-            <input type="hidden" id="rating-input" name="rating" required>
-          </div>
-          <div class="form-group">
-            <label class="form-label">{{ _('Comment') }}</label>
-            <textarea name="comment" placeholder="{{ _('Share your experience working with this person...') }}" minlength="10" required></textarea>
-            <div style="font-size:0.7rem;color:var(--muted);margin-top:4px;">{{ _('Minimum 10 characters') }}</div>
-          </div>
-          <div class="form-actions">
-            <button type="submit" class="btn-submit">{{ _('Submit Review') }}</button>
-          </div>
-        </form>
-      </div>
-    {% endif %}
-
-    <h3 style="font-family:'DM Serif Display',serif;font-size:1.1rem;margin-bottom:16px;">{{ user_stats.reviews_count }} {{ _('Reviews') if user_stats.reviews_count != 1 else _('Review') }}</h3>
-    {% if reviews %}
-      <div class="reviews-grid">
-        {% for review in reviews %}
-          <div class="review-card">
-            <div class="review-header">
-              <div>
-                <div class="review-author">{{ review.giver.first_name }} {{ review.giver.last_name }}</div>
-                <div class="review-rating">
-                  {% for i in range(1, review.rating + 1) %}<span class="star">&#9733;</span>{% endfor %}
-                  {% for i in range(review.rating + 1, 6) %}<span class="star" style="opacity:0.3;">&#9733;</span>{% endfor %}
-                </div>
-              </div>
-              <div class="review-date">{{ review.created_at.strftime('%b %d, %Y') }}</div>
-            </div>
-            <div class="review-comment">{{ review.comment }}</div>
-          </div>
-        {% endfor %}
-      </div>
-    {% else %}
-      <div class="empty-state"><p>{{ _('No reviews yet') }}</p></div>
-    {% endif %}
-  </div>
-  {% endif %}
-
-  {% if profile_user.role != 'admin' %}
-  <div id="skills-tab" class="tab-content">
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;">
+    <div class="ph-info">
       <div>
-        <h3 style="font-family:'DM Serif Display',serif;font-size:1.1rem;margin-bottom:16px;">{{ _('Skills') }}</h3>
-        {% if profile_user.skills %}
-          <div style="display:flex;flex-wrap:wrap;gap:8px;">
-            {% for skill in profile_user.skills %}
-              <div style="display:inline-flex;align-items:center;gap:6px;padding:8px 12px;background:var(--accent-dim);border-radius:var(--r);font-size:0.8rem;color:var(--accent);">
-                {{ skill.skill }}
-                <span style="opacity:0.6;font-size:0.7rem;">{{ skill.level }}</span>
-              </div>
-            {% endfor %}
-          </div>
-        {% else %}
-          <div class="empty-state"><p>{{ _('No skills listed') }}</p></div>
+        <h1>{{ profile_user.first_name }} {{ profile_user.last_name }}</h1>
+        <div class="ph-sub">{{ profile_user.department or '' }}{% if profile_user.department %} · {% endif %}{{ profile_user.role.upper() }}</div>
+        {% if profile_user.role != 'admin' and profile_user.skills %}
+        <div class="ph-tags">
+          {% for s in profile_user.skills[:6] %}<span class="tag">{{ s.skill }}</span>{% endfor %}
+        </div>
         {% endif %}
       </div>
-      <div>
-        {% if can_endorse %}
-          <h3 style="font-family:'DM Serif Display',serif;font-size:1.1rem;margin-bottom:16px;">{{ _('Endorse a Skill') }}</h3>
-          <form method="POST" action="/user/{{ profile_user.id }}/endorse">
+    </div>
+  </div>
+
+  {% if profile_user.role != 'admin' %}
+  <!-- STATS BAR -->
+  <div class="stats-bar">
+    <div class="sbi"><div class="sbi-n">{{ user_stats.projects_count }}</div><div class="sbi-l">{{ _('Projects') }}</div></div>
+    <div class="sbi"><div class="sbi-n">{{ user_stats.avg_rating or '—' }}</div><div class="sbi-l">{{ _('Rating') }}</div></div>
+    <div class="sbi"><div class="sbi-n" style="color:var(--soft);">{{ user_stats.reviews_count }}</div><div class="sbi-l">{{ _('Reviews') }}</div></div>
+    <div class="sbi"><div class="sbi-n" style="color:var(--soft);">{{ profile_user.endorsements_received|length }}</div><div class="sbi-l">{{ _('Endorsements') }}</div></div>
+  </div>
+  {% endif %}
+
+  <div class="pv-body">
+  {% if profile_user.role == 'admin' %}
+    <p class="empty" style="padding:40px 0;">{{ _('Administrator account. Limited profile information available.') }}</p>
+  {% else %}
+
+    {% if profile_user.bio %}<div class="pv-bio">{{ profile_user.bio }}</div>{% endif %}
+
+    {% if contributions %}
+    <div class="contrib-card">
+      <div class="contrib-head">
+        <span class="contrib-title">{{ _('Contribution activity') }}</span>
+        <span class="contrib-sub">{{ _('Visible collaboration across the platform') }}</span>
+      </div>
+      <div class="contrib-grid">
+        <div class="contrib-item">
+          <div class="contrib-num">{{ contributions.messages }}</div>
+          <div class="contrib-lbl">{{ _('Messages') }}</div>
+        </div>
+        <div class="contrib-item">
+          <div class="contrib-num">{{ contributions.posts }}</div>
+          <div class="contrib-lbl">{{ _('Posts & comments') }}</div>
+        </div>
+        <div class="contrib-item">
+          <div class="contrib-num">{{ contributions.files }}</div>
+          <div class="contrib-lbl">{{ _('Files shared') }}</div>
+        </div>
+        <div class="contrib-item">
+          <div class="contrib-num">{{ contributions.voice_sessions }}</div>
+          <div class="contrib-lbl">{{ _('Voice sessions') }}</div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab(event, 'reviews-tab')">{{ _('Reviews') }}</button>
+      <button class="tab-btn" onclick="switchTab(event, 'skills-tab')">{{ _('Skills & Endorsements') }}</button>
+    </div>
+
+    <div id="reviews-tab" class="tab-content active">
+      {% if can_leave_review %}
+        <div class="review-form">
+          <h3 style="font-family:'DM Serif Display',serif;font-size:1.1rem;margin-bottom:16px;">{{ _('Leave a Review') }}</h3>
+          <form method="POST" action="/user/{{ profile_user.id }}/review">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div class="form-group">
-              <label class="form-label">{{ _('Skill') }}</label>
-              <input type="text" name="skill" placeholder="{{ _('e.g. Python, React, Project Management') }}" required>
+              <label class="form-label">{{ _('Rating') }}</label>
+              <div class="rating-selector" id="rating-selector">
+                <button type="button" class="rating-btn" data-rating="1">1</button>
+                <button type="button" class="rating-btn" data-rating="2">2</button>
+                <button type="button" class="rating-btn" data-rating="3">3</button>
+                <button type="button" class="rating-btn" data-rating="4">4</button>
+                <button type="button" class="rating-btn" data-rating="5">5</button>
+              </div>
+              <input type="hidden" id="rating-input" name="rating" required>
             </div>
-            <button type="submit" class="btn-submit">{{ _('Endorse Skill') }}</button>
+            <div class="form-group">
+              <label class="form-label">{{ _('Comment') }}</label>
+              <textarea name="comment" placeholder="{{ _('Share your experience working with this person...') }}" minlength="10" required></textarea>
+              <div style="font-size:0.7rem;color:var(--muted);margin-top:4px;">{{ _('Minimum 10 characters') }}</div>
+            </div>
+            <div class="form-actions">
+              <button type="submit" class="btn-submit">{{ _('Submit Review') }}</button>
+            </div>
           </form>
-          {% if already_endorsed_skills %}
-            <div style="margin-top:12px;font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--muted);">
-              {{ _('Already endorsed:') }} {{ already_endorsed_skills | join(', ') }}
-            </div>
-          {% endif %}
-        {% endif %}
-      </div>
-    </div>
+        </div>
+      {% endif %}
 
-    <div style="margin-top:32px;">
-      <h3 style="font-family:'DM Serif Display',serif;font-size:1.1rem;margin-bottom:16px;">{{ _('Endorsements Received') }}</h3>
-      {% if profile_user.endorsements_received %}
-        {% set skill_endorsements = {} %}
-        {% for endorsement in profile_user.endorsements_received %}
-          {% if endorsement.skill in skill_endorsements %}
-            {% set _ = skill_endorsements.update({endorsement.skill: skill_endorsements[endorsement.skill] + 1}) %}
-          {% else %}
-            {% set _ = skill_endorsements.update({endorsement.skill: 1}) %}
-          {% endif %}
-        {% endfor %}
-        <div class="sticker-wall">
-          {% set colors = ['#7C9BFF','#FF6B6B','#4ECDC4','#A78BFA','#34D399','#A98BFF','#60A5FA','#F472B6','#7C9BFF','#2DD4BF'] %}
-          {% for skill, count in skill_endorsements.items() %}
-            {% set ci = loop.index0 % colors|length %}
-            <div class="endorsement-sticker" style="--sc:{{ colors[ci] }};">
-              <div class="sticker-ribbon">{{ count }}×</div>
-              <div class="sticker-skill">{{ skill }}</div>
-              <div class="sticker-label">{{ _('endorsed') }}</div>
+      <h3 style="font-family:'DM Serif Display',serif;font-size:1.1rem;margin-bottom:16px;">{{ user_stats.reviews_count }} {{ _('Reviews') if user_stats.reviews_count != 1 else _('Review') }}</h3>
+      {% if reviews %}
+        <div class="reviews-grid">
+          {% for review in reviews %}
+            <div class="review-card">
+              <div class="review-header">
+                <div>
+                  <div class="review-author">{{ review.giver.first_name }} {{ review.giver.last_name }}</div>
+                  <div class="review-rating">
+                    {% for i in range(1, review.rating + 1) %}<span class="star">&#9733;</span>{% endfor %}
+                    {% for i in range(review.rating + 1, 6) %}<span class="star" style="opacity:0.3;">&#9733;</span>{% endfor %}
+                  </div>
+                </div>
+                <div class="review-date">{{ review.created_at.strftime('%b %d, %Y') }}</div>
+              </div>
+              <div class="review-comment">{{ review.comment }}</div>
             </div>
           {% endfor %}
         </div>
       {% else %}
-        <div class="empty-state"><p>{{ _('No endorsements yet') }}</p></div>
+        <div class="empty-state"><p>{{ _('No reviews yet') }}</p></div>
       {% endif %}
     </div>
-  </div>
-  {% endif %}
 
-  {% if profile_user.role != 'admin' %}
-  <!-- PROFILE WALL -->
-  <div class="pv-wall">
-    <div class="pv-wall-head">
-      <h3>{{ _('Wall') }}</h3>
-      <span class="cnt" id="wall-count">{{ wall_comments|length }} {{ _('comments') if wall_comments|length != 1 else _('comment') }}</span>
+    <div id="skills-tab" class="tab-content">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;">
+        <div>
+          <h3 style="font-family:'DM Serif Display',serif;font-size:1.1rem;margin-bottom:16px;">{{ _('Skills') }}</h3>
+          {% if profile_user.skills %}
+            <div style="display:flex;flex-wrap:wrap;gap:8px;">
+              {% for skill in profile_user.skills %}
+                <div style="display:inline-flex;align-items:center;gap:6px;padding:8px 12px;background:var(--accent-dim);border-radius:var(--r);font-size:0.8rem;color:var(--accent);">
+                  {{ skill.skill }}
+                  <span style="opacity:0.6;font-size:0.7rem;">{{ skill.level }}</span>
+                </div>
+              {% endfor %}
+            </div>
+          {% else %}
+            <div class="empty-state"><p>{{ _('No skills listed') }}</p></div>
+          {% endif %}
+        </div>
+        <div>
+          {% if can_endorse %}
+            <h3 style="font-family:'DM Serif Display',serif;font-size:1.1rem;margin-bottom:16px;">{{ _('Endorse a Skill') }}</h3>
+            <form method="POST" action="/user/{{ profile_user.id }}/endorse">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <div class="form-group">
+                <label class="form-label">{{ _('Skill') }}</label>
+                <input type="text" name="skill" placeholder="{{ _('e.g. Python, React, Project Management') }}" required>
+              </div>
+              <button type="submit" class="btn-submit">{{ _('Endorse Skill') }}</button>
+            </form>
+            {% if already_endorsed_skills %}
+              <div style="margin-top:12px;font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--muted);">
+                {{ _('Already endorsed:') }} {{ already_endorsed_skills | join(', ') }}
+              </div>
+            {% endif %}
+          {% endif %}
+        </div>
+      </div>
+
+      <div style="margin-top:32px;">
+        <h3 style="font-family:'DM Serif Display',serif;font-size:1.1rem;margin-bottom:16px;">{{ _('Endorsements Received') }}</h3>
+        {% if profile_user.endorsements_received %}
+          {% set skill_endorsements = {} %}
+          {% for endorsement in profile_user.endorsements_received %}
+            {% if endorsement.skill in skill_endorsements %}
+              {% set _ = skill_endorsements.update({endorsement.skill: skill_endorsements[endorsement.skill] + 1}) %}
+            {% else %}
+              {% set _ = skill_endorsements.update({endorsement.skill: 1}) %}
+            {% endif %}
+          {% endfor %}
+          <div class="sticker-wall">
+            {% set colors = ['#7C9BFF','#FF6B6B','#4ECDC4','#A78BFA','#34D399','#A98BFF','#60A5FA','#F472B6','#7C9BFF','#2DD4BF'] %}
+            {% for skill, count in skill_endorsements.items() %}
+              {% set ci = loop.index0 % colors|length %}
+              <div class="endorsement-sticker" style="--sc:{{ colors[ci] }};">
+                <div class="sticker-ribbon">{{ count }}×</div>
+                <div class="sticker-skill">{{ skill }}</div>
+                <div class="sticker-label">{{ _('endorsed') }}</div>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <div class="empty-state"><p>{{ _('No endorsements yet') }}</p></div>
+        {% endif %}
+      </div>
     </div>
-    <div class="wall-form">
-      <textarea class="wall-input" id="wall-input" rows="1" placeholder="{{ _('Leave a comment…') }}" onkeydown="wallKey(event)"></textarea>
-      <button class="wall-post" id="wall-post" onclick="postWall()">{{ _('Post') }}</button>
+
+    <!-- PROFILE WALL -->
+    <div class="pv-wall">
+      <div class="pv-wall-head">
+        <h3>{{ _('Wall') }}</h3>
+        <span class="cnt" id="wall-count">{{ wall_comments|length }} {{ _('comments') if wall_comments|length != 1 else _('comment') }}</span>
+      </div>
+      <div class="wall-form">
+        <textarea class="wall-input" id="wall-input" rows="1" placeholder="{{ _('Leave a comment…') }}" onkeydown="wallKey(event)"></textarea>
+        <button class="wall-post" id="wall-post" onclick="postWall()">{{ _('Post') }}</button>
+      </div>
+      <div class="wall-list" id="wall-list"></div>
     </div>
-    <div class="wall-list" id="wall-list"></div>
-  </div>
+
   {% endif %}
+  </div>
 {% endblock %}
 
 {% block extra_script %}
