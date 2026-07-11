@@ -442,10 +442,13 @@ def dismiss_warnings():
 @login_required
 def projects_page():
     search_query = request.args.get("q", "").strip()
-    query = Project.query.filter_by(status="open")
     if search_query:
-        query = query.filter(Project.title.ilike(f"%{search_query}%"))
-    projects = query.order_by(Project.created_at.desc()).all()
+        # Semantic ranking (falls back to keyword/substring inside the service)
+        from services.project_search import semantic_search
+        projects = semantic_search(search_query, limit=60)
+    else:
+        projects = (Project.query.filter_by(status="open")
+                    .order_by(Project.created_at.desc()).all())
 
     user_votes = {}
     if current_user.is_authenticated:
@@ -460,6 +463,26 @@ def projects_page():
 @login_required
 def post_project_page():
     return render_template("projects/post.html")
+
+
+@main_bp.route("/projects/check-similar", methods=["POST"])
+@login_required
+@limiter.limit("30 per minute")
+def check_similar_projects():
+    """Return open projects similar to a draft title/description, so the post
+    form can warn about duplicates. Read-only; input length-capped."""
+    data = request.get_json(silent=True) or {}
+    title = (data.get("title") or "").strip()[:200]
+    description = (data.get("description") or "").strip()[:2000]
+    if len(title) < 4:
+        return jsonify({"similar": []})
+    from services.project_search import similar_projects
+    try:
+        similar = similar_projects(title, description, limit=3)
+    except Exception:
+        current_app.logger.exception("similar-project check failed")
+        similar = []
+    return jsonify({"similar": similar})
 
 
 # ── MY PROJECTS ───────────────────────────────────────────────────────────────

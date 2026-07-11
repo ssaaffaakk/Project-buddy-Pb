@@ -58,6 +58,20 @@
 
 /* BUTTONS */
 .btn-row{display:flex;gap:12px;margin-top:28px;}
+.similar-warn{margin-top:14px;padding:14px 16px;border-radius:var(--r);
+  background:rgba(245,200,66,0.06);border:1px solid rgba(245,200,66,0.28);animation:fxUp .4s cubic-bezier(.16,1,.3,1) both;}
+.similar-warn-head{display:flex;align-items:center;gap:8px;color:#F5C842;
+  font-family:'DM Mono',monospace;font-size:0.72rem;letter-spacing:0.05em;text-transform:uppercase;}
+.similar-warn-sub{color:var(--soft);font-size:0.78rem;margin:8px 0 10px;}
+.similar-item{display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:9px 12px;border-radius:8px;background:var(--card);border:1px solid var(--border);
+  margin-bottom:6px;text-decoration:none;transition:border-color .18s,background .18s;}
+.similar-item:hover{border-color:rgba(124,155,255,0.35);background:var(--card-h);}
+.similar-item-title{font-size:0.82rem;color:var(--text);font-weight:500;min-width:0;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.similar-item-meta{display:flex;align-items:center;gap:10px;flex-shrink:0;
+  font-family:'DM Mono',monospace;font-size:0.64rem;color:var(--muted);}
+.similar-sim{color:var(--accent);}
 .btn-next{flex:1;padding:13px;background:linear-gradient(110deg,var(--accent) 0%,var(--violet,#A78BFF) 45%,var(--coral,#FF6B6B) 100%);border:none;border-radius:var(--r);
   color:var(--bg);font-family:'DM Mono',monospace;font-size:0.76rem;font-weight:600;
   cursor:pointer;transition:background-color 0.2s,box-shadow 0.2s;letter-spacing:0.08em;text-transform:uppercase;
@@ -147,8 +161,16 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
       </div>
       <div class="form-group">
         <label>{{ _('Description') }} <span class="req">*</span></label>
-        <textarea id="descInput" placeholder="{{ _('What are you building? What problem does it solve? What kind of teammate are you looking for?') }}" oninput="updatePreview();updateChar()"></textarea>
+        <textarea id="descInput" placeholder="{{ _('What are you building? What problem does it solve? What kind of teammate are you looking for?') }}" oninput="updatePreview();updateChar();scheduleSimilarCheck()"></textarea>
         <div class="char-count"><span id="charCount">0</span> / 500</div>
+      </div>
+      <div class="similar-warn" id="similarWarn" style="display:none;">
+        <div class="similar-warn-head">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 9v4M12 17h.01M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"/></svg>
+          <span id="similarWarnTitle">{{ _('Similar projects already exist') }}</span>
+        </div>
+        <div class="similar-warn-sub">{{ _('Consider joining one instead of creating a duplicate:') }}</div>
+        <div id="similarList"></div>
       </div>
       <div class="form-row">
         <div class="form-group">
@@ -562,6 +584,40 @@ function updatePreview() {
 function updateChar() {
   document.getElementById('charCount').textContent = document.getElementById('descInput').value.length;
 }
+
+/* Duplicate detection — debounced call to /projects/check-similar as the user
+   drafts. Advisory only: never blocks posting. */
+var _similarTimer = null;
+function scheduleSimilarCheck() {
+  clearTimeout(_similarTimer);
+  _similarTimer = setTimeout(runSimilarCheck, 600);
+}
+async function runSimilarCheck() {
+  var title = document.getElementById('titleInput').value.trim();
+  var desc  = document.getElementById('descInput').value.trim();
+  var warn  = document.getElementById('similarWarn');
+  if (title.length < 4) { warn.style.display = 'none'; return; }
+  try {
+    var r = await fetch('/projects/check-similar', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title: title, description: desc })
+    });
+    if (!r.ok) { warn.style.display = 'none'; return; }
+    var d = await r.json();
+    var list = document.getElementById('similarList');
+    if (!d.similar || !d.similar.length) { warn.style.display = 'none'; return; }
+    list.innerHTML = d.similar.map(function (p) {
+      var spots = p.spots_left > 0 ? (p.spots_left + ' spot(s) left') : 'full';
+      return '<a class="similar-item" href="' + window._esc(p.url) + '" target="_blank" rel="noopener">' +
+        '<span class="similar-item-title">' + window._esc(p.title) + '</span>' +
+        '<span class="similar-item-meta"><span class="similar-sim">' + p.similarity + '% similar</span>' +
+        '<span>' + spots + '</span></span></a>';
+    }).join('');
+    warn.style.display = 'block';
+  } catch (e) { warn.style.display = 'none'; }
+}
+document.getElementById('titleInput').addEventListener('input', scheduleSimilarCheck);
 
 function toggleSkill(el) { el.classList.toggle('selected'); }
 
