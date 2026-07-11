@@ -11,6 +11,9 @@
 
 /* COVER BANNER */
 .pv-cover{height:150px;border-radius:16px 16px 0 0;border:1px solid rgba(255,255,255,0.09);border-bottom:none;overflow:hidden;position:relative;}
+.pv-cover::before{content:'';position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(ellipse 60% 80% at 20% 40%,rgba(124,155,255,0.14) 0%,transparent 60%),
+             radial-gradient(ellipse 50% 70% at 82% 30%,rgba(255,107,107,0.08) 0%,transparent 60%);}
 .profile-header.pv-under{border-radius:0 0 16px 16px;border-top:none;}
 .profile-header.pv-under::before{display:none;}
 .profile-header.pv-under .profile-avatar{margin-top:-58px;border:4px solid var(--bg);width:92px;height:92px;}

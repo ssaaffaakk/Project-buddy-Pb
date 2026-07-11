@@ -65,7 +65,11 @@ BANNER_PRESETS = [
     {"key": "sky",    "css": "linear-gradient(120deg,#B7CCFF 0%,#7C9BFF 60%,#4A5BA8 100%)"},
 ]
 BANNER_CSS = {p["key"]: p["css"] for p in BANNER_PRESETS}
-DEFAULT_BANNER_CSS = "linear-gradient(120deg,#141d3a 0%,#0a1024 100%)"
+# Default cover for users who haven't picked a banner. The old default
+# (#141d3a → #0a1024) was nearly identical to the page background (#060B1A),
+# so a bannerless profile looked like an empty/broken box. This on-brand
+# navy → steel → dusk gradient is clearly visible while staying subtle.
+DEFAULT_BANNER_CSS = "linear-gradient(120deg,#141d3a 0%,#243b6b 52%,#3a2b56 100%)"
 
 
 def banner_style(banner_url):
