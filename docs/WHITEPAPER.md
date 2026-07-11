@@ -382,7 +382,7 @@ The provider selector checks for API keys in order (Groq → Anthropic → built
 
 **Rate Limiting:** 20 requests/minute, 200/day per user. Input validated for length (max 1000 characters) and emptiness.
 
-**Standalone CLI Agent (`ssm_agent.py`):**
+**Standalone CLI Agent (`agent/ssm_agent.py`):**
 - Implements a ReAct-style (Reasoning + Acting) agent loop over a local Ollama model.
 - Tool registry supports: `read_file`, `write_file`, `run_shell`, `get_datetime`, `search_web`.
 - Agent parses tool calls from model output as JSON, executes them, feeds results back for iterative reasoning.

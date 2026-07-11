@@ -61,10 +61,12 @@ pb development/
 ├── templates/          # Jinja2 HTML templates
 ├── static/             # CSS, JS, images
 ├── migrations/         # Alembic migration files
-├── ssm_agent.py        # SSM-1.0 local LLM agent
-├── tools.py            # Agent tools
-├── run.py              # Launch SSM-1.0 CLI
-└── start.sh            # Quick launcher
+└── agent/              # SSM-1.0 local LLM dev agent (self-contained)
+    ├── ssm_agent.py    # SSM-1.0 local LLM agent
+    ├── tools.py        # Agent tools
+    ├── run.py          # Launch SSM-1.0 CLI
+    ├── start.sh        # Quick launcher
+    └── upload_to_hf.py # Push the GGUF model to Hugging Face
 ```
 
 ## SSM-1.0 Dev Agent
@@ -72,11 +74,11 @@ pb development/
 A local LLaMA agent (via Ollama) runs alongside development:
 
 ```bash
-./start.sh         # launch SSM-1.0 CLI
-python run.py      # alternative launch
+./agent/start.sh         # launch SSM-1.0 CLI
+python agent/run.py      # alternative launch
 ```
 
-Model config: edit `AGENT_MODEL` in `ssm_agent.py` to match `ollama list` output.
+Model config: edit `AGENT_MODEL` in `agent/ssm_agent.py` to match `ollama list` output.
 
 ## Development Rules (follow these strictly)
 
@@ -103,5 +105,5 @@ flask db upgrade
 ollama list
 
 # Launch SSM-1.0
-./start.sh
+./agent/start.sh
 ```

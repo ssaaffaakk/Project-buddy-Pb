@@ -280,7 +280,8 @@ ProjectBuddy/
 ├── tasks.py                # Celery tasks (eager in-process fallback)
 ├── frontend/               # React 18 + TypeScript + Vite explorer (beta SPA)
 ├── ops/                    # Prometheus + Grafana compose profile
-├── scripts/                # CLI: recommender training, evals, admin, db init
+├── scripts/                # CLI: recommender training, evals, admin, db init, mock seeder
+├── agent/                  # SSM-1.0 local LLM dev agent (Ollama, self-contained)
 ├── render.yaml             # Render Blueprint (IaC)
 ├── Dockerfile              # Web image · docker-compose.yml (web + Postgres + Redis)
 ├── .github/                # CI workflow + issue/PR templates

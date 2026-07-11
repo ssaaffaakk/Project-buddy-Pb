@@ -1,5 +1,7 @@
 #!/bin/bash
 # SSM-1.0 — Project Buddy launcher for pb development
+# Runs from anywhere: resolve to this script's own directory (agent/).
+cd "$(dirname "$0")" || exit 1
 
 echo ""
 echo "  ================================================"
