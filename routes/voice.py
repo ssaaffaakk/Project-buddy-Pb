@@ -308,6 +308,25 @@ def on_join_collab(data):
     join_room(f'collab_{group_id}')
 
 
+@socketio.on('sg_typing')
+def on_sg_typing(data):
+    """Relay a transient 'is typing' signal to the rest of the group's room.
+
+    Ephemeral and best-effort: no persistence, throttled on the client, and
+    the receiver auto-clears it on a timeout, so a dropped event is harmless."""
+    if not current_user.is_authenticated:
+        return
+    try:
+        group_id = int(data.get('group_id', 0))
+    except (TypeError, ValueError):
+        return
+    if not group_id or not _verify_member(group_id):
+        return
+    emit('sg_typing',
+         {'name': current_user.first_name, 'id': current_user.id},
+         to=f'collab_{group_id}', include_self=False)
+
+
 @socketio.on('note_update')
 def on_note_update(data):
     """Persist the shared note and broadcast it to everyone else in the room."""

@@ -53,6 +53,7 @@ html,body{height:100%;overflow:hidden;}
 .input-wrap{display:flex;gap:8px;align-items:flex-end;}
 .msg-input{flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:10px 14px;color:var(--text);font-family:'Inter',sans-serif;font-size:0.85rem;resize:none;min-height:42px;max-height:120px;outline:none;transition:border-color 0.2s;}
 .msg-input:focus{border-color:rgba(124,155,255,0.35);}
+.typing-indicator{display:none;font-family:'DM Mono',monospace;font-size:0.66rem;font-style:italic;color:var(--muted);letter-spacing:0.03em;padding:0 4px 6px;}
 .send-btn{padding:10px 18px;border-radius:var(--r);font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;border:none;background:linear-gradient(110deg,var(--accent) 0%,var(--violet,#A78BFF) 45%,var(--coral,#FF6B6B) 100%);color:#fff;cursor:pointer;font-weight:500;transition:all 0.2s;flex-shrink:0;}
 .send-btn:hover{box-shadow:0 0 0 1px rgba(124,155,255,0.5),0 4px 20px rgba(124,155,255,0.2);}
 .send-btn:disabled{opacity:0.4;cursor:default;box-shadow:none;}
@@ -303,6 +304,7 @@ html,body{height:100%;overflow:hidden;}
 
       {% if is_member %}
       <div class="input-bar">
+        <div class="typing-indicator" id="typing-indicator" aria-live="polite"></div>
         <div class="staged-file" id="staged-file" style="display:none;">
           <span class="sf-ic"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></span>
           <span class="sf-name" id="sf-name"></span>
@@ -313,8 +315,8 @@ html,body{height:100%;overflow:hidden;}
           <button class="attach-btn" onclick="document.getElementById('chat-file').click()" title="Attach a file" aria-label="Attach a file">
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a5 5 0 0 1-7.07-7.07l9.19-9.19a3.5 3.5 0 0 1 4.95 4.95l-9.2 9.19a1.5 1.5 0 0 1-2.12-2.12l8.49-8.49"/></svg>
           </button>
-          <textarea class="msg-input" id="msg-input" placeholder="{{ _('Message {name}…').format(name=group.name) }}" rows="1"
-                    onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
+          <textarea class="msg-input" id="msg-input" placeholder="{{ _('Write a message…') }}" rows="1"
+                    onkeydown="handleKey(event)" oninput="autoResize(this);emitTyping()"></textarea>
           <button class="send-btn" id="send-btn" onclick="sendMessage()">{{ _('Send') }}</button>
         </div>
       </div>
@@ -462,6 +464,34 @@ function appendMessage(m,mine){
 }
 
 function escHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+/* ── Typing indicator ─────────────────────────────────────────────────────────
+   Throttled emit while typing; receivers show a transient "… is typing" that
+   auto-clears on a timeout, so a dropped event never leaves it stuck. */
+var _lastTypingEmit = 0;
+function emitTyping(){
+  if(!socket || !socket.connected) return;
+  var now = Date.now();
+  if(now - _lastTypingEmit > 2000){ _lastTypingEmit = now; socket.emit('sg_typing', {group_id: GROUP_ID}); }
+}
+var typers = {};            // id -> { name, t: last-seen ms }
+var TYPING_TTL = 3500;
+function noteTyping(id, name){ typers[id] = {name: name, t: Date.now()}; renderTyping(); }
+function clearTyping(id){ if(typers[id]){ delete typers[id]; renderTyping(); } }
+function renderTyping(){
+  var el = document.getElementById('typing-indicator');
+  if(!el) return;
+  var now = Date.now();
+  Object.keys(typers).forEach(function(id){ if(now - typers[id].t >= TYPING_TTL) delete typers[id]; });
+  var names = Object.keys(typers).map(function(id){ return typers[id].name; });
+  var text = '';
+  if(names.length === 1) text = names[0] + ' {{ _("is typing…") }}';
+  else if(names.length === 2) text = names[0] + ' & ' + names[1] + ' {{ _("are typing…") }}';
+  else if(names.length > 2) text = '{{ _("Several people are typing…") }}';
+  el.textContent = text;
+  el.style.display = text ? 'block' : 'none';
+}
+setInterval(renderTyping, 1200);  // prune so it fades after they stop
 
 async function pollMessages(){
   try{
@@ -612,8 +642,12 @@ function ensureSocket(){
   socket.on('sg_message',function(m){
     appendMessage(m, m.author_id===MY_ID);
     if(m.id>lastMsgId) lastMsgId=m.id;
+    clearTyping(m.author_id);   // they just sent — no longer "typing"
     scrollBottom(true);
   });
+
+  // Someone else in the room is typing.
+  socket.on('sg_typing',function(d){ noteTyping(d.id, d.name); });
 
   socket.on('voice_user_joined',function(user){
     addTile(user.sid,user.name,user.initials,user.avatar,false);
