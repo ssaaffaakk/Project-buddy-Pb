@@ -5,6 +5,51 @@
 <style nonce="{{ csp_nonce }}">
 .main{padding:40px;display:flex;flex-direction:column;position:relative;z-index:2;}
 
+/* ── TASK BOARD (kanban) ── */
+.board-wrap{margin-top:28px;background:var(--card);border:1px solid var(--border);
+  border-top-color:rgba(255,255,255,0.08);border-radius:var(--r);padding:22px 24px;position:relative;overflow:hidden;}
+.board-wrap::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(124,155,255,0.14),transparent);}
+.board-header{display:flex;align-items:baseline;gap:14px;margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid var(--border);}
+.board-header h2{font-family:'DM Serif Display',serif;font-style:italic;font-size:1.15rem;font-weight:400;}
+.board-hint{font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.05em;text-transform:uppercase;color:var(--muted);}
+.board-cols{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+.board-col{background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:var(--r);
+  padding:12px;display:flex;flex-direction:column;min-height:120px;transition:border-color .18s,background .18s;}
+.board-col.drop{border-color:rgba(124,155,255,0.5);background:rgba(124,155,255,0.05);}
+.board-col-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;padding:0 4px;}
+.board-col-title{font-family:'DM Mono',monospace;font-size:0.66rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--soft);}
+.board-col-count{font-family:'DM Mono',monospace;font-size:0.62rem;color:var(--muted);
+  background:rgba(255,255,255,0.05);border-radius:99px;padding:1px 8px;}
+.board-col-body{display:flex;flex-direction:column;gap:8px;flex:1;min-height:30px;}
+.task-card{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;
+  cursor:grab;transition:border-color .18s,transform .18s,box-shadow .18s;position:relative;}
+.task-card:hover{border-color:rgba(124,155,255,0.3);box-shadow:0 4px 16px rgba(0,0,0,0.25);}
+.task-card.dragging{opacity:0.5;}
+.task-title{font-size:0.82rem;color:var(--text);line-height:1.4;word-break:break-word;padding-right:18px;}
+.task-del{position:absolute;top:8px;right:8px;background:none;border:none;color:var(--muted);
+  cursor:pointer;font-size:0.9rem;line-height:1;padding:2px;opacity:0;transition:opacity .15s,color .15s;}
+.task-card:hover .task-del{opacity:1;}
+.task-del:hover{color:var(--coral);}
+.task-foot{display:flex;align-items:center;justify-content:space-between;margin-top:9px;gap:8px;}
+.task-move{display:flex;gap:4px;}
+.task-move button{background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:5px;
+  color:var(--muted);cursor:pointer;font-size:0.7rem;line-height:1;padding:3px 7px;transition:all .15s;}
+.task-move button:hover:not(:disabled){border-color:rgba(124,155,255,0.4);color:var(--accent);}
+.task-move button:disabled{opacity:0.25;cursor:default;}
+.task-assignee{font-family:'DM Mono',monospace;font-size:0.62rem;color:var(--muted);
+  display:flex;align-items:center;gap:6px;cursor:pointer;}
+.task-av{width:20px;height:20px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#4A5BA8);
+  color:#fff;display:flex;align-items:center;justify-content:center;font-size:0.55rem;font-weight:600;flex-shrink:0;}
+.task-assignee select{width:auto;padding:2px 6px;font-size:0.68rem;min-height:0;background:var(--bg3);}
+.board-add{display:flex;gap:6px;margin-top:10px;}
+.board-add input{padding:8px 10px;font-size:0.8rem;flex:1;min-height:0;}
+.board-add button{background:var(--card);border:1px solid var(--border);border-radius:var(--r);
+  color:var(--accent);cursor:pointer;font-size:1.1rem;line-height:1;width:38px;flex-shrink:0;transition:all .18s;}
+.board-add button:hover{border-color:rgba(124,155,255,0.4);background:var(--card-h);}
+.board-empty{color:var(--muted);font-size:0.74rem;font-style:italic;text-align:center;padding:14px 0;}
+@media(max-width:720px){.board-cols{grid-template-columns:1fr;}}
+
 .back-link{display:inline-flex;align-items:center;gap:6px;color:var(--accent);text-decoration:none;
   font-size:0.85rem;font-weight:500;margin-bottom:24px;transition:all 0.2s;}
 .back-link:hover{gap:10px;}
@@ -198,6 +243,34 @@
       <a href="/report-issue" class="btn-action btn-secondary" style="text-decoration:none;text-align:center;">{{ _('Report Issue') }}</a>
     </div>
   </div>
+
+  {% if is_owner or is_member %}
+  <div class="board-wrap" id="board-wrap"
+       data-pid="{{ project.id }}" data-uid="{{ current_user.id }}">
+    <div class="board-header">
+      <h2>{{ _('Task Board') }}</h2>
+      <span class="board-hint">{{ _('Move tasks across columns to track progress') }}</span>
+    </div>
+    <div class="board-cols">
+      {% for col, label in [('todo', _('To Do')), ('doing', _('In Progress')), ('done', _('Done'))] %}
+      <div class="board-col" data-status="{{ col }}">
+        <div class="board-col-head">
+          <span class="board-col-title">{{ label }}</span>
+          <span class="board-col-count" id="count-{{ col }}">0</span>
+        </div>
+        <div class="board-col-body" id="col-{{ col }}"></div>
+        {% if col == 'todo' %}
+        <form class="board-add" id="board-add-form">
+          <input type="text" id="board-add-input" maxlength="200"
+                 placeholder="{{ _('Add a task…') }}" autocomplete="off">
+          <button type="submit" aria-label="{{ _('Add task') }}">+</button>
+        </form>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
 {% endblock %}
 
 {% block extra_script %}
@@ -246,5 +319,152 @@ if (messageForm) {
     }
   });
 }
+
+/* ── TASK BOARD ── */
+(function(){
+  var wrap = document.getElementById('board-wrap');
+  if (!wrap) return;
+  var PID = wrap.dataset.pid;
+  var STATUSES = ['todo','doing','done'];
+  var MEMBERS = {{ assignable_members | tojson }};
+  var api = '/project/' + PID + '/tasks';
+
+  function esc(s){ return window._esc(String(s == null ? '' : s)); }
+
+  function assigneeControl(t){
+    var opts = '<option value="">— ' + '{{ _("unassigned") }}' + '</option>';
+    MEMBERS.forEach(function(m){
+      opts += '<option value="' + m.id + '"' + (t.assignee_id === m.id ? ' selected' : '') + '>' + esc(m.name) + '</option>';
+    });
+    var av = t.assignee_initials
+      ? '<span class="task-av">' + esc(t.assignee_initials) + '</span>' : '';
+    return '<span class="task-assignee">' + av +
+      '<select data-tid="' + t.id + '" onchange="pbAssignTask(' + t.id + ', this.value)">' + opts + '</select></span>';
+  }
+
+  function moveControl(t){
+    var i = STATUSES.indexOf(t.status);
+    return '<span class="task-move">' +
+      '<button ' + (i<=0?'disabled':'') + ' onclick="pbMoveTask(' + t.id + ',-1)" aria-label="left">‹</button>' +
+      '<button ' + (i>=2?'disabled':'') + ' onclick="pbMoveTask(' + t.id + ',1)" aria-label="right">›</button></span>';
+  }
+
+  function cardHTML(t){
+    var del = t.can_delete
+      ? '<button class="task-del" onclick="pbDeleteTask(' + t.id + ')" aria-label="delete">×</button>' : '';
+    return '<div class="task-card" draggable="true" data-tid="' + t.id + '" data-status="' + t.status + '">' +
+      del +
+      '<div class="task-title">' + esc(t.title) + '</div>' +
+      '<div class="task-foot">' + moveControl(t) + assigneeControl(t) + '</div></div>';
+  }
+
+  var TASKS = [];
+  function render(){
+    STATUSES.forEach(function(s){
+      var body = document.getElementById('col-' + s);
+      var items = TASKS.filter(function(t){ return t.status === s; });
+      document.getElementById('count-' + s).textContent = items.length;
+      body.innerHTML = items.length
+        ? items.map(cardHTML).join('')
+        : '<div class="board-empty">{{ _("Nothing here yet") }}</div>';
+    });
+    bindDrag();
+  }
+
+  async function load(){
+    try {
+      var r = await fetch(api);
+      if (!r.ok) return;
+      TASKS = (await r.json()).tasks || [];
+      render();
+    } catch(e){}
+  }
+
+  window.pbMoveTask = async function(tid, dir){
+    var t = TASKS.find(function(x){ return x.id === tid; });
+    if (!t) return;
+    var i = STATUSES.indexOf(t.status) + dir;
+    if (i < 0 || i > 2) return;
+    await setStatus(tid, STATUSES[i]);
+  };
+
+  async function setStatus(tid, status){
+    try {
+      var r = await fetch(api + '/' + tid + '/move', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({status: status})
+      });
+      if (!r.ok){ showToast('Could not move task.', 'error'); return; }
+      var t = TASKS.find(function(x){ return x.id === tid; });
+      if (t){ t.status = status; render(); }
+    } catch(e){}
+  }
+
+  window.pbAssignTask = async function(tid, val){
+    try {
+      var r = await fetch(api + '/' + tid + '/assign', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({user_id: val || null})
+      });
+      if (!r.ok){ showToast('Could not assign task.', 'error'); return; }
+      var data = await r.json();
+      var idx = TASKS.findIndex(function(x){ return x.id === tid; });
+      if (idx > -1){ TASKS[idx] = data.task; render(); }
+    } catch(e){}
+  };
+
+  window.pbDeleteTask = async function(tid){
+    var ok = await pbConfirm({title:'Delete task?', message:'This removes the task from the board.', confirmText:'Delete', danger:true});
+    if (!ok) return;
+    try {
+      var r = await fetch(api + '/' + tid + '/delete', { method:'POST' });
+      if (!r.ok){ showToast('Could not delete task.', 'error'); return; }
+      TASKS = TASKS.filter(function(x){ return x.id !== tid; });
+      render();
+    } catch(e){}
+  };
+
+  var addForm = document.getElementById('board-add-form');
+  if (addForm){
+    addForm.addEventListener('submit', async function(e){
+      e.preventDefault();
+      var input = document.getElementById('board-add-input');
+      var title = input.value.trim();
+      if (!title) return;
+      try {
+        var r = await fetch(api, {
+          method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({title: title, status:'todo'})
+        });
+        if (!r.ok){ showToast('Could not add task.', 'error'); return; }
+        TASKS.push((await r.json()).task);
+        input.value = '';
+        render();
+      } catch(e){}
+    });
+  }
+
+  /* Drag & drop (desktop) — click ‹ › covers touch */
+  function bindDrag(){
+    document.querySelectorAll('.task-card').forEach(function(card){
+      card.addEventListener('dragstart', function(e){
+        card.classList.add('dragging');
+        e.dataTransfer.setData('text/plain', card.dataset.tid);
+      });
+      card.addEventListener('dragend', function(){ card.classList.remove('dragging'); });
+    });
+    document.querySelectorAll('.board-col').forEach(function(col){
+      col.ondragover = function(e){ e.preventDefault(); col.classList.add('drop'); };
+      col.ondragleave = function(){ col.classList.remove('drop'); };
+      col.ondrop = function(e){
+        e.preventDefault(); col.classList.remove('drop');
+        var tid = parseInt(e.dataTransfer.getData('text/plain'), 10);
+        if (tid) setStatus(tid, col.dataset.status);
+      };
+    });
+  }
+
+  load();
+})();
 </script>
 {% endblock %}

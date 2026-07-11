@@ -191,6 +191,23 @@ class ProjectMessage(db.Model):
     sender = db.relationship("User", lazy=True)
 
 
+class ProjectTask(db.Model):
+    """A kanban task on a project board. Visible to and editable by project
+    members (and the owner). Status moves across todo → doing → done."""
+    __tablename__ = "project_tasks"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    project_id: Mapped[int] = mapped_column(db.ForeignKey("projects.id"), index=True)
+    title: Mapped[str] = mapped_column(String(200))
+    status: Mapped[str] = mapped_column(String(10), default="todo")  # todo | doing | done
+    assignee_id: Mapped[Optional[int]] = mapped_column(db.ForeignKey("users.id"))
+    created_by: Mapped[int] = mapped_column(db.ForeignKey("users.id"))
+    position: Mapped[int] = mapped_column(Integer, default=0)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+    assignee = db.relationship("User", foreign_keys=[assignee_id], lazy=True)
+
+
 class AdminMessage(db.Model):
     __tablename__ = "admin_messages"
 

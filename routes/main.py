@@ -685,11 +685,20 @@ def project_detail(project_id):
 
     analytics.track("project_view", current_user.id, "project", project_id, commit=True)
 
+    # Members assignable to board tasks (owner + active members)
+    assignable = []
+    if project.owner:
+        assignable.append({"id": project.owner.id, "name": project.owner.get_full_name()})
+    for m in team_members:
+        if m.user:
+            assignable.append({"id": m.user.id, "name": m.user.get_full_name()})
+
     return render_template(
         "projects/detail.html",
         project=project,
         messages=proj_messages,
         team_members=team_members,
+        assignable_members=assignable,
         is_owner=is_owner,
         is_member=is_member,
         has_applied=has_applied,
@@ -779,6 +788,137 @@ def send_project_message(project_id):
     db.session.add(msg)
     db.session.commit()
     return jsonify({"message": "Message sent"}), 201
+
+
+# ── PROJECT TASK BOARD (kanban) ───────────────────────────────────────────────
+_TASK_STATUSES = ("todo", "doing", "done")
+
+
+def _project_if_member(project_id):
+    """Return the project if the current user is its owner or an active member,
+    else None. The single authorization gate for every task endpoint."""
+    project = Project.query.get(project_id)
+    if project is None:
+        return None
+    if project.owner_id == current_user.id:
+        return project
+    is_member = any(m.user_id == current_user.id and not m.removed
+                    for m in project.members)
+    return project if is_member else None
+
+
+def _task_json(t):
+    return {
+        "id": t.id,
+        "title": t.title,
+        "status": t.status,
+        "assignee_id": t.assignee_id,
+        "assignee_name": t.assignee.get_full_name() if t.assignee else None,
+        "assignee_initials": ((t.assignee.first_name[:1] + t.assignee.last_name[:1]).upper()
+                              if t.assignee else None),
+        "can_delete": t.created_by == current_user.id or _is_owner_of(t.project_id),
+    }
+
+
+def _is_owner_of(project_id):
+    p = Project.query.get(project_id)
+    return bool(p and p.owner_id == current_user.id)
+
+
+@main_bp.route("/project/<int:project_id>/tasks", methods=["GET"])
+@login_required
+def list_tasks(project_id):
+    from models import ProjectTask
+    if _project_if_member(project_id) is None:
+        return jsonify({"error": "Not a member of this project."}), 403
+    tasks = (ProjectTask.query.filter_by(project_id=project_id)
+             .order_by(ProjectTask.position, ProjectTask.id).all())
+    return jsonify({"tasks": [_task_json(t) for t in tasks]})
+
+
+@main_bp.route("/project/<int:project_id>/tasks", methods=["POST"])
+@login_required
+@limiter.limit("60 per minute")
+def create_task(project_id):
+    from models import ProjectTask
+    if _project_if_member(project_id) is None:
+        return jsonify({"error": "Not a member of this project."}), 403
+    data = request.get_json(silent=True) or {}
+    title = (data.get("title") or "").strip()
+    status = data.get("status") if data.get("status") in _TASK_STATUSES else "todo"
+    if not title:
+        return jsonify({"error": "Task title required."}), 400
+    if len(title) > 200:
+        return jsonify({"error": "Title too long (max 200)."}), 400
+    task = ProjectTask(project_id=project_id, title=title, status=status,
+                       created_by=current_user.id)
+    db.session.add(task)
+    db.session.commit()
+    return jsonify({"task": _task_json(task)}), 201
+
+
+@main_bp.route("/project/<int:project_id>/tasks/<int:task_id>/move", methods=["POST"])
+@login_required
+def move_task(project_id, task_id):
+    from models import ProjectTask
+    if _project_if_member(project_id) is None:
+        return jsonify({"error": "Not a member of this project."}), 403
+    task = ProjectTask.query.filter_by(id=task_id, project_id=project_id).first()
+    if task is None:
+        return jsonify({"error": "Task not found."}), 404
+    data = request.get_json(silent=True) or {}
+    status = data.get("status")
+    if status not in _TASK_STATUSES:
+        return jsonify({"error": "Invalid status."}), 400
+    task.status = status
+    db.session.commit()
+    return jsonify({"task": _task_json(task)})
+
+
+@main_bp.route("/project/<int:project_id>/tasks/<int:task_id>/assign", methods=["POST"])
+@login_required
+def assign_task(project_id, task_id):
+    from models import ProjectTask
+    project = _project_if_member(project_id)
+    if project is None:
+        return jsonify({"error": "Not a member of this project."}), 403
+    task = ProjectTask.query.filter_by(id=task_id, project_id=project_id).first()
+    if task is None:
+        return jsonify({"error": "Task not found."}), 404
+    data = request.get_json(silent=True) or {}
+    user_id = data.get("user_id")
+    if user_id in (None, "", "null"):
+        task.assignee_id = None
+    else:
+        try:
+            uid = int(user_id)
+        except (TypeError, ValueError):
+            return jsonify({"error": "Invalid user."}), 400
+        # Only the owner or an active member may be assigned.
+        valid = uid == project.owner_id or any(
+            m.user_id == uid and not m.removed for m in project.members)
+        if not valid:
+            return jsonify({"error": "Assignee must be a project member."}), 400
+        task.assignee_id = uid
+    db.session.commit()
+    return jsonify({"task": _task_json(task)})
+
+
+@main_bp.route("/project/<int:project_id>/tasks/<int:task_id>/delete", methods=["POST"])
+@login_required
+def delete_task(project_id, task_id):
+    from models import ProjectTask
+    if _project_if_member(project_id) is None:
+        return jsonify({"error": "Not a member of this project."}), 403
+    task = ProjectTask.query.filter_by(id=task_id, project_id=project_id).first()
+    if task is None:
+        return jsonify({"error": "Task not found."}), 404
+    # Only the task's creator or the project owner may delete it.
+    if task.created_by != current_user.id and not _is_owner_of(project_id):
+        return jsonify({"error": "Not authorized to delete this task."}), 403
+    db.session.delete(task)
+    db.session.commit()
+    return jsonify({"ok": True})
 
 
 # ── MY PROFILE ────────────────────────────────────────────────────────────────
