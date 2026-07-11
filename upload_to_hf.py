@@ -11,10 +11,7 @@ Requirements:
     pip install huggingface_hub
 """
 
-import os
 import sys
-import glob
-import json
 import subprocess
 from pathlib import Path
 
@@ -190,9 +187,9 @@ def main():
     repo_id = push_to_hf(gguf_path, hf_username)
 
     print("\n  Next step:")
-    print(f"  Add this to your .env / Render environment variables:")
-    print(f"    HF_MODEL_ID = meta-llama/Llama-3.1-8B-Instruct")
-    print(f"    HF_TOKEN    = <your read token from huggingface.co/settings/tokens>")
+    print("  Add this to your .env / Render environment variables:")
+    print("    HF_MODEL_ID = meta-llama/Llama-3.1-8B-Instruct")
+    print("    HF_TOKEN    = <your read token from huggingface.co/settings/tokens>")
     print(f"\n  Your SSM-1.0 model page: https://huggingface.co/{repo_id}")
 
 

@@ -3,3 +3,8 @@
 #   pytest
 -r requirements.txt
 pytest==8.4.2
+pytest-cov==7.1.0
+ruff==0.15.21
+# Optional: experiment tracking for `flask train-recommender`
+# (trainer logs to MLflow only when the package is installed)
+# mlflow==2.22.2

@@ -1,0 +1,42 @@
+# Full local stack: web + PostgreSQL + Redis — mirrors production topology.
+#   docker compose up --build
+# App:  http://localhost:5001   (admin login uses ADMIN_EMAIL / ADMIN_PASSWORD)
+services:
+  web:
+    build: .
+    ports:
+      - "5001:5001"
+    environment:
+      SECRET_KEY: ${SECRET_KEY:-dev-only-change-me}
+      FLASK_ENV: production
+      SQLALCHEMY_DATABASE_URI: postgresql://projectbuddy:projectbuddy@db:5432/projectbuddy
+      REDIS_URL: redis://redis:6379/0
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@local.dev}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-Admin@12345}
+      SEED_MOCK_DATA: ${SEED_MOCK_DATA:-true}
+      MOCK_PASSWORD: ${MOCK_PASSWORD:-Mock@123}
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: projectbuddy
+      POSTGRES_PASSWORD: projectbuddy
+      POSTGRES_DB: projectbuddy
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U projectbuddy"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+
+volumes:
+  pgdata:

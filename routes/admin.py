@@ -1,5 +1,4 @@
-from flask import Blueprint, request, jsonify, render_template, flash, redirect, url_for, current_app
-from flask_login import login_required
+from flask import Blueprint, request, jsonify, render_template, current_app
 from extensions import db, admin_required
 from models import Report, User, Project, Application, Badge, AdminMessage
 

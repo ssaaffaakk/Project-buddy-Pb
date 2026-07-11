@@ -22,7 +22,8 @@ eventlet.monkey_patch()
 # eventlet.sleep / Event.wait / Semaphore.acquire), so we patch those too.
 # ALL patches write directly to stderr with flush=True so output is never lost.
 # Remove this block once the root cause is confirmed and fixed.
-import sys as _sys, traceback as _tb
+import sys as _sys
+import traceback as _tb
 
 def _dump(label, exc_tb=None):
     print(f"\n[WSGI DIAG] BLOCKING FROM MAINLOOP ({label}):", file=_sys.stderr, flush=True)

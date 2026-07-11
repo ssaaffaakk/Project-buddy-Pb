@@ -27,12 +27,8 @@ TRANSLATIONS = {
     "tr": {
         # ── Sidebar / navigation ──
         "Dashboard": "Panel",
-        "Browse Projects": "Projelere Göz At",
         "Community": "Topluluk",
-        "Voice Chat": "Sesli Sohbet",
         "AI Assistant": "Yapay Zekâ Asistanı",
-        "Post a Project": "Proje Paylaş",
-        "My Projects": "Projelerim",
         "My Profile": "Profilim",
         "Support Chat": "Destek Sohbeti",
         "Report Issue": "Sorun Bildir",
@@ -57,11 +53,7 @@ TRANSLATIONS = {
         "Create one": "Bir tane oluştur",
         "Admin Login": "Yönetici Girişi",
         "Create account": "Hesap oluştur",
-        "First Name": "Ad",
-        "Last Name": "Soyad",
-        "Department": "Bölüm",
         "Continue": "Devam Et",
-        "Back": "Geri",
         "Pick your interests": "İlgi alanlarını seç",
         "You have been logged out.": "Çıkış yaptın.",
         "Step 1 of 3 — Basic information": "Adım 1/3 — Temel bilgiler",
@@ -76,10 +68,7 @@ TRANSLATIONS = {
         "Step 3 of 3 — Select exactly 5 areas": "Adım 3/3 — Tam 5 alan seç",
         "These power your project recommendations. Choose wisely — you can update them later.":
             "Bunlar proje önerilerini güçlendirir. Dikkatli seç — sonra değiştirebilirsin.",
-        "Search interests — e.g. psychology, finance, robotics…": "İlgi ara — örn. psikoloji, finans, robotik…",
-        "selected": "seçildi",
         "By creating an account you agree to our": "Hesap oluşturarak şunu kabul edersin:",
-        "Privacy Policy": "Gizlilik Politikası",
         "Your next great project starts with the right people. Join the collaboration platform built for students who are serious about what they make.":
             "Bir sonraki harika projen doğru insanlarla başlar. Yaptığı işi ciddiye alan öğrenciler için kurulmuş işbirliği platformuna katıl.",
         "5-tag interest matching for personalized recommendations": "Kişisel öneriler için 5 etiketli ilgi eşleşmesi",
@@ -90,16 +79,13 @@ TRANSLATIONS = {
         "CS Student · 3rd Year": "Bilgisayar Öğrencisi · 3. Sınıf",
         # ── Dashboard ──
         "Good morning": "Günaydın", "Good afternoon": "İyi günler", "Good evening": "İyi akşamlar",
-        "active": "aktif", "pending applications": "bekleyen başvuru", "completed": "tamamlandı",
         "Post Project": "Proje Paylaş",
-        "Active": "Aktif", "Completed": "Tamamlanan", "Avg Rating": "Ort. Puan", "Endorsements": "Onaylar", "Max 3": "En fazla 3",
         "Recommended for you": "Senin için önerilenler", "All Projects": "Tüm Projeler", "fit": "uyum",
         "No recommendations yet — update your interest tags.": "Henüz öneri yok — ilgi etiketlerini güncelle.",
         "Pending Applications": "Bekleyen Başvurular", "Application for": "Şuna başvuru:", "your project": "projen",
         "No pending applications.": "Bekleyen başvuru yok.",
         "Personal": "Kişisel", "member(s)": "üye",
         "No active projects.": "Aktif proje yok.", "Post one": "Bir tane paylaş",
-        "Achievements": "Başarılar", "Complete projects to earn badges.": "Rozet kazanmak için projeleri tamamla.",
         "Official Warning from ProjectBuddy": "ProjectBuddy'den Resmi Uyarı", "Dismiss": "Kapat",
         # ── Landing ──
         "Sign In / Register": "Giriş / Kayıt",
@@ -112,7 +98,6 @@ TRANSLATIONS = {
         "Now live for all universities": "Artık tüm üniversitelerde",
         # hero headline (three lines): "Rastgele takım arkadaşına razı olma."
         "Stop settling for": "Rastgele takım",
-        "random": "arkadaşına",
         "teammates.": "razı olma.",
         "ProjectBuddy connects students and instructors through skills, interests, and real collaboration history — so every project starts with the right team.":
             "ProjectBuddy öğrencileri ve eğitmenleri becerilere, ilgi alanlarına ve gerçek işbirliği geçmişine göre buluşturur — böylece her proje doğru ekiple başlar.",
@@ -206,7 +191,6 @@ TRANSLATIONS = {
             "Projeleri dersin bir parçası olarak yürüt. İlanları kayda bağla, başvuranları yönet ve katkıları puanla.",
         "Course-tied project posts": "Derse bağlı proje ilanları", "Manage applications": "Başvuruları yönet",
         "Set deadlines & scope": "Son tarih & kapsam belirle", "Rate team members": "Ekip üyelerini puanla",
-        "Faculty": "Öğretim Üyesi", "Admin": "Yönetici",
         "Keep the community healthy. Review reports, act on violations, and watch platform-wide activity.":
             "Topluluğu sağlıklı tut. Raporları incele, ihlallere karşı harekete geç ve platform genelindeki etkinliği izle.",
         "Review user reports": "Kullanıcı raporlarını incele", "Issue warnings & bans": "Uyarı & yasak ver",
@@ -695,12 +679,8 @@ TRANSLATIONS = {
     "bs": {
         # ── Sidebar / navigation ──
         "Dashboard": "Nadzorna ploča",
-        "Browse Projects": "Pregledaj projekte",
         "Community": "Zajednica",
-        "Voice Chat": "Glasovni chat",
         "AI Assistant": "AI asistent",
-        "Post a Project": "Objavi projekat",
-        "My Projects": "Moji projekti",
         "My Profile": "Moj profil",
         "Support Chat": "Podrška",
         "Report Issue": "Prijavi problem",
@@ -725,11 +705,7 @@ TRANSLATIONS = {
         "Create one": "Napravite ga",
         "Admin Login": "Admin prijava",
         "Create account": "Napravi nalog",
-        "First Name": "Ime",
-        "Last Name": "Prezime",
-        "Department": "Odsjek",
         "Continue": "Nastavi",
-        "Back": "Nazad",
         "Pick your interests": "Odaberite interese",
         "You have been logged out.": "Odjavljeni ste.",
         "Step 1 of 3 — Basic information": "Korak 1/3 — Osnovni podaci",
@@ -744,10 +720,7 @@ TRANSLATIONS = {
         "Step 3 of 3 — Select exactly 5 areas": "Korak 3/3 — Odaberite tačno 5 oblasti",
         "These power your project recommendations. Choose wisely — you can update them later.":
             "Ovo pokreće preporuke projekata. Birajte pažljivo — možete ih kasnije promijeniti.",
-        "Search interests — e.g. psychology, finance, robotics…": "Pretraži interese — npr. psihologija, finansije, robotika…",
-        "selected": "odabrano",
         "By creating an account you agree to our": "Kreiranjem naloga prihvatate našu",
-        "Privacy Policy": "Politiku privatnosti",
         "Your next great project starts with the right people. Join the collaboration platform built for students who are serious about what they make.":
             "Vaš sljedeći sjajan projekat počinje s pravim ljudima. Pridružite se platformi za saradnju napravljenoj za studente koji ozbiljno shvataju ono što rade.",
         "5-tag interest matching for personalized recommendations": "Povezivanje po 5 interesa za personalizirane preporuke",
@@ -758,16 +731,13 @@ TRANSLATIONS = {
         "CS Student · 3rd Year": "Student informatike · 3. godina",
         # ── Dashboard ──
         "Good morning": "Dobro jutro", "Good afternoon": "Dobar dan", "Good evening": "Dobro veče",
-        "active": "aktivnih", "pending applications": "prijava na čekanju", "completed": "završenih",
         "Post Project": "Objavi projekat",
-        "Active": "Aktivno", "Completed": "Završeno", "Avg Rating": "Prosj. ocjena", "Endorsements": "Potvrde", "Max 3": "Najviše 3",
         "Recommended for you": "Preporučeno za vas", "All Projects": "Svi projekti", "fit": "poklapanje",
         "No recommendations yet — update your interest tags.": "Još nema preporuka — ažurirajte svoje interese.",
         "Pending Applications": "Prijave na čekanju", "Application for": "Prijava za", "your project": "vaš projekat",
         "No pending applications.": "Nema prijava na čekanju.",
         "Personal": "Lično", "member(s)": "član(ova)",
         "No active projects.": "Nema aktivnih projekata.", "Post one": "Objavi jedan",
-        "Achievements": "Postignuća", "Complete projects to earn badges.": "Završite projekte da osvojite značke.",
         "Official Warning from ProjectBuddy": "Zvanično upozorenje od ProjectBuddy-a", "Dismiss": "Odbaci",
         # ── Landing ──
         "Sign In / Register": "Prijava / Registracija",
@@ -780,7 +750,6 @@ TRANSLATIONS = {
         "Now live for all universities": "Sada dostupno za sve univerzitete",
         # hero headline (three lines): "Prestani birati nasumične saigrače."
         "Stop settling for": "Prestani birati",
-        "random": "nasumične",
         "teammates.": "saigrače.",
         "ProjectBuddy connects students and instructors through skills, interests, and real collaboration history — so every project starts with the right team.":
             "ProjectBuddy povezuje studente i profesore na osnovu vještina, interesa i stvarne historije saradnje — tako da svaki projekat počinje s pravim timom.",
@@ -874,7 +843,6 @@ TRANSLATIONS = {
             "Vodite projekte kao dio predmeta. Povežite oglase s upisom, upravljajte prijavama i ocjenjujte doprinose.",
         "Course-tied project posts": "Projekti vezani za predmet", "Manage applications": "Upravljaj prijavama",
         "Set deadlines & scope": "Postavi rokove i obim", "Rate team members": "Ocijeni članove tima",
-        "Faculty": "Nastavno osoblje", "Admin": "Administrator",
         "Keep the community healthy. Review reports, act on violations, and watch platform-wide activity.":
             "Održavajte zajednicu zdravom. Pregledajte prijave, reagujte na prekršaje i pratite aktivnost cijele platforme.",
         "Review user reports": "Pregledaj prijave korisnika", "Issue warnings & bans": "Izdaj upozorenja i blokade",

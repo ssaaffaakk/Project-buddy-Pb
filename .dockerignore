@@ -1,0 +1,17 @@
+.git
+.github
+.claude
+.pytest_cache
+__pycache__
+*.pyc
+venv
+.venv
+.env
+.env.*
+instance
+logs
+static/uploads
+htmlcov
+.coverage
+mlruns
+.DS_Store

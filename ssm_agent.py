@@ -119,7 +119,7 @@ class SSMAgent:
             if "SystemExit" in type(e).__name__:
                 raise
             print(f"[{AGENT_NAME}] Could not connect to Ollama: {e}")
-            print(f"  Make sure Ollama is running: open -a Ollama  or  ollama serve")
+            print("  Make sure Ollama is running: open -a Ollama  or  ollama serve")
             raise SystemExit(1)
 
     def chat(self, user_message: str) -> str:
@@ -189,7 +189,7 @@ def start_cli(agent: SSMAgent):
 
     print(f"\n{'='*54}")
     print(f"  {AGENT_NAME} — pb development  |  model: {agent.model}")
-    print(f"  'reset' = clear history  |  'exit' = quit")
+    print("  'reset' = clear history  |  'exit' = quit")
     print(f"{'='*54}\n")
     print(f"  {AGENT_NAME}: Hey! I'm SSM-1.0, your project buddy for pb development.")
     print(f"         Tools ready: {', '.join(agent.tools.list_tools())}\n")

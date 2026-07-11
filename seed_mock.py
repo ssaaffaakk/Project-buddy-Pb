@@ -3,7 +3,8 @@ Mock Data Seeder for ProjectBuddy
 Run: python seed_mock.py
 Clears existing non-admin data and seeds fresh realistic IUS mock data.
 """
-import sys, io
+import sys
+import io
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
 from app import create_app
 from extensions import db
@@ -588,14 +589,14 @@ def seed():
         # ── Notifications ─────────────────────────────────────────────────
         db.session.add(Notification(
             user_id=users[1].id,
-            message=f"Your application to 'IUS Smart Campus App' was accepted!",
+            message="Your application to 'IUS Smart Campus App' was accepted!",
             link=f"/project/{projects[0].id}",
             type="accepted",
             created_at=datetime.utcnow() - timedelta(hours=3),
         ))
         db.session.add(Notification(
             user_id=users[0].id,
-            message=f"Nikola Petrović applied to join 'IUS Study Group Finder'",
+            message="Nikola Petrović applied to join 'IUS Study Group Finder'",
             link="/my-projects",
             type="apply",
             created_at=datetime.utcnow() - timedelta(hours=10),
