@@ -863,10 +863,14 @@ def user_profile(user_id):
             .limit(100).all())
     wall_comments = [_wall_comment_json(c) for c in wall]
 
+    from services.contribution_stats import contribution_stats
+    contributions = contribution_stats(profile_user.id)
+
     return render_template(
         "user/profile_view.html",
         profile_user=profile_user,
         user_stats=user_stats,
+        contributions=contributions,
         reviews=feedbacks,
         can_leave_review=can_leave_review,
         can_endorse=can_endorse,
