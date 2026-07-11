@@ -1,0 +1,85 @@
+{
+  "title": "ProjectBuddy — Service & Product Health",
+  "uid": "projectbuddy-main",
+  "schemaVersion": 39,
+  "refresh": "30s",
+  "time": { "from": "now-6h", "to": "now" },
+  "panels": [
+    {
+      "id": 1,
+      "type": "timeseries",
+      "title": "Request rate by route (req/s)",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "targets": [
+        {
+          "expr": "sum by (endpoint) (rate(pb_http_requests_total[5m]))",
+          "legendFormat": "{{endpoint}}"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "type": "timeseries",
+      "title": "p95 latency by route (s)",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum by (le, endpoint) (rate(pb_http_request_duration_seconds_bucket[5m])))",
+          "legendFormat": "{{endpoint}}"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "type": "timeseries",
+      "title": "5xx errors (req/s)",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "targets": [
+        {
+          "expr": "sum(rate(pb_http_requests_total{status=~\"5..\"}[5m]))",
+          "legendFormat": "5xx"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "Registered users",
+      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 8 },
+      "targets": [{ "expr": "pb_users_total" }]
+    },
+    {
+      "id": 5,
+      "type": "stat",
+      "title": "Open projects",
+      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 8 },
+      "targets": [{ "expr": "pb_projects_open" }]
+    },
+    {
+      "id": 6,
+      "type": "stat",
+      "title": "Analytics events",
+      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 12 },
+      "targets": [{ "expr": "pb_activity_events_total" }]
+    },
+    {
+      "id": 7,
+      "type": "stat",
+      "title": "Model drift score (warn ≥ 2, drift ≥ 3)",
+      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 12 },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 2 },
+              { "color": "red", "value": 3 }
+            ]
+          }
+        }
+      },
+      "targets": [{ "expr": "pb_model_drift_score" }]
+    }
+  ]
+}

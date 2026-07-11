@@ -1,0 +1,12 @@
+# Prometheus scrape config for the local observability stack
+# (docker compose --profile observability up)
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: projectbuddy
+    metrics_path: /metrics
+    params:
+      token: ["local-dev-token"]   # matches METRICS_TOKEN on the web service
+    static_configs:
+      - targets: ["web:5001"]

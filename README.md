@@ -91,6 +91,22 @@ Task Queue
 	∙	Celery-backed background delivery for push notifications and email, with automatic retries
 	∙	Zero-config fallback: without a broker, tasks run in-process exactly like before — a broker-less deploy keeps working
 	∙	Worker ships in docker-compose: `celery -A celery_worker.celery worker --beat`
+Data Warehouse (ELT)
+	∙	Nightly star-schema load (`dw_dim_user`, `dw_dim_project`, `dw_fact_daily_activity`, `dw_daily_metrics`) via `flask run-etl` / Celery beat
+	∙	Data-quality gates on every run: row parity, completeness vs the event stream, bounds — failures raise, bad numbers never land silently
+DBA & Reliability
+	∙	Hot-path indexes on every heavily-joined foreign key (migration `c3e8f5a71d29`)
+	∙	Slow-query logging (statements only — parameters never logged, they can contain PII)
+	∙	`scripts/db_backup.sh`: pg_dump with rotation + documented restore drill
+MLOps
+	∙	Every training run archives a versioned artifact (`flask model-versions`, `flask rollback-recommender <version>`)
+	∙	Weekly scheduled retraining; daily feature-drift check against the training snapshot (`flask check-drift`, Prometheus gauge, Grafana threshold panel)
+React Frontend (beta, feature-flagged)
+	∙	`/beta/projects` — React 18 + TypeScript explorer (Vite) consuming `/api/v1` with typed clients, debounced search, pagination
+	∙	Gated by `FEATURE_SPA` (off in production by default) + login; typecheck/vitest/build enforced in CI
+Infrastructure as Code
+	∙	`render.yaml` Blueprint provisions web + PostgreSQL + Redis with health checks and generated secrets
+	∙	Local observability stack: `docker compose --profile observability up` → Prometheus + Grafana with a provisioned dashboard (request rate, p95 latency, 5xx, drift)
 Notifications
 	∙	In-app notifications for: application received, accepted, rejected, new comment, mention
 	∙	Email notifications for key events (requires Gmail setup)
@@ -194,8 +210,12 @@ Tech Stack
 |Observability|Prometheus `/metrics` · Sentry (optional)                     |
 |API         |flask-smorest (OpenAPI/Swagger) · marshmallow validation · JWT (PyJWT)|
 |Task Queue  |Celery + Redis (eager in-process fallback without a broker)    |
-|Testing     |pytest (49 tests) · coverage gate in CI                        |
-|CI/CD       |GitHub Actions (ruff + pytest on 3.9/3.11) · Docker + docker-compose|
+|Data Eng    |Nightly ELT → star schema (dw_*) with data-quality gates       |
+|MLOps       |Model versioning/rollback · scheduled retraining · drift monitoring|
+|Frontend (beta)|React 18 + TypeScript + Vite (feature-flagged SPA on /api/v1)|
+|IaC         |render.yaml Blueprint · Prometheus + Grafana compose profile   |
+|Testing     |pytest (65 tests) + vitest · coverage gate in CI               |
+|CI/CD       |GitHub Actions (ruff + pytest 3.9/3.11 + frontend build) · Docker|
 
 Project Structure
 
@@ -246,6 +266,18 @@ docker compose up --build
 
 # Retrain the recommender on current data (logs to MLflow if installed)
 flask train-recommender
+flask model-versions            # list archived versions
+flask rollback-recommender <v>  # restore one as the serving model
+flask check-drift               # live features vs training snapshot
+
+# Load the data warehouse (star schema + quality gates)
+flask run-etl
+
+# Frontend (React explorer at /beta/projects, FEATURE_SPA-gated)
+cd frontend && npm install && npm run build
+
+# Local observability stack (Prometheus :9090 + Grafana :3000)
+docker compose --profile observability up
 
 # Live LLM eval for the assistant (needs GROQ_API_KEY)
 python -m scripts.eval_assistant

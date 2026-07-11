@@ -1,0 +1,46 @@
+# Infrastructure as Code — Render Blueprint.
+# Creating a Blueprint from this repo provisions the whole stack in one step:
+# web service + PostgreSQL + Redis, with health checks and generated secrets.
+# Inert otherwise: it changes nothing until used from the Render dashboard.
+#
+# The Celery worker is intentionally NOT defined here: background tasks run
+# in-process (eager) until a worker service is added — see celery_app.py.
+
+services:
+  - type: web
+    name: projectbuddy
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn --worker-class eventlet -w 1 --timeout 120 --bind 0.0.0.0:$PORT wsgi:app
+    healthCheckPath: /health
+    envVars:
+      - key: FLASK_ENV
+        value: production
+      - key: SECRET_KEY
+        generateValue: true
+      - key: METRICS_TOKEN
+        generateValue: true
+      - key: SEED_MOCK_DATA
+        value: "false"
+      - key: SQLALCHEMY_DATABASE_URI
+        fromDatabase:
+          name: projectbuddy-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: projectbuddy-redis
+          property: connectionString
+      # Set manually in the dashboard (never committed):
+      # ADMIN_EMAIL, ADMIN_PASSWORD, BREVO_API_KEY, GROQ_API_KEY,
+      # GITHUB_CLIENT_ID/SECRET, VAPID keys, XIRSYS/TURN, SENTRY_DSN
+
+  - type: redis
+    name: projectbuddy-redis
+    plan: free
+    ipAllowList: []   # internal access only
+
+databases:
+  - name: projectbuddy-db
+    plan: free

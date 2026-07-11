@@ -16,6 +16,7 @@ services:
       SEED_MOCK_DATA: ${SEED_MOCK_DATA:-true}
       MOCK_PASSWORD: ${MOCK_PASSWORD:-Mock@123}
       CELERY_BROKER_URL: redis://redis:6379/1
+      METRICS_TOKEN: ${METRICS_TOKEN:-local-dev-token}
     depends_on:
       db:
         condition: service_healthy
@@ -54,6 +55,29 @@ services:
 
   redis:
     image: redis:7-alpine
+
+  # ── Observability (opt-in): docker compose --profile observability up ──────
+  prometheus:
+    image: prom/prometheus:v2.53.0
+    profiles: ["observability"]
+    volumes:
+      - ./ops/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports:
+      - "9090:9090"
+
+  grafana:
+    image: grafana/grafana:11.1.0
+    profiles: ["observability"]
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-admin}
+    volumes:
+      - ./ops/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./ops/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
 
 volumes:
   pgdata:
