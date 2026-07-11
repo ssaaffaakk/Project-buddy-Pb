@@ -2,8 +2,9 @@
 SSM-1.0 — ProjectBuddy AI assistant.
 
 Provider priority (first key found in .env wins):
-  1. Groq       — free tier, fast LLaMA 3 models  (GROQ_API_KEY)
-  2. Fallback   — built-in keyword-based responses (no key needed)
+  1. Groq       — free tier, fast LLaMA models      (GROQ_API_KEY)
+  2. Anthropic  — secondary provider, Claude models (ANTHROPIC_API_KEY)
+  3. Fallback   — built-in keyword-based responses  (no key needed)
 
 Groq = LLaMA running in the cloud for free. No Ollama needed on the server.
 Get your key at: https://console.groq.com/keys
@@ -101,7 +102,7 @@ def _groq_reply(history: list, user_message: str) -> str:
             "Content-Type":  "application/json",
         },
         json={
-            "model":       current_app.config.get("GROQ_MODEL", "llama-3.3-70b-versatile"),
+            "model":       current_app.config.get("GROQ_MODEL", "llama-3.1-8b-instant"),
             "messages":    messages,
             "max_tokens":  512,
             "temperature": 0.7,

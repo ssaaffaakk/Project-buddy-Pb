@@ -196,7 +196,7 @@ The technology stack was selected to balance developer productivity, ecosystem m
 | Rate Limiting | Flask-Limiter | 3.x | Per-route rate limiting with Redis backend for multi-worker support |
 | CSRF Protection | Flask-WTF | 1.x | Token-based CSRF with configurable timeout |
 | File Storage | boto3 (AWS S3) | 1.x | Abstracted behind LocalStorage/S3Storage interface for portability |
-| AI (Primary) | Groq API (LLaMA 3.3 70B) | — | Free-tier LLM inference, OpenAI-compatible API format |
+| AI (Primary) | Groq API (LLaMA 3.1 8B Instant) | — | Free-tier LLM inference (70B available via config), OpenAI-compatible API format |
 | AI (Secondary) | Anthropic API (Claude) | — | Fallback provider for high-quality responses |
 | Machine Learning | scikit-learn + NumPy + joblib | 1.6 / 2.0 / 1.5 | Trained recommender (logistic regression) and LSA embedding model; lightweight, no GPU/torch dependency, deploys anywhere |
 | Live Collab (WebRTC) | Browser WebRTC + SocketIO signaling | — | Peer-to-peer audio, video, and screen sharing over one transceiver set, with TURN relay support (Xirsys) |
@@ -360,7 +360,7 @@ SSM-1.0 is ProjectBuddy's integrated AI assistant, available both as a web-based
 
 | Provider | Model | Tier | Characteristics |
 |----------|-------|------|-----------------|
-| **Groq (Primary)** | LLaMA 3.3 70B Versatile | Free | Fast inference, OpenAI-compatible API, ~14,400 req/day free tier |
+| **Groq (Primary)** | LLaMA 3.1 8B Instant | Free | Fast inference, OpenAI-compatible API, ~14,400 req/day free tier (70B configurable via `GROQ_MODEL`) |
 | **Anthropic (Fallback)** | Claude 3 Haiku | Paid | High-quality responses, Anthropic Messages API format |
 | **Built-in (Offline)** | Keyword matching | Free | Category-based response templates (project, team, deadline, skill, flask, git), zero API dependency |
 
