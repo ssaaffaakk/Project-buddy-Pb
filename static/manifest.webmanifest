@@ -1,0 +1,33 @@
+{
+  "name": "ProjectBuddy",
+  "short_name": "ProjectBuddy",
+  "description": "Find teammates, run projects, and collaborate in real time.",
+  "id": "/",
+  "start_url": "/dashboard",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#060B1A",
+  "theme_color": "#060B1A",
+  "categories": ["education", "productivity", "social"],
+  "icons": [
+    {
+      "src": "/static/images/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/static/images/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/static/images/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

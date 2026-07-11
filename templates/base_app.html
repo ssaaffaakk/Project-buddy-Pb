@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="csrf-token" content="{{ csrf_token() }}">
 {% include '_favicon.html' %}
+<meta name="theme-color" content="#060B1A">
+{% include '_pwa.html' %}
+<script src="/static/js/push.js" defer></script>
 <title>{% block title %}ProjectBuddy{% endblock %}</title>
 <meta name="robots" content="noindex, nofollow">
 <link rel="preconnect" href="https://fonts.googleapis.com">

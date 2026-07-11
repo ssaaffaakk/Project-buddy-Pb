@@ -32,6 +32,10 @@
         {{ _('Notifications') }}
         <span id="notif-badge" class="sidebar-notif-badge" style="display:none;">0</span>
       </button>
+      <button type="button" onclick="pbEnablePush()" id="push-enable-btn" class="sidebar-notif-btn" style="display:none;">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 17h5l-1.4-1.4A2 2 0 0 1 18 14.2V11a6 6 0 1 0-12 0v3.2a2 2 0 0 1-.6 1.4L4 17h5"/><path d="M9 17v1a3 3 0 0 0 6 0v-1"/></svg>
+        {{ _('Enable push') }}
+      </button>
     </div>
     <div class="sidebar-footer">
       <div class="user-card">

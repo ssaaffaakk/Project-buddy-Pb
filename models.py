@@ -361,6 +361,19 @@ class Notification(db.Model):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
 
 
+class PushSubscription(db.Model):
+    """A browser's Web Push subscription for a user. One row per device/browser."""
+    __tablename__ = "push_subscriptions"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(db.ForeignKey("users.id"), index=True)
+    endpoint: Mapped[str] = mapped_column(Text, unique=True)
+    p256dh: Mapped[str] = mapped_column(String(255))
+    auth: Mapped[str] = mapped_column(String(255))
+    user_agent: Mapped[Optional[str]] = mapped_column(String(300))
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+
 class PasswordReset(db.Model):
     __tablename__ = "password_resets"
 

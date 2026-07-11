@@ -12,7 +12,7 @@ from models import (
     User, Project, ProjectMember, Application, Feedback, Endorsement,
     UserBadge, Badge, Report, Chat, AdminMessage, UserInterest, UserSkill, UserCourse,
     ProjectMessage, ProjectVote, CommunityPost, CommunityComment, CommunityLike,
-    Notification, ProfileComment, ProfileCommentLike
+    Notification, ProfileComment, ProfileCommentLike, PushSubscription
 )
 from services.recommendation_service import get_recommended_projects
 from services.badge_service import check_and_award_badges
@@ -104,6 +104,36 @@ def create_notification(user_id, message, link=None, type=None):
         return
     n = Notification(user_id=user_id, message=message, link=link, type=type)
     db.session.add(n)
+    _dispatch_push(user_id, message, link)
+
+
+def _dispatch_push(user_id, message, link):
+    """Fire a Web Push for this notification on a background OS thread so the
+    blocking HTTP call never stalls the eventlet hub or delays the response.
+    Fully best-effort: any failure (incl. push disabled) is swallowed."""
+    try:
+        from flask import current_app
+        app = current_app._get_current_object()
+    except Exception:
+        return
+
+    def _job():
+        with app.app_context():
+            try:
+                from services.push_service import notify_user
+                notify_user(user_id, "ProjectBuddy", message, url=link or "/dashboard")
+            except Exception:
+                pass
+
+    try:
+        import eventlet.patcher as _ep
+        _Thread = _ep.original("threading").Thread
+    except Exception:
+        from threading import Thread as _Thread
+    try:
+        _Thread(target=_job, daemon=True).start()
+    except Exception:
+        pass
 
 
 main_bp = Blueprint("main", __name__)
@@ -187,6 +217,83 @@ def robots():
         "Sitemap: https://project-buddy-pb.onrender.com/sitemap.xml\n"
     )
     return Response(content, mimetype="text/plain")
+
+
+# ── PWA: service worker + manifest ────────────────────────────────────────────
+@main_bp.route("/sw.js")
+def service_worker():
+    """Serve the service worker from the site root so its scope covers the whole
+    app (a worker served from /static/ could only control /static/ URLs)."""
+    from flask import send_from_directory, current_app
+    resp = send_from_directory(
+        os.path.join(current_app.root_path, "static"),
+        "sw.js",
+        mimetype="application/javascript",
+    )
+    resp.headers["Service-Worker-Allowed"] = "/"
+    resp.headers["Cache-Control"] = "no-cache"
+    return resp
+
+
+@main_bp.route("/manifest.webmanifest")
+def manifest():
+    from flask import send_from_directory, current_app
+    return send_from_directory(
+        os.path.join(current_app.root_path, "static"),
+        "manifest.webmanifest",
+        mimetype="application/manifest+json",
+    )
+
+
+# ── PUSH NOTIFICATIONS ─────────────────────────────────────────────────────────
+@main_bp.route("/push/public-key")
+@login_required
+def push_public_key():
+    """Expose the VAPID public key so the browser can subscribe. `enabled` tells
+    the frontend whether push is configured at all."""
+    key = current_app.config.get("VAPID_PUBLIC_KEY", "")
+    return jsonify({"publicKey": key, "enabled": bool(key)})
+
+
+@main_bp.route("/push/subscribe", methods=["POST"])
+@login_required
+def push_subscribe():
+    data = request.get_json(silent=True) or {}
+    endpoint = (data.get("endpoint") or "").strip()
+    keys = data.get("keys") or {}
+    p256dh, auth = keys.get("p256dh"), keys.get("auth")
+    if not endpoint or not p256dh or not auth:
+        return jsonify({"error": "Invalid subscription."}), 400
+
+    existing = PushSubscription.query.filter_by(endpoint=endpoint).first()
+    if existing:
+        # Re-subscribe / device switched user → keep it pointed at current user.
+        existing.user_id = current_user.id
+        existing.p256dh = p256dh
+        existing.auth = auth
+    else:
+        db.session.add(PushSubscription(
+            user_id=current_user.id,
+            endpoint=endpoint,
+            p256dh=p256dh,
+            auth=auth,
+            user_agent=(request.headers.get("User-Agent") or "")[:300],
+        ))
+    db.session.commit()
+    return jsonify({"ok": True})
+
+
+@main_bp.route("/push/unsubscribe", methods=["POST"])
+@login_required
+def push_unsubscribe():
+    data = request.get_json(silent=True) or {}
+    endpoint = (data.get("endpoint") or "").strip()
+    if endpoint:
+        PushSubscription.query.filter_by(
+            endpoint=endpoint, user_id=current_user.id
+        ).delete()
+        db.session.commit()
+    return jsonify({"ok": True})
 
 
 # ── SECURITY.TXT ──────────────────────────────────────────────────────────────
