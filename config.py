@@ -98,6 +98,22 @@ class Config:
     VAPID_PRIVATE_KEY = os.environ.get('VAPID_PRIVATE_KEY', '')
     VAPID_SUBJECT     = os.environ.get('VAPID_SUBJECT', 'mailto:surmeliisafak@gmail.com')
 
+    # ── JSON API (/api/v1) ─────────────────────────────────────────────────────
+    # OpenAPI spec + Swagger UI served by flask-smorest.
+    API_TITLE = 'ProjectBuddy API'
+    API_VERSION = 'v1'
+    OPENAPI_VERSION = '3.0.3'
+    OPENAPI_URL_PREFIX = '/api'
+    OPENAPI_SWAGGER_UI_PATH = '/docs'
+    OPENAPI_SWAGGER_UI_URL = 'https://cdn.jsdelivr.net/npm/swagger-ui-dist/'
+    # Bearer-token lifetime for the API (seconds; default 24h)
+    JWT_ACCESS_TOKEN_EXPIRES = int(os.environ.get('JWT_ACCESS_TOKEN_EXPIRES', 86400))
+
+    # ── Celery task queue ──────────────────────────────────────────────────────
+    # With a broker: async tasks with retries (worker: celery -A celery_worker.celery worker).
+    # Without: tasks run eagerly/in-thread — identical to the pre-queue behavior.
+    CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL', '') or os.environ.get('REDIS_URL', '')
+
     # ── Rate limiting ──────────────────────────────────────────────────────────
     # Use Redis if REDIS_URL is set (required for multi-worker deployments),
     # fall back to in-process memory for single-worker / dev environments.

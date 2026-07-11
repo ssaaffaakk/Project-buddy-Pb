@@ -109,30 +109,13 @@ def create_notification(user_id, message, link=None, type=None):
 
 
 def _dispatch_push(user_id, message, link):
-    """Fire a Web Push for this notification on a background OS thread so the
-    blocking HTTP call never stalls the eventlet hub or delays the response.
-    Fully best-effort: any failure (incl. push disabled) is swallowed."""
+    """Fire a Web Push for this notification in the background — via the
+    Celery queue when a broker is configured (with retries), or an OS thread
+    otherwise. Fully best-effort: any failure (incl. push disabled) is
+    swallowed."""
     try:
-        from flask import current_app
-        app = current_app._get_current_object()
-    except Exception:
-        return
-
-    def _job():
-        with app.app_context():
-            try:
-                from services.push_service import notify_user
-                notify_user(user_id, "ProjectBuddy", message, url=link or "/dashboard")
-            except Exception:
-                pass
-
-    try:
-        import eventlet.patcher as _ep
-        _Thread = _ep.original("threading").Thread
-    except Exception:
-        from threading import Thread as _Thread
-    try:
-        _Thread(target=_job, daemon=True).start()
+        from services.tasks import dispatch_push
+        dispatch_push(user_id, "ProjectBuddy", message, url=link or "/dashboard")
     except Exception:
         pass
 

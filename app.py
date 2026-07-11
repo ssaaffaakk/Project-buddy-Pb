@@ -48,8 +48,16 @@ def create_app(config_class=None):
     except OSError:
         pass
     
+    # Celery: bind broker config (eager/no-op without a broker) BEFORE the
+    # blueprints import services.tasks.
+    from celery_app import init_celery
+    init_celery(app)
+
     # Register blueprints
     _register_blueprints(app)
+
+    # JSON API v1 (+ OpenAPI docs at /api/docs)
+    _register_api(app)
 
     # Prometheus metrics: request RED metrics + domain gauges at /metrics
     from services.metrics import init_metrics
@@ -183,7 +191,8 @@ def _initialize_extensions(app: Flask) -> None:
         response.headers["Content-Security-Policy"] = (
             "default-src 'self'; "
             "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
-            "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
+            # cdn.jsdelivr.net in style-src: Swagger UI (/api/docs) loads its CSS there
+            "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; "
             "font-src 'self' https://fonts.gstatic.com; "
             "img-src 'self' data: https:; "
             "connect-src 'self' ws: wss: https://cdn.jsdelivr.net; "
@@ -309,6 +318,25 @@ def _register_blueprints(app: Flask) -> None:
     _t = _real_Thread(target=_run_startup_tasks, daemon=True)
     _t.start()
     _t.join()  # OS-level block — fine here because hub isn't serving yet
+
+
+def _register_api(app: Flask) -> None:
+    """Register the versioned JSON API (flask-smorest) + OpenAPI docs.
+
+    The blueprint is CSRF-exempt: browsers' session cookies are only accepted
+    on read endpoints; writes require a Bearer token, which cross-site pages
+    cannot attach — so the exemption doesn't reopen CSRF.
+    """
+    from flask_smorest import Api
+    from routes.api_v1 import blp as api_blp
+    from extensions import csrf
+
+    api = Api(app)
+    api.spec.components.security_scheme(
+        "bearerAuth", {"type": "http", "scheme": "bearer", "bearerFormat": "JWT"}
+    )
+    api.register_blueprint(api_blp)
+    csrf.exempt(api_blp)
 
 
 def _apply_schema(app: Flask) -> None:

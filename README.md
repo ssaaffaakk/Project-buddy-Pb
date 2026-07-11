@@ -82,6 +82,15 @@ Product Analytics
 Observability
 	∙	Prometheus metrics at `/metrics` — request rate/latency/status by route plus domain gauges (token-protected in production)
 	∙	Optional Sentry error monitoring (`SENTRY_DSN`)
+JSON API (v1)
+	∙	Versioned REST API at `/api/v1` — projects (paginated, filterable), recommendations, profile, study groups, applications
+	∙	Interactive OpenAPI docs at `/api/docs` (Swagger UI), spec at `/api/openapi.json`
+	∙	JWT Bearer auth (`POST /api/v1/auth/token`); browser sessions accepted on reads, writes require the token (CSRF-safe by design)
+	∙	Schema-validated requests (bad input → structured 422, never a 500)
+Task Queue
+	∙	Celery-backed background delivery for push notifications and email, with automatic retries
+	∙	Zero-config fallback: without a broker, tasks run in-process exactly like before — a broker-less deploy keeps working
+	∙	Worker ships in docker-compose: `celery -A celery_worker.celery worker --beat`
 Notifications
 	∙	In-app notifications for: application received, accepted, rejected, new comment, mention
 	∙	Email notifications for key events (requires Gmail setup)
@@ -183,7 +192,9 @@ Tech Stack
 |ML          |scikit-learn recommender · LSA embeddings · A/B testing · MLflow (optional)|
 |Analytics   |Event stream (ActivityEvent) · DAU/WAU/MAU · funnel · retention cohorts|
 |Observability|Prometheus `/metrics` · Sentry (optional)                     |
-|Testing     |pytest (33 tests) · coverage gate in CI                        |
+|API         |flask-smorest (OpenAPI/Swagger) · marshmallow validation · JWT (PyJWT)|
+|Task Queue  |Celery + Redis (eager in-process fallback without a broker)    |
+|Testing     |pytest (49 tests) · coverage gate in CI                        |
 |CI/CD       |GitHub Actions (ruff + pytest on 3.9/3.11) · Docker + docker-compose|
 
 Project Structure

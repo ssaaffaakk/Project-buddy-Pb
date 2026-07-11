@@ -15,6 +15,23 @@ services:
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-Admin@12345}
       SEED_MOCK_DATA: ${SEED_MOCK_DATA:-true}
       MOCK_PASSWORD: ${MOCK_PASSWORD:-Mock@123}
+      CELERY_BROKER_URL: redis://redis:6379/1
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
+  worker:
+    build: .
+    command: celery -A celery_worker.celery worker --beat --loglevel=info
+    environment:
+      SECRET_KEY: ${SECRET_KEY:-dev-only-change-me}
+      FLASK_ENV: production
+      SQLALCHEMY_DATABASE_URI: postgresql://projectbuddy:projectbuddy@db:5432/projectbuddy
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/1
+      SEED_MOCK_DATA: "false"
     depends_on:
       db:
         condition: service_healthy

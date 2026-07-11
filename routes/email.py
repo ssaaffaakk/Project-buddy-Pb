@@ -1,54 +1,70 @@
 import logging
-import threading
 from flask import current_app
 import secrets
 
 logger = logging.getLogger(__name__)
 
 
-def _do_send(api_key, sender, recipient_email, subject, payload):
-    """Run the actual HTTP request via tpool — never blocks eventlet mainloop."""
+def deliver_email(recipient_email, subject, body, is_html=False):
+    """Synchronously deliver one email via the Brevo HTTP API.
+
+    Called by the Celery task (worker) or on a background thread (no broker).
+    Returns True on 2xx. Uses eventlet's tpool only when the process is
+    monkey-patched (production web), plain requests otherwise (dev, worker).
+    """
+    api_key = current_app.config.get('BREVO_API_KEY', '')
+    sender = current_app.config.get('MAIL_DEFAULT_SENDER', '')
+    if not api_key:
+        logger.warning("Email not sent: BREVO_API_KEY not configured.")
+        return False
+
+    payload = {
+        "sender": {"email": sender, "name": "ProjectBuddy"},
+        "to": [{"email": recipient_email}],
+        "subject": subject,
+    }
+    if is_html:
+        payload["htmlContent"] = body
+    else:
+        payload["textContent"] = body
+
+    import requests as _req
+    post = _req.post
     try:
-        import requests as _req
-        import eventlet.tpool
-        resp = eventlet.tpool.execute(
-            _req.post,
+        import eventlet.patcher
+        if eventlet.patcher.is_monkey_patched('socket'):
+            import eventlet.tpool
+            def post(*args, **kwargs):  # noqa: F811 — tpool wrapper
+                return eventlet.tpool.execute(_req.post, *args, **kwargs)
+    except ImportError:
+        pass
+
+    try:
+        resp = post(
             "https://api.brevo.com/v3/smtp/email",
             json=payload,
             headers={"api-key": api_key, "Content-Type": "application/json"},
             timeout=10,
         )
-        if resp.status_code not in (200, 201):
-            logger.error("Brevo API error %s: %s", resp.status_code, resp.text)
     except Exception as e:
         logger.exception("Brevo send failed: %s", e)
+        return False
+    if resp.status_code not in (200, 201):
+        logger.error("Brevo API error %s: %s", resp.status_code, resp.text)
+        return False
+    return True
 
 
 def send_email(recipient_email, subject, body, is_html=False):
-    """Send email via Brevo HTTP API in a background thread."""
+    """Send an email in the background (Celery queue, or a thread without a
+    broker). Returns True when the send was accepted for delivery."""
     try:
-        api_key = current_app.config.get('BREVO_API_KEY', '')
-        sender  = current_app.config.get('MAIL_DEFAULT_SENDER', 'surmelisafak773@gmail.com')
-
-        if not api_key:
+        if not current_app.config.get('BREVO_API_KEY', ''):
             logger.warning("Email not sent: BREVO_API_KEY not configured.")
             return False
-
-        payload = {
-            "sender":  {"email": sender, "name": "ProjectBuddy"},
-            "to":      [{"email": recipient_email}],
-            "subject": subject,
-        }
-
-        if is_html:
-            payload["htmlContent"] = body
-        else:
-            payload["textContent"] = body
-
-        t = threading.Thread(target=_do_send, args=(api_key, sender, recipient_email, subject, payload), daemon=True)
-        t.start()
+        from services.tasks import dispatch_email
+        dispatch_email(recipient_email, subject, body, is_html=is_html)
         return True
-
     except Exception as e:
         logger.exception("Failed to send email to %s: %s", recipient_email, e)
         return False
