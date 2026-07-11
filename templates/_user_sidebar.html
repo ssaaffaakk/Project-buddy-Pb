@@ -14,6 +14,9 @@
     <a href="/profile" class="nav-item{% if nav_active == 'profile' %} active{% endif %}"><span class="nav-mark">&#8212;</span> {{ _('My Profile') }}</a>
     <a href="/chat/rules" class="nav-item{% if nav_active == 'support_chat' %} active{% endif %}"><span class="nav-mark">&#8212;</span> {{ _('Support Chat') }}</a>
     <a href="/report-issue" class="nav-item{% if nav_active == 'report_issue' %} active{% endif %}"><span class="nav-mark">&#8212;</span> {{ _('Report Issue') }}</a>
+    {% if current_user.is_authenticated and current_user.role in ('instructor', 'admin') %}
+    <a href="/instructor" class="nav-item{% if nav_active == 'instructor' %} active{% endif %}"><span class="nav-mark">&#8212;</span> {{ _('Instructor') }}</a>
+    {% endif %}
     {% if current_user.is_authenticated and current_user.is_admin() %}
     <a href="/admin/dashboard" class="nav-item{% if nav_active == 'admin' %} active{% endif %}"><span class="nav-mark">&#8212;</span> {{ _('Admin Panel') }}</a>
     {% endif %}

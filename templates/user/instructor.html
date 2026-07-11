@@ -1,0 +1,94 @@
+{% extends 'base_app.html' %}
+{% block title %}ProjectBuddy — Instructor{% endblock %}
+
+{% block extra_style %}
+<style nonce="{{ csp_nonce }}">
+.ins-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:28px;}
+.ins-stat{background:var(--card);border:1px solid var(--border);border-top-color:rgba(255,255,255,0.08);
+  border-radius:var(--r);padding:18px 20px;}
+.ins-stat .n{font-family:'DM Serif Display',serif;font-size:1.9rem;line-height:1;}
+.ins-stat .l{font-family:'DM Mono',monospace;font-size:0.6rem;letter-spacing:0.08em;
+  text-transform:uppercase;color:var(--muted);margin-top:8px;}
+.ins-stat.risk .n{color:var(--coral);}
+.ins-stat.watch .n{color:#F5C842;}
+.ins-stat.ok .n{color:var(--accent);}
+.course-block{margin-bottom:24px;}
+.course-head{display:flex;align-items:center;gap:12px;margin-bottom:12px;padding-bottom:10px;
+  border-bottom:1px solid var(--border);}
+.course-name{font-family:'DM Serif Display',serif;font-style:italic;font-size:1.1rem;}
+.course-pills{display:flex;gap:6px;margin-left:auto;}
+.course-pill{font-family:'DM Mono',monospace;font-size:0.58rem;letter-spacing:0.05em;text-transform:uppercase;
+  padding:3px 9px;border-radius:99px;border:1px solid var(--border);color:var(--muted);}
+.course-pill.risk{color:var(--coral);border-color:rgba(255,107,107,0.3);background:rgba(255,107,107,0.08);}
+.course-pill.watch{color:#F5C842;border-color:rgba(245,200,66,0.3);background:rgba(245,200,66,0.08);}
+.proj-row{display:flex;align-items:center;gap:14px;padding:12px 14px;border-radius:var(--r);
+  background:var(--card);border:1px solid var(--border);border-left:3px solid var(--border);margin-bottom:8px;
+  text-decoration:none;transition:border-color .18s,background .18s;}
+.proj-row:hover{background:var(--card-h);}
+.proj-row.risk{border-left-color:var(--coral);}
+.proj-row.watch{border-left-color:#F5C842;}
+.proj-row.ok{border-left-color:var(--green,#5a8a6a);}
+.proj-main{flex:1;min-width:0;}
+.proj-title{font-size:0.9rem;color:var(--text);font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.proj-meta{font-family:'DM Mono',monospace;font-size:0.64rem;color:var(--muted);margin-top:3px;}
+.proj-flags{display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end;flex-shrink:0;max-width:50%;}
+.proj-flag{font-family:'DM Mono',monospace;font-size:0.6rem;padding:2px 8px;border-radius:99px;
+  background:rgba(255,107,107,0.1);color:var(--coral);border:1px solid rgba(255,107,107,0.2);white-space:nowrap;}
+.proj-flag.watch{background:rgba(245,200,66,0.1);color:#F5C842;border-color:rgba(245,200,66,0.2);}
+.proj-ok{font-family:'DM Mono',monospace;font-size:0.6rem;color:var(--green,#7ab890);letter-spacing:0.05em;}
+@media(max-width:640px){.ins-stats{grid-template-columns:repeat(2,1fr);}
+  .proj-row{flex-wrap:wrap;}.proj-flags{max-width:100%;justify-content:flex-start;}}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header fx-up">
+  <div>
+    <div class="page-title">Instructor</div>
+    <div class="page-sub">Team health across courses</div>
+  </div>
+</div>
+
+<div class="ins-stats fx-up">
+  <div class="ins-stat risk"><div class="n">{{ totals.risk }}</div><div class="l">At risk</div></div>
+  <div class="ins-stat watch"><div class="n">{{ totals.watch }}</div><div class="l">Needs watching</div></div>
+  <div class="ins-stat ok"><div class="n">{{ totals.projects }}</div><div class="l">Active projects</div></div>
+  <div class="ins-stat ok"><div class="n">{{ totals.courses }}</div><div class="l">Courses</div></div>
+</div>
+
+{% if overview %}
+<div class="fx-stagger">
+  {% for course in overview %}
+  <div class="course-block">
+    <div class="course-head">
+      <span class="course-name">{{ course.course }}</span>
+      <div class="course-pills">
+        {% if course.risk_count %}<span class="course-pill risk">{{ course.risk_count }} at risk</span>{% endif %}
+        {% if course.watch_count %}<span class="course-pill watch">{{ course.watch_count }} watch</span>{% endif %}
+        <span class="course-pill">{{ course.projects|length }} projects</span>
+      </div>
+    </div>
+    {% for p in course.projects %}
+    <a href="/project/{{ p.id }}" class="proj-row {{ p.level }}">
+      <div class="proj-main">
+        <div class="proj-title">{{ p.title }}</div>
+        <div class="proj-meta">{{ p.owner }} · {{ p.members }}/{{ p.team_size }} members · {{ p.status }}</div>
+      </div>
+      <div class="proj-flags">
+        {% if p.flags %}
+          {% for f in p.flags %}<span class="proj-flag{% if p.level == 'watch' %} watch{% endif %}">{{ f }}</span>{% endfor %}
+        {% else %}
+          <span class="proj-ok">✓ on track</span>
+        {% endif %}
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="section-card fx-up" style="text-align:center;padding:56px 24px;">
+  <p class="empty" style="font-size:0.95rem;">No active projects to supervise yet.</p>
+</div>
+{% endif %}
+{% endblock %}

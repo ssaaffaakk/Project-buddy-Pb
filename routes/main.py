@@ -1135,6 +1135,29 @@ def set_language(lang):
     return redirect(request.referrer or url_for("main.dashboard"))
 
 
+# ── INSTRUCTOR DASHBOARD ──────────────────────────────────────────────────────
+@main_bp.route("/instructor")
+@login_required
+def instructor_dashboard():
+    """Course-level team-health oversight. Instructors and admins only."""
+    if current_user.role not in ("instructor", "admin"):
+        flash("This page is only available to instructors.", "error")
+        return redirect(url_for("main.dashboard"))
+    from services.instructor_view import course_overview
+    try:
+        overview = course_overview()
+    except Exception:
+        current_app.logger.exception("instructor overview failed")
+        overview = []
+    totals = {
+        "risk": sum(c["risk_count"] for c in overview),
+        "watch": sum(c["watch_count"] for c in overview),
+        "projects": sum(len(c["projects"]) for c in overview),
+        "courses": len(overview),
+    }
+    return render_template("user/instructor.html", overview=overview, totals=totals)
+
+
 # ── TEAMMATE FINDER ───────────────────────────────────────────────────────────
 @main_bp.route("/teammates")
 @login_required
