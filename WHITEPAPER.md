@@ -357,7 +357,7 @@ The community module provides a social learning feed modeled after educational d
 
 Study groups provide persistent, topic-organized collaboration spaces. Each group room combines asynchronous messaging with a synchronous "live room" that layers voice, video, screen sharing, and shared notes on demand:
 
-1. **Text-Based Group Messaging with In-Chat Files:** Polling-based with 3-second intervals; the last 60 messages load on entry (2000-character limit). Files are attached directly to messages rather than through a separate upload flow — images render inline in the stream, other files appear as download cards. A read-only "Files" tab auto-collects every attachment shared in chat (25 MB limit, 40+ formats, UUID-named through the storage abstraction).
+1. **Text-Based Group Messaging with In-Chat Files:** Real-time delivery over SocketIO — each message is broadcast to the group's room, with a reconnect/​fallback poll for resilience; the last 60 messages load on entry (2000-character limit). Files are attached directly to messages rather than through a separate upload flow — images render inline in the stream, other files appear as download cards. A read-only "Files" tab auto-collects every attachment shared in chat (25 MB limit, 40+ formats, UUID-named through the storage abstraction).
 2. **Discord-style Live Room:** Joining voice turns the room into a call stage — a grid of equal participant tiles (video fills the tile, or a profile-photo/letter avatar when the camera is off), a floating control bar (mic, camera, screen share, notes, chat, leave), speaking indicators, and a slide-in chat drawer. Camera and screen share ride the existing peer connections via a pre-allocated video transceiver, so they start without renegotiation. A lightweight relay event broadcasts each participant's mute/camera/screen-share state so peers render the correct tile chrome.
 3. **Shared Live Notes:** A per-group collaborative notepad synced over SocketIO with a 500 ms debounce and persisted server-side (`StudyGroupNote`), so a team can take notes together while on a call.
 4. **Peer-to-Peer WebRTC Transport:** Full-mesh topology with SocketIO signaling (detailed in Section 5).
@@ -716,7 +716,7 @@ Every feature was built to the same bar: locked to the existing design system (p
 
 1. **Full-Mesh Voice Topology:** The peer-to-peer WebRTC mesh topology has O(n²) connection complexity, making it unsuitable for rooms with more than 6–8 participants. A selective forwarding unit (SFU) architecture would be needed for larger rooms.
 
-2. **Polling-Based Group Chat:** Study group messages use HTTP polling (3-second intervals) rather than WebSocket push. While sufficient for the current scale, this creates unnecessary server load and latency compared to SocketIO-based message delivery.
+2. **Single-Worker Real-Time Fan-Out:** Group chat now delivers messages in real time over SocketIO — a v3.x change that replaced the former 3-second HTTP polling — with a slow reconnect/​fallback poll for resilience. The broadcast, however, relies on a single eventlet worker holding every room member in-process; scaling SocketIO across multiple workers would require a shared message queue (e.g., Redis) to fan events out between processes.
 
 3. **Single-Server Recommendation Engine:** The recommender scores all open projects on each request (O(n) projects). A v3.0 performance pass batched the embedding transforms and eager-loaded relationships to remove an N+1 pattern, but for very large deployments this path would still need indexing, caching, or an approximate-nearest-neighbour index over the embedding space.
 
@@ -736,12 +736,12 @@ Every feature was built to the same bar: locked to the existing design system (p
 
 ### 10.2 Planned Improvements
 
-**Delivered since v2.1.** Several items previously listed here were implemented in Version 3.0 (Section 9): a comprehensive test suite and CI; OpenAPI/Swagger documentation with a versioned JSON API; contribution analytics and the instructor dashboard; AI-powered exam preparation (the quiz generator, including PDF upload); multi-language support (English, Turkish, Bosnian); and the MLOps, data-warehouse, and observability infrastructure. The roadmap below reflects what remains outstanding.
+**Delivered since v2.1.** Several items previously listed here were implemented in Version 3.0 (Section 9): a comprehensive test suite and CI; OpenAPI/Swagger documentation with a versioned JSON API; contribution analytics and the instructor dashboard; AI-powered exam preparation (the quiz generator, including PDF upload); multi-language support (English, Turkish, Bosnian); real-time SocketIO group chat (replacing the former polling); and the MLOps, data-warehouse, and observability infrastructure. The roadmap below reflects what remains outstanding.
 
 
 1. **SFU-Based Voice Architecture:** Migrate from full-mesh WebRTC to a Selective Forwarding Unit (e.g., mediasoup or Janus) to support voice rooms with 20+ concurrent participants while reducing client-side bandwidth requirements.
 
-2. **SocketIO-Based Group Messaging:** Replace polling-based study group chat with real-time SocketIO event delivery, reducing latency and server load while enabling typing indicators and read receipts.
+2. **Chat Presence and Receipts:** Build on the SocketIO delivery now powering group chat (which replaced the former polling) with presence signals such as typing indicators and read receipts, and a shared message queue to fan events across multiple workers.
 
 3. **Deeper Recommender Modelling:** The trained recommender (Section 4.3) ships in v2.1 with a logistic-regression + LSA-embedding hybrid. As interaction volume grows, planned work includes contrastive fine-tuning of the embedding towers on real interaction pairs, transformer-based embeddings (served via a lightweight ONNX runtime to avoid a torch dependency), and collaborative-filtering signals from completion rates and feedback scores.
 
