@@ -18,10 +18,19 @@
 .applications{margin-top:20px;}
 .app-label{font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--text);margin-bottom:12px;}
 .app-list{display:flex;flex-direction:column;gap:10px;}
-.app-item{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--bg3);border-left:2px solid var(--accent);border-radius:4px;}
-.app-applicant{flex:1;}
-.app-name{font-size:0.85rem;color:var(--text);font-weight:500;margin-bottom:2px;}
+.app-item{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:12px 14px;background:var(--bg3);border-left:2px solid var(--accent);border-radius:4px;}
+.app-applicant{flex:1;min-width:0;}
+.app-name-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:2px;}
+.app-name{font-size:0.85rem;color:var(--text);font-weight:500;}
 .app-email{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--text);}
+.fit-badge{display:inline-flex;align-items:baseline;gap:3px;font-family:'DM Mono',monospace;
+  font-size:0.62rem;letter-spacing:0.05em;text-transform:uppercase;padding:2px 8px;border-radius:99px;
+  border:1px solid rgba(124,155,255,0.25);background:rgba(124,155,255,0.1);color:var(--accent);white-space:nowrap;}
+.fit-badge b{font-family:'DM Serif Display',serif;font-size:0.9rem;letter-spacing:0;}
+.fit-badge.mid{border-color:rgba(74,127,165,0.3);background:rgba(74,127,165,0.1);color:#7aaed0;}
+.fit-badge.low{border-color:var(--border);background:rgba(255,255,255,0.03);color:var(--muted);}
+.fit-reasons{font-family:'DM Mono',monospace;font-size:0.66rem;color:var(--muted);
+  letter-spacing:0.02em;margin-top:5px;line-height:1.5;}
 .app-actions{display:flex;gap:8px;}
 .btn-sm{padding:6px 12px;border-radius:var(--r);font-family:'DM Mono',monospace;font-size:0.68rem;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;border:none;cursor:pointer;transition:all 0.2s;}
 .btn-accept{background:linear-gradient(110deg,var(--accent) 0%,var(--violet,#A78BFF) 45%,var(--coral,#FF6B6B) 100%);color:#fff;}
@@ -72,11 +81,22 @@
               <div class="applications">
                 <div class="app-label">{{ item.pending_apps|length }} {{ _('Pending Application(s)') }}</div>
                 <div class="app-list">
-                  {% for app in item.pending_apps %}
+                  {% for entry in item.pending_apps %}
+                    {% set app = entry.app %}
+                    {% set fit = entry.fit %}
                     <div class="app-item">
                       <div class="app-applicant">
-                        <div class="app-name">{{ app.applicant.first_name }} {{ app.applicant.last_name }}</div>
+                        <div class="app-name-row">
+                          <span class="app-name">{{ app.applicant.first_name }} {{ app.applicant.last_name }}</span>
+                          {% if fit.percent is not none %}
+                            <span class="fit-badge{% if fit.percent < 35 %} low{% elif fit.percent < 65 %} mid{% endif %}"
+                                  title="{{ fit.reasons | join(', ') }}"><b>{{ fit.percent }}%</b> {{ _('fit') }}</span>
+                          {% endif %}
+                        </div>
                         <div class="app-email">{{ app.applicant.email }}</div>
+                        {% if fit.reasons %}
+                          <div class="fit-reasons">{{ fit.reasons | join(' · ') }}</div>
+                        {% endif %}
                       </div>
                       <div class="app-actions">
                         <form method="POST" action="/applications/{{ app.id }}/accept" style="margin:0;">

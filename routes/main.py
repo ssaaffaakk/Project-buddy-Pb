@@ -470,12 +470,22 @@ def my_projects():
     owned = Project.query.filter_by(owner_id=current_user.id).order_by(
         Project.created_at.desc()
     ).all()
+    from services.applicant_fit import score_applicant
     owned_projects_with_apps = []
     for project in owned:
         apps = Application.query.filter_by(
             project_id=project.id, status="pending"
         ).all()
-        owned_projects_with_apps.append({"project": project, "pending_apps": apps})
+        # Attach an explainable fit score to each applicant, best-first.
+        scored = []
+        for app in apps:
+            try:
+                fit = score_applicant(app.applicant, project)
+            except Exception:
+                fit = {"percent": None, "reasons": [], "shared_skills": []}
+            scored.append({"app": app, "fit": fit})
+        scored.sort(key=lambda s: (s["fit"]["percent"] or 0), reverse=True)
+        owned_projects_with_apps.append({"project": project, "pending_apps": scored})
 
     # Projects user is a member of (not owner)
     memberships = (
