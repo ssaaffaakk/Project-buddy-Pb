@@ -37,8 +37,20 @@ Finding project partners at university still means posting "anyone want to join?
 Features
 Projects
 	∙	Post a project — set a title, description, required skills, topic tags, team size, course, and deadline
-	∙	Browse open projects — filterable list of all active projects on the platform
+	∙	Duplicate detection — as you draft, an advisory warning surfaces semantically similar open projects ("join instead?")
+	∙	Browse open projects — semantic search ranks by meaning, not just title text
 	∙	Smart recommendations — dashboard surfaces projects that match your skills and interests
+	∙	Task board — a per-project kanban (To Do / In Progress / Done) with drag-and-drop, assignees, and delete; members only
+Teammates & Matching
+	∙	Teammate Finder — recommends *people* whose skills, courses, and interests complement yours, with explainable match reasons
+	∙	Applicant fit score — project owners see a fit % and reasons next to each applicant, sorted best-first
+	∙	Weekly digest — your top project match delivered as a scheduled notification + push
+Study Tools
+	∙	Quiz generator — paste notes, SSM-1.0 builds a practice quiz with instant scoring and explanations (notes never stored)
+	∙	AI meeting notes — opt-in recording in a study group is transcribed (Whisper) and summarized into the shared live notes
+Oversight & Reputation
+	∙	Contribution stats — each public profile shows messages, posts, files, and voice sessions (free-rider visibility)
+	∙	Instructor dashboard — course-level team-health flags (stalled teams, deadline risk, overdue); instructors/admins only
 	∙	Upvote / downvote — community can vote on projects to highlight the best ones
 	∙	Apply to join — submit a message with your application; owner reviews and accepts or rejects
 	∙	Auto-close — when the team is full, the listing closes automatically
@@ -214,7 +226,7 @@ Tech Stack
 |MLOps       |Model versioning/rollback · scheduled retraining · drift monitoring|
 |Frontend (beta)|React 18 + TypeScript + Vite (feature-flagged SPA on /api/v1)|
 |IaC         |render.yaml Blueprint · Prometheus + Grafana compose profile   |
-|Testing     |pytest (65 tests) + vitest · coverage gate in CI               |
+|Testing     |pytest (110+ tests) + vitest · coverage gate in CI            |
 |CI/CD       |GitHub Actions (ruff + pytest 3.9/3.11 + frontend build) · Docker|
 
 Project Structure

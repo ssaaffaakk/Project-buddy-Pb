@@ -316,6 +316,68 @@ def poll_messages(group_id):
     } for m in msgs])
 
 
+# ── AI MEETING NOTES (transcribe a recording → summary → shared notes) ────────
+@study_groups_bp.route("/<int:group_id>/transcribe", methods=["POST"])
+@login_required
+@limiter.limit("4 per minute; 30 per day")
+def transcribe_meeting(group_id):
+    """Transcribe an uploaded recording, summarize it, and append the summary to
+    the group's shared notes. Members only; audio processed in-memory (never
+    stored)."""
+    group = StudyGroup.query.get_or_404(group_id)
+    if not group.is_member(current_user.id):
+        return jsonify({"error": "Only group members can add meeting notes."}), 403
+
+    f = request.files.get("audio")
+    if not f or not f.filename:
+        return jsonify({"error": "No audio uploaded."}), 400
+    ctype = (f.mimetype or "").lower()
+    if not (ctype.startswith("audio/") or ctype.startswith("video/webm")):
+        return jsonify({"error": "Unsupported audio format."}), 400
+    audio_bytes = f.read()
+
+    from services.meeting_notes import transcribe_and_summarize, MeetingNotesError, MAX_AUDIO_BYTES
+    if len(audio_bytes) > MAX_AUDIO_BYTES:
+        return jsonify({"error": "Recording too large (max 25 MB)."}), 400
+
+    from datetime import datetime, timezone
+    try:
+        summary, _transcript = transcribe_and_summarize(audio_bytes, f.filename)
+    except MeetingNotesError as e:
+        return jsonify({"error": str(e)}), 400
+    except Exception:
+        from flask import current_app
+        current_app.logger.exception("meeting-notes transcription failed")
+        return jsonify({"error": "Something went wrong. Please try again."}), 500
+
+    stamp = datetime.now(timezone.utc).strftime("%b %d, %H:%M")
+    block = (f"\n\n──────────\nAI meeting notes · {stamp} "
+             f"(by {current_user.get_full_name()})\n{summary}\n")
+
+    note = StudyGroupNote.query.filter_by(group_id=group_id).first()
+    if not note:
+        note = StudyGroupNote(group_id=group_id, content=block.strip(),
+                              updated_by=current_user.id)
+        db.session.add(note)
+    else:
+        note.content = (note.content or "") + block
+        note.updated_by = current_user.id
+    db.session.commit()
+
+    # Broadcast the updated note so every member's live notepad refreshes.
+    try:
+        from extensions import socketio
+        socketio.emit("note_update",
+                      {"content": note.content, "by": current_user.get_full_name()},
+                      to=f"collab_{group_id}")
+    except Exception:
+        pass
+
+    from services import analytics
+    analytics.track("meeting_notes_created", current_user.id, "group", group_id, commit=True)
+    return jsonify({"summary": summary, "note": note.content})
+
+
 # ── DELETE GROUP (creator/admin only) ────────────────────────────────────────
 @study_groups_bp.route("/<int:group_id>/delete", methods=["POST"])
 @login_required
