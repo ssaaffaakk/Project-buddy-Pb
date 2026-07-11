@@ -23,6 +23,45 @@ MAX_INPUT_CHARS = 12000
 MIN_INPUT_CHARS = 60
 MAX_QUESTIONS = 10
 
+# File upload (notes as a file instead of pasting)
+ALLOWED_UPLOAD_EXT = {"txt", "md", "pdf"}
+MAX_UPLOAD_BYTES = 8 * 1024 * 1024   # 8 MB
+MAX_PDF_PAGES = 50
+
+
+def _extract_pdf(data):
+    """Extract text from a PDF's first MAX_PDF_PAGES pages. Never raises."""
+    import io
+    try:
+        from pypdf import PdfReader
+        reader = PdfReader(io.BytesIO(data))
+        parts = [(page.extract_text() or "") for page in reader.pages[:MAX_PDF_PAGES]]
+        return "\n".join(parts)
+    except Exception:
+        logger.exception("PDF text extraction failed")
+        return ""
+
+
+def extract_text_from_upload(file_storage):
+    """Read notes from an uploaded .txt/.md/.pdf. Returns (text, error).
+    File is processed in-memory and never stored."""
+    name = (file_storage.filename or "")
+    ext = name.rsplit(".", 1)[-1].lower() if "." in name else ""
+    if ext not in ALLOWED_UPLOAD_EXT:
+        return None, "Only .txt, .md, or .pdf files are supported."
+    data = file_storage.read()
+    if not data:
+        return None, "The file is empty."
+    if len(data) > MAX_UPLOAD_BYTES:
+        return None, "File too large (max 8 MB)."
+    if ext == "pdf":
+        text = _extract_pdf(data)
+        if not text.strip():
+            return None, "Couldn't read text from that PDF (is it a scanned image?)."
+    else:
+        text = data.decode("utf-8", errors="replace")
+    return text, None
+
 _SYSTEM = (
     "You are SSM-1.0, a study assistant. From the user's course material, write "
     "{n} multiple-choice practice questions that test understanding (not trivia). "

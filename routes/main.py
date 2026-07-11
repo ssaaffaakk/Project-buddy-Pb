@@ -1288,13 +1288,25 @@ def quiz_page():
 def quiz_generate():
     """Generate a practice quiz from pasted notes. LLM-backed, rate-limited,
     input length-capped; notes are never persisted."""
-    from services.quiz_service import generate_quiz, QuizError
-    data = request.get_json(silent=True) or {}
-    material = (data.get("material") or "")
-    try:
-        count = int(data.get("count", 5))
-    except (TypeError, ValueError):
-        count = 5
+    from services.quiz_service import generate_quiz, QuizError, extract_text_from_upload
+
+    # Notes can arrive as an uploaded file (.txt/.md/.pdf) or pasted JSON text.
+    upload = request.files.get("file")
+    if upload and upload.filename:
+        material, err = extract_text_from_upload(upload)
+        if err:
+            return jsonify({"error": err}), 400
+        try:
+            count = int(request.form.get("count", 5))
+        except (TypeError, ValueError):
+            count = 5
+    else:
+        data = request.get_json(silent=True) or {}
+        material = (data.get("material") or "")
+        try:
+            count = int(data.get("count", 5))
+        except (TypeError, ValueError):
+            count = 5
     try:
         questions = generate_quiz(material, n=count)
     except QuizError as e:

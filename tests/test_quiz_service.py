@@ -74,6 +74,69 @@ def test_generate_happy_path(app, monkeypatch):
 
 # ── Route ───────────────────────────────────────────────────────────────────────
 
+# ── File upload ─────────────────────────────────────────────────────────────────
+
+class _Upload:
+    """Minimal stand-in for a Werkzeug FileStorage."""
+    def __init__(self, filename, data):
+        self.filename = filename
+        self._data = data
+    def read(self):
+        return self._data
+
+
+def test_extract_txt():
+    from services.quiz_service import extract_text_from_upload
+    text, err = extract_text_from_upload(_Upload("notes.txt", NOTES.encode()))
+    assert err is None
+    assert "Photosynthesis" in text
+
+
+def test_extract_rejects_unknown_ext():
+    from services.quiz_service import extract_text_from_upload
+    text, err = extract_text_from_upload(_Upload("malware.exe", b"MZ"))
+    assert text is None and "supported" in err
+
+
+def test_extract_rejects_oversize():
+    from services.quiz_service import extract_text_from_upload, MAX_UPLOAD_BYTES
+    text, err = extract_text_from_upload(_Upload("big.txt", b"x" * (MAX_UPLOAD_BYTES + 1)))
+    assert text is None and "too large" in err.lower()
+
+
+def test_extract_real_pdf():
+    """Round-trip a generated PDF through pypdf extraction."""
+    import io
+    from pypdf import PdfWriter, PdfReader  # noqa: F401
+    try:
+        from reportlab.pdfgen import canvas  # optional; skip if unavailable
+    except Exception:
+        import pytest
+        pytest.skip("reportlab not installed")
+    buf = io.BytesIO()
+    c = canvas.Canvas(buf)
+    c.drawString(72, 720, "Mitochondria are the powerhouse of the cell.")
+    c.save()
+    from services.quiz_service import extract_text_from_upload
+    text, err = extract_text_from_upload(_Upload("cell.pdf", buf.getvalue()))
+    assert err is None
+    assert "Mitochondria" in text
+
+
+def test_generate_endpoint_accepts_file_upload(app, client, make_user, login, monkeypatch):
+    import io
+    import json
+    make_user("quizfile@example.com")
+    login("quizfile@example.com")
+    monkeypatch.setitem(app.config, "GROQ_API_KEY", "fake")
+    monkeypatch.setattr(quiz_service, "_call_groq",
+                        lambda system, material, n: json.dumps(GOOD_JSON))
+    data = {"count": "3", "file": (io.BytesIO(NOTES.encode()), "notes.txt")}
+    resp = client.post("/quiz/generate", data=data, content_type="multipart/form-data")
+    assert resp.status_code == 200
+    assert len(resp.get_json()["questions"]) == 1
+
+
 def test_quiz_page_requires_login(client):
     assert client.get("/quiz").status_code == 302
 

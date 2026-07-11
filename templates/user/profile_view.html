@@ -130,7 +130,11 @@
 {% endblock %}
 
 {% block content %}
-  <a href="/profile" class="back-link">← {{ _('Back to My Profile') }}</a>
+  {# Go back to wherever the user actually came from (teammates, search,
+     community…) instead of always dumping them on their own profile.
+     history.back() when we arrived from within the site; else fall back. #}
+  <a href="/dashboard" class="back-link"
+     onclick="if(document.referrer.indexOf(location.origin)===0&&document.referrer!==location.href){history.back();return false;}">← {{ _('Back') }}</a>
 
   <!-- COVER BANNER -->
   <div class="pv-cover" style="{{ banner_style(profile_user.banner_url) }}"></div>

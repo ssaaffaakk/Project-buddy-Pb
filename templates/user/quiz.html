@@ -14,6 +14,12 @@
   font-size:0.7rem;letter-spacing:0.05em;text-transform:uppercase;color:var(--muted);}
 .quiz-count select{width:auto;min-height:0;padding:6px 28px 6px 10px;}
 .quiz-char{font-family:'DM Mono',monospace;font-size:0.66rem;color:var(--muted);margin-left:auto;}
+.quiz-file{display:inline-flex;align-items:center;gap:7px;padding:8px 13px;border-radius:var(--r);
+  background:var(--card);border:1px solid var(--border);cursor:pointer;color:var(--soft);
+  font-family:'DM Mono',monospace;font-size:0.64rem;letter-spacing:0.05em;text-transform:uppercase;transition:all .18s;}
+.quiz-file:hover{border-color:rgba(124,155,255,0.4);color:var(--text);}
+.quiz-file.has-file{border-color:rgba(124,155,255,0.4);color:var(--accent);}
+.quiz-hint{font-family:'DM Mono',monospace;font-size:0.62rem;color:var(--muted);margin-top:12px;letter-spacing:0.03em;}
 .btn-quiz{padding:11px 22px;border:none;border-radius:var(--r);cursor:pointer;
   background:linear-gradient(110deg,var(--accent) 0%,var(--violet) 45%,var(--coral) 100%);color:#fff;
   font-family:'DM Mono',monospace;font-size:0.7rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;
@@ -80,9 +86,15 @@
         <option value="10">10</option>
       </select>
     </label>
+    <label class="quiz-file" id="quiz-file-label">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8l-5-5-5 5"/><path d="M12 3v12"/></svg>
+      <span id="quiz-file-name">{{ _('Upload a file') }}</span>
+      <input type="file" id="quiz-file" accept=".txt,.md,.pdf" hidden>
+    </label>
     <button class="btn-quiz" id="gen-btn" onclick="generateQuiz()">{{ _('Generate quiz') }}</button>
     <span class="quiz-char"><span id="char-count">0</span> / 12000</span>
   </div>
+  <div class="quiz-hint">{{ _('Paste notes above, or upload a .txt, .md, or .pdf file.') }}</div>
 </div>
 
 <div id="quiz-output"></div>
@@ -96,18 +108,35 @@ material.addEventListener('input', function(){
   document.getElementById('char-count').textContent = material.value.length;
 });
 
+// File upload: show the chosen filename; a selected file overrides pasted text.
+var quizFile = document.getElementById('quiz-file');
+quizFile.addEventListener('change', function(){
+  var f = quizFile.files && quizFile.files[0];
+  var label = document.getElementById('quiz-file-label');
+  document.getElementById('quiz-file-name').textContent = f ? f.name : '{{ _("Upload a file") }}';
+  label.classList.toggle('has-file', !!f);
+});
+
 async function generateQuiz(){
   var text = material.value.trim();
-  if (text.length < 60){ showToast('Paste at least 60 characters of notes.', 'warning'); return; }
+  var file = quizFile.files && quizFile.files[0];
+  if (!file && text.length < 60){ showToast('Paste at least 60 characters of notes, or upload a file.', 'warning'); return; }
   var btn = document.getElementById('gen-btn');
   btn.disabled = true;
   btn.innerHTML = '<span class="quiz-spinner"></span>{{ _("Generating…") }}';
   document.getElementById('quiz-output').innerHTML = '';
   try {
-    var r = await fetch('/quiz/generate', {
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({material: text, count: document.getElementById('count').value})
-    });
+    var opts;
+    if (file){
+      var fd = new FormData();
+      fd.append('file', file);
+      fd.append('count', document.getElementById('count').value);
+      opts = { method:'POST', body: fd };           // multipart (CSRF header auto-added)
+    } else {
+      opts = { method:'POST', headers:{'Content-Type':'application/json'},
+               body: JSON.stringify({material: text, count: document.getElementById('count').value}) };
+    }
+    var r = await fetch('/quiz/generate', opts);
     var d = await r.json();
     if (!r.ok){ showToast(d.error || 'Could not generate the quiz.', 'error'); return; }
     QUIZ = d.questions; renderQuiz();

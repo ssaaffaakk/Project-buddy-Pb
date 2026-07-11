@@ -117,7 +117,10 @@
 {% endblock %}
 
 {% block content %}
-  <a href="/my-projects" class="back-link">← {{ _('Back to My Projects') }}</a>
+  {# Context-aware back: return to the page you came from (Browse, Community,
+     search…) rather than always /my-projects. #}
+  <a href="/projects-page" class="back-link"
+     onclick="if(document.referrer.indexOf(location.origin)===0&&document.referrer!==location.href){history.back();return false;}">← {{ _('Back') }}</a>
 
   <div class="project-header fx-up">
     <div class="project-title">{{ project.title }}</div>
