@@ -67,7 +67,21 @@ Study Groups
 AI Chatbot
 	∙	Built-in assistant to help navigate the platform
 	∙	Powered by Groq API (falls back to Anthropic, then built-in mock responses)
+	∙	RAG-grounded: every reply is grounded in live platform data (relevant open projects retrieved via the in-house LSA embedding space)
+	∙	Tool calling: the model can search projects/study groups, fetch the user's deadlines, and pull personalized recommendations before answering
+	∙	Eval harness: deterministic retrieval/tool-loop tests in CI + a live golden-set eval (`python -m scripts.eval_assistant`)
 	∙	Conversation history persisted per user (last 20 messages)
+Machine Learning & Experimentation
+	∙	Trained recommender (logistic regression + LSA two-tower embeddings) with leakage-free cross-validation
+	∙	Ranking metrics — recall@5 and NDCG@10 per user — alongside ROC/PR-AUC, on a public model card (`/ml/recommender`)
+	∙	Live A/B experiment: users split 50/50 by hash between ML ranking and the rule-based baseline; impressions and clicks are logged per arm and CTR is compared on the model card
+	∙	Optional MLflow experiment tracking on `flask train-recommender`
+Product Analytics
+	∙	Append-only event stream (logins, signups, project views, applications, rec impressions/clicks, group joins, chatbot use, voice joins)
+	∙	Admin dashboard: DAU/WAU/MAU, stickiness, activation funnel (signup → onboarded → applied → completed), weekly retention cohorts
+Observability
+	∙	Prometheus metrics at `/metrics` — request rate/latency/status by route plus domain gauges (token-protected in production)
+	∙	Optional Sentry error monitoring (`SENTRY_DSN`)
 Notifications
 	∙	In-app notifications for: application received, accepted, rejected, new comment, mention
 	∙	Email notifications for key events (requires Gmail setup)
@@ -166,6 +180,11 @@ Tech Stack
 |Deployment  |Render (hosting) · PostgreSQL (prod DB)                        |
 |Rate Limiting|Flask-Limiter · Redis (prod) / in-memory (dev)               |
 |Security    |CSRF (Flask-WTF) · CSP nonces · HSTS · security headers        |
+|ML          |scikit-learn recommender · LSA embeddings · A/B testing · MLflow (optional)|
+|Analytics   |Event stream (ActivityEvent) · DAU/WAU/MAU · funnel · retention cohorts|
+|Observability|Prometheus `/metrics` · Sentry (optional)                     |
+|Testing     |pytest (33 tests) · coverage gate in CI                        |
+|CI/CD       |GitHub Actions (ruff + pytest on 3.9/3.11) · Docker + docker-compose|
 
 Project Structure
 
@@ -203,6 +222,26 @@ ProjectBuddy/
 ├── migrations/             # Alembic database migrations
 └── logs/                   # Rotating application logs
 
+
+Engineering Workflow
+
+```bash
+# Lint + tests (same as CI)
+ruff check .
+pytest --cov=.
+
+# Full stack in Docker (web + PostgreSQL + Redis)
+docker compose up --build
+
+# Retrain the recommender on current data (logs to MLflow if installed)
+flask train-recommender
+
+# Live LLM eval for the assistant (needs GROQ_API_KEY)
+python -m scripts.eval_assistant
+```
+
+CI runs on every push/PR (`.github/workflows/ci.yml`): ruff lint + pytest with a
+coverage floor, on Python 3.9 (dev floor) and 3.11 (production runtime).
 
 License
 MIT — Safak Surmeli

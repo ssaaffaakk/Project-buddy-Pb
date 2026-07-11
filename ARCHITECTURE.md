@@ -119,7 +119,11 @@ The frontend user interface running in web browsers.
 | Service | Function |
 |---|---|
 | `badge_service.py` | Award badges on project completion and skill endorsement |
-| `recommendation_service.py` | Interest-based project recommendations (tag expansion + scoring) |
+| `recommendation_service.py` | Project recommendations — ML model (A/B arm 'ml') or rule-based scorer (arm 'rules'/fallback) |
+| `ml/` | Trained recommender: LSA embeddings, feature engineering, training with ranking metrics (recall@5, NDCG@10), serving |
+| `analytics.py` | Product analytics: event tracking (`track()`), A/B assignment, DAU/WAU/MAU, funnel, retention cohorts, CTR per arm |
+| `assistant_tools.py` | Chatbot RAG layer: semantic retrieval over live platform data + LLM function-calling registry |
+| `metrics.py` | Prometheus `/metrics`: request RED metrics + domain gauges |
 | `deadline_checker.py` | Auto-complete overdue projects — runs every 1h via APScheduler |
 | `file_storage.py` | Upload abstraction: local disk (dev) or AWS S3 (prod) |
 | `mock_data.py` | Seed realistic demo data on first run |
@@ -147,6 +151,7 @@ All models use `Mapped[type]` + `mapped_column` (full SQLAlchemy 2.0 syntax). Al
 | `StudyGroup` / `StudyGroupMember` / `StudyGroupMessage` | Study rooms |
 | `SharedFile` | File metadata for study group uploads |
 | `Notification` | In-app notification feed |
+| `ActivityEvent` | Append-only analytics event stream (logins, views, applications, rec impressions/clicks with A/B arm) |
 | `PasswordReset` | Token-based reset (24h expiry) |
 | `ChatbotSession` | AI conversation history (last 20 turns per user) |
 
