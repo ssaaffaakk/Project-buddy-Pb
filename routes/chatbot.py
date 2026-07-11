@@ -32,8 +32,14 @@ _SYSTEM_PROMPT = (
     "'I'm SSM-1.0, the AI assistant powering ProjectBuddy.' "
     "Help users with project planning, finding teammates, managing deadlines, "
     "skill development, and general study advice. "
+    "You have tools to search the platform's live projects and study groups, "
+    "fetch the user's deadlines, and get their personalized recommendations — "
+    "use them instead of guessing, and include the project link when you "
+    "mention a specific project. "
     "Be concise, warm, and practical. Keep replies under 150 words unless asked for more."
 )
+
+MAX_TOOL_ROUNDS = 3   # cap agentic loops so one request can't spiral
 
 
 # ── MOCK RESPONSES ────────────────────────────────────────────────────────────
@@ -85,15 +91,8 @@ def _mock_reply(message: str) -> str:
 
 
 # ── GROQ (free) ───────────────────────────────────────────────────────────────
-def _groq_reply(history: list, user_message: str) -> str:
-    """
-    Groq uses the OpenAI-compatible chat completions format.
-    Free tier: ~14,400 requests/day on llama-3.1-8b-instant.
-    """
-    messages = [{"role": "system", "content": _SYSTEM_PROMPT}]
-    messages += history
-    messages.append({"role": "user", "content": user_message})
-
+def _groq_chat(payload: dict) -> dict:
+    """One Groq chat-completions call (OpenAI-compatible format)."""
     resp = eventlet.tpool.execute(
         requests.post,
         "https://api.groq.com/openai/v1/chat/completions",
@@ -101,20 +100,66 @@ def _groq_reply(history: list, user_message: str) -> str:
             "Authorization": f"Bearer {current_app.config['GROQ_API_KEY']}",
             "Content-Type":  "application/json",
         },
-        json={
-            "model":       current_app.config.get("GROQ_MODEL", "llama-3.1-8b-instant"),
-            "messages":    messages,
-            "max_tokens":  512,
-            "temperature": 0.7,
-        },
+        json=payload,
         timeout=20,
     )
     resp.raise_for_status()
-    return resp.json()["choices"][0]["message"]["content"].strip()
+    return resp.json()["choices"][0]["message"]
+
+
+def _groq_reply(history: list, user_message: str, system_prompt: str, user_id: int) -> str:
+    """Agentic loop: the model may call platform tools (search projects,
+    deadlines, recommendations) before answering. Free tier:
+    ~14,400 requests/day on llama-3.1-8b-instant.
+    """
+    import json as _json
+    from services.assistant_tools import TOOL_SPECS, run_tool
+
+    model = current_app.config.get("GROQ_MODEL", "llama-3.1-8b-instant")
+    messages = [{"role": "system", "content": system_prompt}]
+    messages += history
+    messages.append({"role": "user", "content": user_message})
+
+    for _round in range(MAX_TOOL_ROUNDS):
+        msg = _groq_chat({
+            "model":       model,
+            "messages":    messages,
+            "max_tokens":  512,
+            "temperature": 0.7,
+            "tools":       TOOL_SPECS,
+            "tool_choice": "auto",
+        })
+        tool_calls = msg.get("tool_calls")
+        if not tool_calls:
+            return (msg.get("content") or "").strip()
+
+        # Execute each requested tool and feed the results back.
+        messages.append(msg)
+        for tc in tool_calls:
+            fn_name = tc.get("function", {}).get("name", "")
+            try:
+                fn_args = _json.loads(tc.get("function", {}).get("arguments") or "{}")
+            except ValueError:
+                fn_args = {}
+            result = run_tool(fn_name, fn_args, user_id)
+            messages.append({
+                "role": "tool",
+                "tool_call_id": tc.get("id"),
+                "content": _json.dumps(result),
+            })
+
+    # Tool budget exhausted — force a final plain answer.
+    msg = _groq_chat({
+        "model":       model,
+        "messages":    messages,
+        "max_tokens":  512,
+        "temperature": 0.7,
+    })
+    return (msg.get("content") or "").strip()
 
 
 # ── SECONDARY PROVIDER ────────────────────────────────────────────────────────
-def _anthropic_reply(history: list, user_message: str) -> str:
+def _anthropic_reply(history: list, user_message: str, system_prompt: str) -> str:
     messages = history + [{"role": "user", "content": user_message}]
 
     resp = eventlet.tpool.execute(
@@ -128,7 +173,7 @@ def _anthropic_reply(history: list, user_message: str) -> str:
         json={
             "model":      current_app.config.get("ANTHROPIC_MODEL", "claude-3-haiku-20240307"),
             "max_tokens": 512,
-            "system":     _SYSTEM_PROMPT,
+            "system":     system_prompt,
             "messages":   messages,
         },
         timeout=20,
@@ -138,13 +183,17 @@ def _anthropic_reply(history: list, user_message: str) -> str:
 
 
 # ── PROVIDER SELECTOR ─────────────────────────────────────────────────────────
-def _get_reply(history: list, user_message: str) -> str:
+def _get_reply(history: list, user_message: str, user_id: int) -> str:
+    # RAG: ground every provider in live platform data relevant to the message.
+    from services.assistant_tools import platform_context
+    system_prompt = _SYSTEM_PROMPT + platform_context(user_message, user_id)
+
     if current_app.config.get("GROQ_API_KEY"):
-        logger.info("chatbot: using Groq provider")
-        return _groq_reply(history, user_message)
+        logger.info("chatbot: using Groq provider (tools enabled)")
+        return _groq_reply(history, user_message, system_prompt, user_id)
     if current_app.config.get("ANTHROPIC_API_KEY"):
         logger.info("chatbot: using Anthropic provider")
-        return _anthropic_reply(history, user_message)
+        return _anthropic_reply(history, user_message, system_prompt)
     logger.warning("chatbot: no API key found (GROQ_API_KEY / ANTHROPIC_API_KEY) — using mock responses")
     return _mock_reply(user_message)
 
@@ -185,7 +234,7 @@ def ask():
     history = [{"role": r.role, "content": r.content} for r in reversed(recent)]
 
     try:
-        reply = _get_reply(history, user_message)
+        reply = _get_reply(history, user_message, current_user.id)
     except Exception as e:
         logger.exception("chatbot: provider call failed — %s", e)
         reply = "Sorry, I'm having trouble connecting to the AI right now. Please try again in a moment."
@@ -201,6 +250,8 @@ def ask():
     for old in all_rows[HISTORY_LIMIT * 2:]:
         db.session.delete(old)
 
+    from services.analytics import track
+    track("chatbot_message", current_user.id)
     db.session.commit()
     return jsonify({"reply": reply})
 
