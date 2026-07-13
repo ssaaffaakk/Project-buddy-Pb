@@ -455,11 +455,16 @@ def projects_page():
                     .order_by(Project.created_at.desc()).all())
 
     user_votes = {}
+    saved_ids = set()
     if current_user.is_authenticated:
         votes = ProjectVote.query.filter_by(user_id=current_user.id).all()
         user_votes = {v.project_id: v.direction for v in votes}
+        from models import SavedProject
+        saved_ids = {s.project_id for s in
+                     SavedProject.query.filter_by(user_id=current_user.id).all()}
 
-    return render_template("projects/list.html", projects=projects, search_query=search_query, user_votes=user_votes)
+    return render_template("projects/list.html", projects=projects, search_query=search_query,
+                           user_votes=user_votes, saved_ids=saved_ids)
 
 
 # ── POST PROJECT PAGE ─────────────────────────────────────────────────────────
@@ -1024,14 +1029,20 @@ def toggle_saved_project(project_id):
 @main_bp.route("/saved")
 @login_required
 def saved_projects():
-    """The user's bookmarked projects, newest bookmark first."""
-    from models import SavedProject
+    """The user's bookmarks — projects and community posts, newest first."""
+    from models import SavedProject, SavedPost
     rows = (SavedProject.query
             .filter_by(user_id=current_user.id)
             .order_by(SavedProject.created_at.desc())
             .all())
     projects = [r.project for r in rows if r.project is not None]
-    return render_template("projects/saved.html", projects=projects, user=current_user)
+    post_rows = (SavedPost.query
+                 .filter_by(user_id=current_user.id)
+                 .order_by(SavedPost.created_at.desc())
+                 .all())
+    posts = [r.post for r in post_rows if r.post is not None]
+    return render_template("projects/saved.html", projects=projects, posts=posts,
+                           user=current_user)
 
 
 # ── WEEKLY AVAILABILITY + TEAM MEETING-TIME OVERLAP ───────────────────────────

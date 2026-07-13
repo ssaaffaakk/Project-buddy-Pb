@@ -37,7 +37,7 @@
 .pc-eyebrow{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;gap:8px;}
 .pc-type{font-family:'DM Mono',monospace;font-size:0.58rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:6px;}
 .pc-type::before{content:'';width:5px;height:5px;border-radius:50%;background:#7ab890;box-shadow:0 0 7px #7ab890;}
-.pc-course{font-family:'DM Mono',monospace;font-size:0.58rem;letter-spacing:0.06em;color:var(--accent);padding:3px 8px;border:1px solid rgba(124,155,255,0.25);border-radius:5px;background:rgba(124,155,255,0.06);white-space:nowrap;}
+.pc-course{font-family:'DM Mono',monospace;font-size:0.58rem;letter-spacing:0.06em;color:var(--accent);padding:3px 8px;border:1px solid rgba(124,155,255,0.25);border-radius:5px;background:rgba(124,155,255,0.06);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;}
 .pc-title{font-family:'DM Serif Display',serif;font-style:italic;font-size:1.12rem;font-weight:400;margin-bottom:9px;line-height:1.28;letter-spacing:-0.01em;transition:color .25s;}
 .project-card:hover .pc-title{color:var(--accent-hi,#B7CCFF);}
 .pc-desc{font-size:0.8rem;color:var(--soft);line-height:1.65;margin-bottom:15px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
@@ -49,6 +49,13 @@
 .apply-link{display:inline-flex;align-items:center;gap:6px;padding:7px 15px;border-radius:99px;font-family:'DM Mono',monospace;font-size:0.62rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;text-decoration:none;background:rgba(124,155,255,0.1);color:var(--accent);border:1px solid rgba(124,155,255,0.25);transition:all 0.28s cubic-bezier(.16,1,.3,1);}
 .apply-link:hover{background:linear-gradient(135deg,var(--accent),var(--violet,#A78BFF));color:#fff;border-color:transparent;box-shadow:0 6px 22px rgba(124,155,255,0.4);transform:translateY(-1px);}
 .project-card:hover .tag{border-color:rgba(124,155,255,0.28);background:rgba(124,155,255,0.12);}
+
+/* SAVE / BOOKMARK */
+.save-btn{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:8px;background:var(--card);border:1px solid var(--border);color:var(--muted);cursor:pointer;flex-shrink:0;transition:all .2s ease-out;padding:0;}
+.save-btn svg{width:15px;height:15px;}
+.save-btn:hover{border-color:rgba(124,155,255,0.45);color:var(--accent);background:var(--accent-dim);transform:translateY(-1px);}
+.save-btn.saved{background:var(--accent-dim);border-color:rgba(124,155,255,0.45);color:var(--accent);}
+.save-btn.saved svg{fill:currentColor;}
 
 /* VOTE WIDGET */
 .vote-widget{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:8px 5px;border-radius:12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.09);min-width:42px;flex-shrink:0;user-select:none;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);}
@@ -131,7 +138,18 @@
         <div style="flex:1;min-width:0;">
           <div class="pc-eyebrow">
             <div class="pc-type">{{ _('Open Project') }}</div>
-            {% if project.course %}<div class="pc-course">{{ project.course }}</div>{% endif %}
+            <div style="display:flex;align-items:center;gap:8px;min-width:0;">
+              {% if project.course %}<div class="pc-course">{{ project.course }}</div>{% endif %}
+              {% if current_user.is_authenticated %}
+              <button class="save-btn {% if project.id in saved_ids %}saved{% endif %}"
+                      data-id="{{ project.id }}" onclick="event.stopPropagation();toggleSave(this)"
+                      title="{{ _('Saved — click to remove') if project.id in saved_ids else _('Save for later') }}"
+                      aria-label="{{ _('Save for later') }}"
+                      aria-pressed="{{ 'true' if project.id in saved_ids else 'false' }}">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+              </button>
+              {% endif %}
+            </div>
           </div>
           <div class="pc-title">{{ project.title }}</div>
           <div class="pc-desc">{{ project.description }}</div>
@@ -201,6 +219,21 @@ async function castVote(btn) {
     widget.querySelectorAll('.vote-btn').forEach(function(b){ b.classList.remove('active'); });
     if (data.user_vote) { widget.querySelector('.vote-btn.'+data.user_vote).classList.add('active'); }
   } catch(e) { showToast('Vote failed', 'error'); }
+}
+
+/* ── SAVE / BOOKMARK ── */
+async function toggleSave(btn) {
+  var id = btn.dataset.id;
+  try {
+    var res = await fetch('/projects/'+id+'/save', { method:'POST' });
+    if (!res.ok) { showToast('{{ _("Could not update saved projects.") }}', 'error'); return; }
+    var data = await res.json();
+    btn.classList.toggle('saved', data.saved);
+    btn.setAttribute('aria-pressed', data.saved ? 'true' : 'false');
+    btn.title = data.saved ? '{{ _("Saved — click to remove") }}' : '{{ _("Save for later") }}';
+    showToast(data.saved ? '{{ _("Saved — find it under Saved in the sidebar") }}'
+                         : '{{ _("Removed from saved") }}', 'success');
+  } catch(e) { showToast('Network error', 'error'); }
 }
 
 /* ── MODAL ── */
