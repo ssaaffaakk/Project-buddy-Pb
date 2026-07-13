@@ -392,6 +392,7 @@ def _register_blueprints(app: Flask) -> None:
     def _run_startup_tasks():
         with app.app_context():
             _apply_schema(app)
+            _ensure_feature_columns(app)
             _seed_badges()
             _sync_admin()
             _sync_avatar_urls()
@@ -447,6 +448,43 @@ def _apply_schema(app: Flask) -> None:
     except Exception as e:
         app.logger.warning("Migration step skipped: %s", e)
     db.create_all()
+
+
+def _ensure_feature_columns(app: Flask) -> None:
+    """Backfill columns added to *existing* tables when `db upgrade` was skipped.
+
+    create_all() (the boot-time safety net) creates missing TABLES but never
+    ALTERs existing ones, so a column added by a migration is absent on any DB
+    whose migration chain didn't fully apply. When a mapped column is missing,
+    every query on that model raises a DB-API error (ProgrammingError on
+    PostgreSQL, OperationalError on SQLite) — e.g. a missing `users.timezone`
+    500s essentially every page. This idempotently adds those columns so the
+    app self-heals on the next restart regardless of migration state.
+    """
+    from sqlalchemy import inspect as sa_inspect, String, DateTime
+
+    # (table, column, SQLAlchemy type) for every column this app added to a
+    # pre-existing table. New TABLES are handled by create_all and need no entry.
+    wanted = [
+        ("users", "timezone", String(64)),
+        ("project_tasks", "due_date", DateTime()),
+    ]
+    try:
+        insp = sa_inspect(db.engine)
+        existing_tables = set(insp.get_table_names())
+        dialect = db.engine.dialect
+        for table, column, coltype in wanted:
+            if table not in existing_tables:
+                continue  # whole table missing → create_all will build it correctly
+            cols = {c["name"] for c in insp.get_columns(table)}
+            if column in cols:
+                continue
+            ddl_type = coltype.compile(dialect=dialect)
+            with db.engine.begin() as conn:
+                conn.exec_driver_sql(f'ALTER TABLE {table} ADD COLUMN {column} {ddl_type}')
+            app.logger.warning("Backfilled missing column %s.%s (%s).", table, column, ddl_type)
+    except Exception as e:
+        app.logger.warning("Feature-column backfill skipped: %s", e)
 
 
 def _seed_badges() -> None:
@@ -646,6 +684,10 @@ def _register_context_processors(app: Flask) -> None:
                          DirectMessage.is_read == False)  # noqa: E712
                  .count())
         except Exception:
+            # A failed query (e.g. the table isn't there yet on a half-migrated
+            # DB) leaves the session needing a rollback; without it every later
+            # query in this request would raise PendingRollbackError.
+            db.session.rollback()
             n = 0
         return {"dm_unread": n}
 
