@@ -636,3 +636,20 @@ class ChatbotSession(db.Model):
     role: Mapped[str] = mapped_column(String(10))  # "user" | "assistant"
     content: Mapped[str] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+
+# ── SAVED PROJECTS (bookmarks / watchlist) ───────────────────────────────────
+
+class SavedProject(db.Model):
+    """A user's bookmark on a project ("save for later"). One row per
+    (user, project); toggled on/off from the project card and detail page."""
+    __tablename__ = "saved_projects"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(db.ForeignKey("users.id"), index=True)
+    project_id: Mapped[int] = mapped_column(db.ForeignKey("projects.id"), index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+    project = db.relationship("Project", lazy=True)
+
+    __table_args__ = (db.UniqueConstraint("user_id", "project_id", name="uq_saved_project"),)

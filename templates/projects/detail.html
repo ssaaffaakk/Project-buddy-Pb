@@ -242,6 +242,14 @@
           <div class="btn-action" style="background:var(--accent-dim);color:var(--accent);cursor:default;">✓ {{ _('Completed') }}</div>
         {% endif %}
       {% endif %}
+
+      {# Save / bookmark toggle — available to everyone #}
+      <button type="button" id="save-btn" class="btn-action btn-secondary"
+              data-saved="{{ '1' if is_saved else '0' }}"
+              onclick="pbToggleSave({{ project.id }})">
+        {{ _('Saved ✓') if is_saved else _('Save for later') }}
+      </button>
+
       <a href="/projects-page" class="btn-action btn-secondary" style="text-decoration:none;text-align:center;">← {{ _('Browse Projects') }}</a>
       <a href="/report-issue" class="btn-action btn-secondary" style="text-decoration:none;text-align:center;">{{ _('Report Issue') }}</a>
     </div>
@@ -299,6 +307,19 @@ async function detailVote(dir) {
 // Auto-scroll chat to bottom
 var chatMessages = document.getElementById('chat-messages');
 if (chatMessages) chatMessages.scrollTop = chatMessages.scrollHeight;
+
+/* ── Save / bookmark toggle ── */
+window.pbToggleSave = async function(pid){
+  var btn = document.getElementById('save-btn');
+  try {
+    var r = await fetch('/projects/' + pid + '/save', { method:'POST' });
+    if (!r.ok){ showToast('Could not update saved projects.', 'error'); return; }
+    var data = await r.json();
+    btn.dataset.saved = data.saved ? '1' : '0';
+    btn.textContent = data.saved ? '{{ _("Saved ✓") }}' : '{{ _("Save for later") }}';
+    showToast(data.saved ? '{{ _("Saved to your list") }}' : '{{ _("Removed from saved") }}', 'success');
+  } catch(e){ showToast('Network error', 'error'); }
+};
 
 // Send message
 var messageForm = document.getElementById('message-form');

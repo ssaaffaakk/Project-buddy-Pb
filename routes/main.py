@@ -669,7 +669,9 @@ def project_detail(project_id):
     is_owner = False
     is_member = False
     has_applied = False
+    is_saved = False
     if current_user.is_authenticated:
+        from models import SavedProject
         is_owner = project.owner_id == current_user.id
         is_member = any(
             m.user_id == current_user.id and not m.removed
@@ -677,6 +679,9 @@ def project_detail(project_id):
         )
         has_applied = Application.query.filter_by(
             project_id=project_id, applicant_id=current_user.id
+        ).first() is not None
+        is_saved = SavedProject.query.filter_by(
+            user_id=current_user.id, project_id=project_id
         ).first() is not None
 
     vote_score = project.vote_score
@@ -706,6 +711,7 @@ def project_detail(project_id):
         is_owner=is_owner,
         is_member=is_member,
         has_applied=has_applied,
+        is_saved=is_saved,
         vote_score=vote_score,
         user_vote=user_vote,
     )
@@ -923,6 +929,38 @@ def delete_task(project_id, task_id):
     db.session.delete(task)
     db.session.commit()
     return jsonify({"ok": True})
+
+
+# ── SAVED PROJECTS (bookmarks) ────────────────────────────────────────────────
+@main_bp.route("/projects/<int:project_id>/save", methods=["POST"])
+@login_required
+def toggle_saved_project(project_id):
+    """Toggle a bookmark on a project. Returns the new saved state."""
+    from models import SavedProject
+    Project.query.get_or_404(project_id)
+    existing = SavedProject.query.filter_by(
+        user_id=current_user.id, project_id=project_id
+    ).first()
+    if existing:
+        db.session.delete(existing)
+        db.session.commit()
+        return jsonify({"saved": False})
+    db.session.add(SavedProject(user_id=current_user.id, project_id=project_id))
+    db.session.commit()
+    return jsonify({"saved": True})
+
+
+@main_bp.route("/saved")
+@login_required
+def saved_projects():
+    """The user's bookmarked projects, newest bookmark first."""
+    from models import SavedProject
+    rows = (SavedProject.query
+            .filter_by(user_id=current_user.id)
+            .order_by(SavedProject.created_at.desc())
+            .all())
+    projects = [r.project for r in rows if r.project is not None]
+    return render_template("projects/saved.html", projects=projects, user=current_user)
 
 
 # ── MY PROFILE ────────────────────────────────────────────────────────────────
