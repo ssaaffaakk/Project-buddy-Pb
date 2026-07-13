@@ -97,10 +97,16 @@ def feed():
         like.post_id
         for like in CommunityLike.query.filter_by(user_id=current_user.id).all()
     }
+    from models import SavedPost
+    saved_ids = {
+        s.post_id
+        for s in SavedPost.query.filter_by(user_id=current_user.id).all()
+    }
     return render_template(
         "community.html",
         posts=posts,
         liked_ids=liked_ids,
+        saved_ids=saved_ids,
         user=current_user,
     )
 
@@ -158,6 +164,24 @@ def toggle_like(post_id):
     db.session.commit()
     count = CommunityLike.query.filter_by(post_id=post_id).count()
     return jsonify({"liked": liked, "count": count})
+
+
+# ── TOGGLE SAVE (bookmark — same logic as saved projects) ────────────────────
+@community_bp.route("/<int:post_id>/save", methods=["POST"])
+@login_required
+def toggle_save(post_id):
+    from models import SavedPost
+    CommunityPost.query.get_or_404(post_id)
+    existing = SavedPost.query.filter_by(
+        post_id=post_id, user_id=current_user.id
+    ).first()
+    if existing:
+        db.session.delete(existing)
+        db.session.commit()
+        return jsonify({"saved": False})
+    db.session.add(SavedPost(post_id=post_id, user_id=current_user.id))
+    db.session.commit()
+    return jsonify({"saved": True})
 
 
 # ── ADD COMMENT ───────────────────────────────────────────────────────────────

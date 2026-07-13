@@ -149,6 +149,54 @@
 .btn-comments-toggle:hover{border-color:rgba(124,155,255,0.35);color:var(--accent);background:var(--accent-dim);transform:translateY(-1px);}
 .btn-comments-toggle:hover svg{transform:scale(1.15);}
 .btn-comments-toggle.open{background:var(--accent-dim);border-color:rgba(124,155,255,0.35);color:var(--accent);}
+.btn-share-post{display:flex;align-items:center;gap:7px;padding:8px 16px;background:var(--card);margin-left:auto;
+  border:1px solid var(--border);border-radius:20px;color:var(--soft);font-family:'DM Mono',monospace;
+  font-size:0.72rem;letter-spacing:0.04em;cursor:pointer;transition:all 0.22s cubic-bezier(.16,1,.3,1);user-select:none;}
+.btn-share-post svg{flex-shrink:0;transition:transform 0.25s;}
+.btn-share-post:hover{border-color:rgba(124,155,255,0.35);color:var(--accent);background:var(--accent-dim);transform:translateY(-1px);}
+.btn-share-post:hover svg{transform:scale(1.15) rotate(-6deg);}
+.btn-save-post{display:flex;align-items:center;gap:7px;padding:8px 16px;background:var(--card);
+  border:1px solid var(--border);border-radius:20px;color:var(--soft);font-family:'DM Mono',monospace;
+  font-size:0.72rem;letter-spacing:0.04em;cursor:pointer;transition:all 0.22s cubic-bezier(.16,1,.3,1);user-select:none;}
+.btn-save-post svg{flex-shrink:0;transition:transform 0.25s;}
+.btn-save-post:hover{border-color:rgba(124,155,255,0.35);color:var(--accent);background:var(--accent-dim);transform:translateY(-1px);}
+.btn-save-post:hover svg{transform:scale(1.15);}
+.btn-save-post.saved{background:var(--accent-dim);border-color:rgba(124,155,255,0.45);color:var(--accent);}
+.btn-save-post.saved svg{fill:currentColor;}
+.btn-save-post .save-lbl-on{display:none;}
+.btn-save-post.saved .save-lbl-on{display:inline;}
+.btn-save-post.saved .save-lbl-off{display:none;}
+
+/* ── SHARE MODAL ── */
+.share-overlay{position:fixed;inset:0;background:rgba(4,7,16,0.7);backdrop-filter:blur(10px);z-index:400;display:none;align-items:center;justify-content:center;padding:20px;}
+.share-overlay.open{display:flex;animation:pbcFade .2s ease both;}
+.share-modal{width:100%;max-width:440px;max-height:min(85vh,640px);display:flex;flex-direction:column;background:var(--bg2);border:1px solid var(--border);border-radius:16px;overflow:hidden;box-shadow:0 40px 90px rgba(0,0,0,0.6);animation:modalIn .25s cubic-bezier(.16,1,.3,1) both;}
+@keyframes modalIn{from{opacity:0;transform:translateY(16px) scale(.98);}to{opacity:1;transform:translateY(0) scale(1);}}
+.share-head{display:flex;align-items:center;justify-content:space-between;padding:18px 20px;border-bottom:1px solid var(--border);flex-shrink:0;}
+.share-title{font-family:'DM Serif Display',serif;font-style:italic;font-size:1.15rem;}
+.share-close{width:30px;height:30px;border-radius:8px;background:var(--card);border:1px solid var(--border);color:var(--muted);cursor:pointer;font-size:0.9rem;}
+.share-close:hover{color:var(--text);}
+.share-search{margin:14px 20px 6px;flex-shrink:0;}
+.share-search input{width:100%;}
+.share-people{flex:1;overflow-y:auto;padding:6px 12px;min-height:80px;}
+.share-person{display:flex;align-items:center;gap:11px;padding:9px 10px;border-radius:10px;cursor:pointer;transition:background .14s;}
+.share-person:hover{background:var(--card-h);}
+.share-person.sel{background:var(--accent-dim);}
+.sp-av{width:36px;height:36px;border-radius:50%;flex-shrink:0;background:linear-gradient(135deg,var(--accent),#4A5BA8);color:#fff;display:flex;align-items:center;justify-content:center;font-size:0.72rem;font-weight:600;overflow:hidden;}
+.sp-av img{width:100%;height:100%;object-fit:cover;}
+.sp-main{flex:1;min-width:0;}
+.sp-name{font-size:0.85rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sp-why{font-family:'DM Mono',monospace;font-size:0.58rem;letter-spacing:0.04em;text-transform:uppercase;color:var(--muted);margin-top:2px;}
+.sp-check{width:22px;height:22px;border-radius:50%;border:1.5px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#fff;transition:all .15s;}
+.share-person.sel .sp-check{background:var(--accent);border-color:var(--accent);}
+.sp-check svg{width:12px;height:12px;opacity:0;transition:opacity .15s;}
+.share-person.sel .sp-check svg{opacity:1;}
+.share-empty{padding:30px 20px;text-align:center;color:var(--muted);font-size:0.82rem;font-style:italic;}
+.share-foot{flex-shrink:0;border-top:1px solid var(--border);padding:14px 20px;display:flex;flex-direction:column;gap:10px;}
+.share-note{width:100%;min-height:40px;max-height:90px;resize:none;font-size:0.85rem;}
+.share-send{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:12px;border:none;border-radius:var(--r);background:linear-gradient(110deg,var(--accent) 0%,var(--violet,#A78BFF) 45%,var(--coral,#FF6B6B) 100%);color:#fff;font-family:'DM Mono',monospace;font-size:0.74rem;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;cursor:pointer;transition:all .18s;}
+.share-send:disabled{opacity:0.45;cursor:not-allowed;}
+.share-send:not(:disabled):hover{box-shadow:0 4px 22px rgba(124,155,255,0.3);transform:translateY(-1px);}
 
 /* ── COMMENTS SECTION ── */
 .comments-section{display:none;border-top:1px solid var(--border);}
@@ -354,6 +402,17 @@
           <span id="comment-count-{{ post.id }}">{{ post.comments | length }}</span>
           <span>{{ _('comment') if post.comments | length == 1 else _('comments') }}</span>
         </button>
+        <button class="btn-share-post" onclick="openShare({{ post.id }})" title="{{ _('Send to friends') }}">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.6" y1="13.5" x2="15.4" y2="17.5"/><line x1="15.4" y1="6.5" x2="8.6" y2="10.5"/></svg>
+          <span>{{ _('Share') }}</span>
+        </button>
+        <button class="btn-save-post {% if post.id in saved_ids %}saved{% endif %}"
+                id="save-btn-{{ post.id }}" onclick="toggleSavePost({{ post.id }})"
+                aria-pressed="{{ 'true' if post.id in saved_ids else 'false' }}">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+          <span class="save-lbl-off">{{ _('Save') }}</span>
+          <span class="save-lbl-on">{{ _('Saved') }}</span>
+        </button>
       </div>
 
       <!-- COMMENTS -->
@@ -418,6 +477,29 @@
 
     </article>
     {% endfor %}
+  </div>
+
+  <!-- SHARE-TO-FRIENDS MODAL -->
+  <div class="share-overlay" id="shareOverlay" onclick="if(event.target===this)closeShare()">
+    <div class="share-modal" role="dialog" aria-modal="true" aria-labelledby="shareTitle">
+      <div class="share-head">
+        <span class="share-title" id="shareTitle">{{ _('Share with') }}</span>
+        <button class="share-close" onclick="closeShare()" aria-label="{{ _('Close') }}">✕</button>
+      </div>
+      <div class="share-search">
+        <input type="search" id="shareSearch" placeholder="{{ _('Search people…') }}" autocomplete="off">
+      </div>
+      <div class="share-people" id="sharePeople">
+        <div class="share-empty">{{ _('Loading…') }}</div>
+      </div>
+      <div class="share-foot">
+        <textarea class="share-note" id="shareNote" placeholder="{{ _('Add a message (optional)…') }}" maxlength="4000" rows="1"></textarea>
+        <button class="share-send" id="shareSend" onclick="doShare()" disabled>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          <span id="shareSendLbl">{{ _('Send') }}</span>
+        </button>
+      </div>
+    </div>
   </div>
 {% endblock %}
 
@@ -727,6 +809,139 @@ function toggleLike(postId) {
   .catch(function() { showToast('Could not update like.', 'error'); })
   .finally(function() { btn.style.pointerEvents = ''; });
 }
+
+// ── SAVE / BOOKMARK ──────────────────────────────────────────────────────────
+function toggleSavePost(postId) {
+  var btn = document.getElementById('save-btn-' + postId);
+  btn.style.pointerEvents = 'none';
+  fetch('/community/' + postId + '/save', {method:'POST'})
+  .then(function(r) { return r.json(); })
+  .then(function(d) {
+    btn.classList.toggle('saved', d.saved);
+    btn.setAttribute('aria-pressed', d.saved ? 'true' : 'false');
+    showToast(d.saved ? '{{ _("Saved — find it under Saved in the sidebar") }}'
+                      : '{{ _("Removed from saved") }}', 'success');
+  })
+  .catch(function() { showToast('Could not update.', 'error'); })
+  .finally(function() { btn.style.pointerEvents = ''; });
+}
+
+// ── SHARE TO FRIENDS ─────────────────────────────────────────────────────────
+var _sharePostId = null;
+var _sharePeople = [];          // fetched once, cached
+var _shareSelected = {};        // id -> true
+var _sharePeopleLoaded = false;
+
+function _shareEsc(s){ return window._esc ? window._esc(s) : String(s); }
+
+function openShare(postId) {
+  _sharePostId = postId;
+  _shareSelected = {};
+  document.getElementById('shareNote').value = '';
+  document.getElementById('shareSearch').value = '';
+  updateShareSend();
+  document.getElementById('shareOverlay').classList.add('open');
+  if (!_sharePeopleLoaded) {
+    loadSharePeople();
+  } else {
+    renderSharePeople('');
+  }
+  setTimeout(function(){ document.getElementById('shareSearch').focus(); }, 60);
+}
+
+function closeShare() {
+  document.getElementById('shareOverlay').classList.remove('open');
+  _sharePostId = null;
+}
+
+function loadSharePeople() {
+  var box = document.getElementById('sharePeople');
+  box.innerHTML = '<div class="share-empty">{{ _("Loading…") }}</div>';
+  fetch('/messages/share-targets')
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    _sharePeople = d.people || [];
+    _sharePeopleLoaded = true;
+    renderSharePeople('');
+  })
+  .catch(function(){ box.innerHTML = '<div class="share-empty">{{ _("Could not load people.") }}</div>'; });
+}
+
+function renderSharePeople(query) {
+  var box = document.getElementById('sharePeople');
+  var q = (query || '').toLowerCase();
+  var list = _sharePeople.filter(function(p){ return !q || p.name.toLowerCase().indexOf(q) !== -1; });
+  if (!list.length) {
+    box.innerHTML = '<div class="share-empty">' +
+      (_sharePeople.length ? '{{ _("No matches.") }}' : '{{ _("No one to share with yet — join a project or study group first.") }}') +
+      '</div>';
+    return;
+  }
+  box.innerHTML = list.map(function(p){
+    var sel = _shareSelected[p.id] ? ' sel' : '';
+    var av = p.avatar_url
+      ? '<img src="' + _shareEsc(p.avatar_url) + '" alt="">'
+      : _shareEsc(p.initials);
+    return '<div class="share-person' + sel + '" data-id="' + p.id + '" onclick="toggleSharePerson(' + p.id + ')">' +
+             '<div class="sp-av">' + av + '</div>' +
+             '<div class="sp-main"><div class="sp-name">' + _shareEsc(p.name) + '</div>' +
+             '<div class="sp-why">' + _shareEsc(p.reason) + '</div></div>' +
+             '<div class="sp-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>' +
+           '</div>';
+  }).join('');
+}
+
+function toggleSharePerson(id) {
+  if (_shareSelected[id]) delete _shareSelected[id];
+  else _shareSelected[id] = true;
+  var row = document.querySelector('.share-person[data-id="' + id + '"]');
+  if (row) row.classList.toggle('sel', !!_shareSelected[id]);
+  updateShareSend();
+}
+
+function updateShareSend() {
+  var n = Object.keys(_shareSelected).length;
+  var btn = document.getElementById('shareSend');
+  btn.disabled = n === 0;
+  document.getElementById('shareSendLbl').textContent =
+    n === 0 ? '{{ _("Send") }}' : '{{ _("Send to") }} ' + n;
+}
+
+document.getElementById('shareSearch').addEventListener('input', function(){
+  renderSharePeople(this.value);
+});
+
+var _shareSending = false;
+function doShare() {
+  if (_shareSending || !_sharePostId) return;
+  var ids = Object.keys(_shareSelected).map(Number);
+  if (!ids.length) return;
+  _shareSending = true;
+  var btn = document.getElementById('shareSend');
+  btn.disabled = true;
+  fetch('/messages/share-post', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({
+      post_id: _sharePostId,
+      user_ids: ids,
+      note: document.getElementById('shareNote').value.trim()
+    })
+  })
+  .then(function(r){ return r.json().then(function(d){ return {ok: r.ok, d: d}; }); })
+  .then(function(res){
+    if (!res.ok){ showToast(res.d.error || 'Could not share.', 'error'); return; }
+    showToast(res.d.sent === 1 ? '{{ _("Shared with 1 person") }}'
+                               : '{{ _("Shared with") }} ' + res.d.sent + ' {{ _("people") }}', 'success');
+    closeShare();
+  })
+  .catch(function(){ showToast('Network error', 'error'); })
+  .finally(function(){ _shareSending = false; updateShareSend(); });
+}
+
+document.addEventListener('keydown', function(e){
+  if (e.key === 'Escape' && document.getElementById('shareOverlay').classList.contains('open')) closeShare();
+});
 
 // ── DELETE POST ───────────────────────────────────────────────────────────────
 async function deletePost(postId) {
