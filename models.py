@@ -677,3 +677,53 @@ class UserAvailability(db.Model):
     block: Mapped[int] = mapped_column(Integer)     # 0..2
 
     __table_args__ = (db.UniqueConstraint("user_id", "weekday", "block", name="uq_availability_cell"),)
+
+
+# ── DIRECT MESSAGES (1:1 chat between two users) ─────────────────────────────
+
+class Conversation(db.Model):
+    """A private 1:1 thread between two users. Exactly one row exists per pair:
+    the two ids are stored canonically (user_a_id < user_b_id) and looked up
+    that way, so opening a chat from either side lands in the same thread."""
+    __tablename__ = "conversations"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_a_id: Mapped[int] = mapped_column(db.ForeignKey("users.id"), index=True)  # always the lower id
+    user_b_id: Mapped[int] = mapped_column(db.ForeignKey("users.id"), index=True)  # always the higher id
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
+    # Bumped on every message so the inbox can sort by recency cheaply.
+    last_message_at: Mapped[datetime] = mapped_column(
+        DateTime, default=lambda: datetime.now(timezone.utc), index=True
+    )
+
+    user_a = db.relationship("User", foreign_keys=[user_a_id], lazy=True)
+    user_b = db.relationship("User", foreign_keys=[user_b_id], lazy=True)
+    messages = db.relationship("DirectMessage", lazy=True, cascade="all, delete-orphan",
+                               order_by="DirectMessage.created_at")
+
+    __table_args__ = (db.UniqueConstraint("user_a_id", "user_b_id", name="uq_conversation_pair"),)
+
+    @staticmethod
+    def pair(uid1: int, uid2: int):
+        """Canonical (low, high) ordering for a user pair."""
+        return (uid1, uid2) if uid1 < uid2 else (uid2, uid1)
+
+    def other(self, user_id: int):
+        """The participant who is *not* `user_id`."""
+        return self.user_b if self.user_a_id == user_id else self.user_a
+
+    def has_member(self, user_id: int) -> bool:
+        return user_id in (self.user_a_id, self.user_b_id)
+
+
+class DirectMessage(db.Model):
+    __tablename__ = "direct_messages"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    conversation_id: Mapped[int] = mapped_column(db.ForeignKey("conversations.id"), index=True)
+    sender_id: Mapped[int] = mapped_column(db.ForeignKey("users.id"))
+    body: Mapped[str] = mapped_column(Text)
+    is_read: Mapped[bool] = mapped_column(Boolean, default=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+    sender = db.relationship("User", lazy=True)

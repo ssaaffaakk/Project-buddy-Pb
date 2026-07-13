@@ -1,0 +1,126 @@
+{% extends 'base_app.html' %}
+{% block title %}{{ other.get_full_name() }} · {{ _('Messages') }}{% endblock %}
+
+{% block extra_style %}
+<style nonce="{{ csp_nonce }}">
+.dm-wrap{display:flex;flex-direction:column;height:calc(100vh - 120px);max-width:760px;}
+.dm-head{display:flex;align-items:center;gap:12px;padding-bottom:16px;border-bottom:1px solid var(--border);margin-bottom:16px;}
+.dm-head-av{width:40px;height:40px;border-radius:50%;flex-shrink:0;background:linear-gradient(135deg,var(--accent),#4A5BA8);color:#fff;display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:600;overflow:hidden;}
+.dm-head-av img{width:100%;height:100%;object-fit:cover;}
+.dm-head-name{font-family:'DM Serif Display',serif;font-style:italic;font-size:1.2rem;}
+.dm-head a{color:var(--muted);text-decoration:none;font-size:0.78rem;}
+.dm-head a:hover{color:var(--accent);}
+.dm-stream{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:8px;padding:4px 4px 12px;}
+.dm-msg{max-width:72%;padding:9px 13px;border-radius:14px;font-size:0.9rem;line-height:1.5;word-wrap:break-word;white-space:pre-wrap;}
+.dm-msg.them{align-self:flex-start;background:var(--card);border:1px solid var(--border);border-bottom-left-radius:4px;}
+.dm-msg.me{align-self:flex-end;background:linear-gradient(110deg,var(--accent),var(--violet));color:#fff;border-bottom-right-radius:4px;}
+.dm-msg .t{display:block;font-family:'DM Mono',monospace;font-size:0.6rem;opacity:0.6;margin-top:4px;}
+.dm-compose{display:flex;gap:10px;padding-top:14px;border-top:1px solid var(--border);}
+.dm-compose textarea{min-height:44px;max-height:140px;resize:none;flex:1;}
+.dm-compose button{flex-shrink:0;align-self:flex-end;}
+.dm-empty{color:var(--muted);font-style:italic;font-size:0.85rem;text-align:center;margin:auto;}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dm-wrap">
+  <div class="dm-head">
+    <div class="dm-head-av">
+      {% if other.avatar_url %}<img src="{{ other.avatar_url }}" alt="">{% else %}{{ (other.first_name[:1] + other.last_name[:1])|upper }}{% endif %}
+    </div>
+    <div style="flex:1;">
+      <div class="dm-head-name">{{ other.get_full_name() }}</div>
+      <a href="{{ url_for('main.user_profile', user_id=other.id) }}">{{ _('View profile') }}</a>
+    </div>
+    <a href="{{ url_for('messages.inbox') }}" class="btn-ghost">{{ _('All chats') }}</a>
+  </div>
+
+  <div class="dm-stream" id="dmStream">
+    {% if not messages %}
+      <div class="dm-empty" id="dmEmpty">{{ _('Say hello — this is the start of your conversation.') }}</div>
+    {% endif %}
+    {% for m in messages %}
+      <div class="dm-msg {{ 'me' if m.sender_id == user.id else 'them' }}" data-id="{{ m.id }}">
+        {{ m.body }}<span class="t">{{ m.created_at.strftime('%H:%M') }}</span>
+      </div>
+    {% endfor %}
+  </div>
+
+  <form class="dm-compose" id="dmForm" autocomplete="off">
+    <textarea id="dmInput" placeholder="{{ _('Write a message…') }}" maxlength="4000" rows="1"></textarea>
+    <button type="submit" class="btn-gold btn-send">{{ _('Send') }}</button>
+  </form>
+</div>
+{% endblock %}
+
+{% block extra_script %}
+<script src="https://cdn.jsdelivr.net/npm/socket.io-client@4.7.5/dist/socket.io.min.js"></script>
+<script nonce="{{ csp_nonce }}">
+(function(){
+  var CONV_ID  = {{ conversation.id }};
+  var OTHER_ID = {{ other.id }};
+  var MY_ID    = {{ user.id }};
+  var stream = document.getElementById('dmStream');
+  var input  = document.getElementById('dmInput');
+  var form   = document.getElementById('dmForm');
+  var lastId = 0;
+  stream.querySelectorAll('.dm-msg[data-id]').forEach(function(el){
+    lastId = Math.max(lastId, parseInt(el.dataset.id,10) || 0);
+  });
+
+  function scrollDown(){ stream.scrollTop = stream.scrollHeight; }
+  scrollDown();
+
+  function render(m){
+    if (document.querySelector('.dm-msg[data-id="'+m.id+'"]')) return; // dedupe by id
+    var empty = document.getElementById('dmEmpty');
+    if (empty) empty.remove();
+    var div = document.createElement('div');
+    div.className = 'dm-msg ' + (m.is_mine || m.sender_id === MY_ID ? 'me' : 'them');
+    div.dataset.id = m.id;
+    div.innerHTML = window._esc(m.body) + '<span class="t">' + window._esc(m.time) + '</span>';
+    stream.appendChild(div);
+    if (m.id > lastId) lastId = m.id;
+    scrollDown();
+  }
+
+  // ── Realtime via SocketIO ───────────────────────────────────────────────────
+  var socket = io();
+  socket.on('connect', function(){ socket.emit('join_dm', {conversation_id: CONV_ID}); });
+  socket.on('dm_message', function(m){ if (m.conversation_id === CONV_ID) render(m); });
+
+  // ── Fallback poll (covers socket-down / reconnect gaps) ─────────────────────
+  async function poll(){
+    try{
+      var r = await fetch('/messages/'+CONV_ID+'/poll?after='+lastId);
+      if (r.ok){ (await r.json()).forEach(render); }
+    }catch(e){}
+  }
+  setInterval(poll, 8000);
+
+  // ── Send ────────────────────────────────────────────────────────────────────
+  async function send(){
+    var body = input.value.trim();
+    if (!body) return;
+    input.value = ''; input.style.height = 'auto';
+    try{
+      var r = await fetch('/messages/with/'+OTHER_ID+'/send', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({body: body})
+      });
+      var data = await r.json();
+      if (!r.ok){ window.showToast(data.error || 'Could not send', 'error'); return; }
+      render(data); // optimistic echo (socket echo is deduped by id)
+    }catch(e){ window.showToast('Network error', 'error'); }
+  }
+  form.addEventListener('submit', function(e){ e.preventDefault(); send(); });
+  input.addEventListener('keydown', function(e){
+    if (e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); send(); }
+  });
+  input.addEventListener('input', function(){
+    input.style.height = 'auto';
+    input.style.height = Math.min(input.scrollHeight, 140) + 'px';
+  });
+})();
+</script>
+{% endblock %}

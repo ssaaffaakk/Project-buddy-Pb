@@ -12,6 +12,7 @@
     <a href="/quiz" class="nav-item{% if nav_active == 'quiz' %} active{% endif %}"><span class="nav-mark">&#8212;</span> {{ _('Quiz Generator') }}</a>
     <a href="/post-project-page" class="nav-item{% if nav_active == 'post_project' %} active{% endif %}"><span class="nav-mark">&#8212;</span> {{ _('Post a Project') }}</a>
     <a href="/my-projects" class="nav-item{% if nav_active == 'my_projects' %} active{% endif %}"><span class="nav-mark">&#8212;</span> {{ _('My Projects') }}</a>
+    <a href="/messages" class="nav-item{% if nav_active == 'messages' %} active{% endif %}"><span class="nav-mark">&#8212;</span> {{ _('Messages') }}{% if dm_unread %} <span class="nav-badge">{{ dm_unread }}</span>{% endif %}</a>
     <a href="/saved" class="nav-item{% if nav_active == 'saved' %} active{% endif %}"><span class="nav-mark">&#8212;</span> {{ _('Saved') }}</a>
     <a href="/availability" class="nav-item{% if nav_active == 'availability' %} active{% endif %}"><span class="nav-mark">&#8212;</span> {{ _('Availability') }}</a>
     <a href="/profile" class="nav-item{% if nav_active == 'profile' %} active{% endif %}"><span class="nav-mark">&#8212;</span> {{ _('My Profile') }}</a>

@@ -364,6 +364,8 @@ def _register_blueprints(app: Flask) -> None:
     from routes.community import community_bp
     from routes.study_groups import study_groups_bp
     from routes.chatbot import chatbot_bp
+    # Importing routes.messages also registers its @socketio.on('join_dm') handler.
+    from routes.messages import messages_bp
 
     app.register_blueprint(main_bp)
     app.register_blueprint(auth_bp)
@@ -374,6 +376,7 @@ def _register_blueprints(app: Flask) -> None:
     app.register_blueprint(community_bp)
     app.register_blueprint(study_groups_bp)
     app.register_blueprint(chatbot_bp)
+    app.register_blueprint(messages_bp)
 
     # Register SocketIO voice-chat event handlers
     import routes.voice  # noqa: F401  — side-effect: registers @socketio.on handlers
@@ -611,6 +614,8 @@ def _register_context_processors(app: Flask) -> None:
             active = "post_project"
         elif path == "/my-projects":
             active = "my_projects"
+        elif path.startswith("/messages"):
+            active = "messages"
         elif path == "/saved":
             active = "saved"
         elif path == "/availability":
@@ -623,6 +628,26 @@ def _register_context_processors(app: Flask) -> None:
             active = "report_issue"
 
         return {"nav_active": active}
+
+    @app.context_processor
+    def inject_dm_unread():
+        """Expose the current user's unread direct-message count so the sidebar
+        can render a badge on the Messages link. One indexed COUNT query."""
+        from flask_login import current_user
+        if not current_user.is_authenticated:
+            return {}
+        try:
+            from models import Conversation, DirectMessage
+            n = (DirectMessage.query
+                 .join(Conversation, Conversation.id == DirectMessage.conversation_id)
+                 .filter((Conversation.user_a_id == current_user.id) |
+                         (Conversation.user_b_id == current_user.id))
+                 .filter(DirectMessage.sender_id != current_user.id,
+                         DirectMessage.is_read == False)  # noqa: E712
+                 .count())
+        except Exception:
+            n = 0
+        return {"dm_unread": n}
 
 
 def _setup_shell_context(app: Flask) -> None:

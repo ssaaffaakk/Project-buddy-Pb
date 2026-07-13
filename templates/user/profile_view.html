@@ -180,6 +180,11 @@
         </div>
         {% endif %}
       </div>
+      {% if current_user.is_authenticated and current_user.id != profile_user.id and profile_user.role != 'admin' and not profile_user.is_banned %}
+      <div style="margin-left:auto;align-self:flex-start;">
+        <a href="{{ url_for('messages.thread', user_id=profile_user.id) }}" class="btn-gold">{{ _('Message') }}</a>
+      </div>
+      {% endif %}
     </div>
   </div>
 
