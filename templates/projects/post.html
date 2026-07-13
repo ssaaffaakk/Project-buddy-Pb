@@ -92,7 +92,20 @@
 .checklist-item{display:flex;align-items:center;gap:8px;font-size:0.8rem;color:var(--text);padding:4px 0;font-family:'DM Mono',monospace;}
 
 /* PREVIEW */
-.preview-area{width:300px;flex-shrink:0;}
+.preview-area{width:320px;flex-shrink:0;display:flex;flex-direction:column;gap:20px;}
+.preview-sticky{position:sticky;top:40px;display:flex;flex-direction:column;gap:20px;}
+
+/* SIDE INFO BLOCKS */
+.side-block{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:18px 20px;}
+.side-block-title{font-family:'DM Mono',monospace;font-size:0.62rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:14px;}
+.how-step{display:flex;gap:12px;align-items:flex-start;padding:7px 0;}
+.how-num{width:22px;height:22px;border-radius:50%;background:var(--accent-dim);border:1px solid rgba(124,155,255,0.3);color:var(--accent);font-family:'DM Mono',monospace;font-size:0.66rem;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
+.how-txt{font-size:0.78rem;color:var(--soft);line-height:1.55;}
+.how-txt strong{color:var(--text);font-weight:600;}
+.fact-row{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--border);}
+.fact-row:last-child{border-bottom:none;}
+.fact-key{font-size:0.74rem;color:var(--soft);}
+.fact-val{font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--accent);white-space:nowrap;}
 .preview-label{font-size:0.68rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:14px;font-family:'DM Mono',monospace;}
 .preview-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:24px;position:sticky;top:40px;}
 .preview-card-icon{width:36px;height:36px;border-radius:6px;background:var(--accent-dim);display:flex;align-items:center;justify-content:center;font-size:1rem;margin-bottom:14px;color:var(--accent);}
@@ -516,20 +529,42 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
     </div>
   </div>
 
-  <!-- LIVE PREVIEW -->
+  <!-- LIVE PREVIEW + GUIDANCE -->
   <div class="preview-area">
-    <div class="preview-label">Live Preview</div>
-    <div class="preview-card">
-      <div class="preview-title" id="pv-title">Your project title...</div>
-      <div class="preview-desc"  id="pv-desc">Description will appear here...</div>
-      <div class="preview-tags"  id="pv-tags"></div>
-      <div class="preview-footer">
-        <div class="preview-owner">You</div>
-        <div class="preview-slots" id="pv-slots">3 members max</div>
+    <div class="preview-sticky">
+      <div>
+        <div class="preview-label">{{ _('Live Preview') }}</div>
+        <div class="preview-card" style="position:static;">
+          <div class="preview-title" id="pv-title">Your project title...</div>
+          <div class="preview-desc"  id="pv-desc">Description will appear here...</div>
+          <div class="preview-tags"  id="pv-tags"></div>
+          <div class="preview-footer">
+            <div class="preview-owner">{{ _('You') }}</div>
+            <div class="preview-slots" id="pv-slots">3 members max</div>
+          </div>
+        </div>
       </div>
-    </div>
-    <div class="preview-tip">
-      <strong>Tip:</strong> Projects with all 5 topic tags get significantly more views from the recommendation engine.
+
+      <div class="side-block">
+        <div class="side-block-title">{{ _('How it works') }}</div>
+        <div class="how-step"><div class="how-num">1</div><div class="how-txt"><strong>{{ _('Post') }}</strong> — {{ _('your listing goes live on Browse Projects and in recommendations.') }}</div></div>
+        <div class="how-step"><div class="how-num">2</div><div class="how-txt"><strong>{{ _('Review applications') }}</strong> — {{ _('students apply; you see their profile, skills and courses.') }}</div></div>
+        <div class="how-step"><div class="how-num">3</div><div class="how-txt"><strong>{{ _('Accept your team') }}</strong> — {{ _('accepted members join the project chat and task board.') }}</div></div>
+        <div class="how-step"><div class="how-num">4</div><div class="how-txt"><strong>{{ _('Build together') }}</strong> — {{ _('use tasks, files and “best times to meet” to stay on track.') }}</div></div>
+      </div>
+
+      <div class="side-block">
+        <div class="side-block-title">{{ _('Good to know') }}</div>
+        <div class="fact-row"><span class="fact-key">{{ _('Team size') }}</span><span class="fact-val">2 – 6</span></div>
+        <div class="fact-row"><span class="fact-key">{{ _('Topic tags') }}</span><span class="fact-val">{{ _('exactly 5') }}</span></div>
+        <div class="fact-row"><span class="fact-key">{{ _('Active projects per person') }}</span><span class="fact-val">{{ _('max 3') }}</span></div>
+        <div class="fact-row"><span class="fact-key">{{ _('Editable after posting') }}</span><span class="fact-val">{{ _('yes') }}</span></div>
+        <div class="fact-row"><span class="fact-key">{{ _('Auto-closes when full') }}</span><span class="fact-val">{{ _('yes') }}</span></div>
+      </div>
+
+      <div class="preview-tip" style="margin-top:0;">
+        <strong>{{ _('Tip:') }}</strong> {{ _('A specific title and a description that says what you’re building, the tech you’ll use, and who you’re looking for gets far more applications — and all 5 topic tags power the recommendation engine.') }}
+      </div>
     </div>
   </div>
 {% endblock %}

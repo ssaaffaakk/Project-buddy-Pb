@@ -122,16 +122,19 @@ html,body{height:100%;overflow:hidden;}
 /* floating control bar */
 .call-bar-wrap{flex-shrink:0;display:flex;justify-content:center;padding:4px 16px 18px;}
 .call-bar{display:flex;align-items:center;gap:9px;background:rgba(10,14,30,0.82);border:1px solid rgba(124,155,255,0.2);border-radius:99px;padding:8px 12px;backdrop-filter:blur(14px);box-shadow:0 12px 40px rgba(0,0,0,0.45);}
+html.light-mode .call-bar{background:rgba(255,255,255,0.9);border-color:rgba(40,50,110,0.16);box-shadow:0 12px 40px rgba(19,22,42,0.16);}
 .cbtn{display:flex;flex-direction:column;align-items:center;gap:4px;}
-.cbtn>button{width:48px;height:48px;border-radius:50%;border:1px solid var(--border);background:rgba(255,255,255,0.05);color:var(--soft);display:grid;place-items:center;cursor:pointer;transition:0.16s;}
-.cbtn>button:hover{background:rgba(255,255,255,0.1);color:var(--text);transform:translateY(-1px);}
+.cbtn>button{width:48px;height:48px;border-radius:50%;border:1px solid var(--border);background:var(--card);color:var(--soft);display:grid;place-items:center;cursor:pointer;transition:all 0.18s ease-out;}
+.cbtn>button:hover{background:var(--card-h);border-color:rgba(124,155,255,0.4);color:var(--text);transform:translateY(-1px);}
 .cbtn>button svg{width:20px;height:20px;}
-.cbtn.on>button{background:var(--accent-dim);border-color:rgba(124,155,255,0.5);color:var(--accent);}
-.cbtn.danger>button{background:rgba(255,107,107,0.16);border-color:rgba(255,107,107,0.5);color:#ff8f81;}
-.cbtn.danger>button:hover{background:rgba(255,107,107,0.26);color:#fff;}
-.cbtn.leave>button{background:rgba(255,107,107,0.16);border-color:rgba(255,107,107,0.5);color:#ff8f81;}
-.cbtn.leave>button:hover{background:rgba(255,107,107,0.28);color:#fff;}
+/* Active state (camera on, sharing, chat open…): unmistakable accent fill */
+.cbtn.on>button{background:linear-gradient(135deg,var(--accent),var(--violet,#A78BFF));border-color:transparent;color:#fff;box-shadow:0 4px 18px var(--accent-glow);}
+.cbtn.on>button:hover{filter:saturate(1.12);color:#fff;}
+/* Danger states (muted mic) and Leave: solid red so they read in both themes */
+.cbtn.danger>button,.cbtn.leave>button{background:linear-gradient(135deg,#e05252,#c0392b);border-color:transparent;color:#fff;box-shadow:0 4px 18px rgba(224,82,82,0.3);}
+.cbtn.danger>button:hover,.cbtn.leave>button:hover{filter:brightness(1.1);color:#fff;box-shadow:0 6px 22px rgba(224,82,82,0.45);}
 .cbtn-lbl{font-family:'DM Mono',monospace;font-size:0.5rem;letter-spacing:0.05em;text-transform:uppercase;color:var(--muted);display:none;}
+html.light-mode .cbtn-lbl{color:var(--soft);}
 @media(max-width:640px){.cbtn-lbl{display:block;}.call-bar{gap:5px;padding:7px 9px;}.cbtn>button{width:44px;height:44px;}}
 
 /* SIDE PANEL */

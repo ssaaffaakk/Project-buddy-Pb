@@ -23,8 +23,14 @@
 .btn-primary{background:linear-gradient(110deg,var(--accent) 0%,var(--violet,#A78BFF) 45%,var(--coral,#FF6B6B) 100%);color:#fff;box-shadow:0 0 20px rgba(124,155,255,0.15);}
 .btn-primary:hover{box-shadow:0 0 0 1px rgba(124,155,255,0.5),0 4px 24px rgba(124,155,255,0.25);transform:translateY(-1px);}
 .btn-secondary{background:var(--card);color:var(--soft);border:1px solid var(--border);}
-.btn-secondary:hover{border-color:rgba(255,255,255,0.12);color:var(--text);}
+.btn-secondary:hover{border-color:rgba(124,155,255,0.35);color:var(--text);background:var(--card-h);}
 form{display:contents;}
+
+/* The base stylesheet's light-mode "glass card" override targets .project-info
+   globally; here it's a plain padding-less wrapper, so undo it and style the
+   outer card instead. */
+html.light-mode .project-info{background:transparent;border:none;box-shadow:none;}
+html.light-mode .card{background:rgba(255,255,255,0.88);border-color:rgba(40,50,110,0.14);box-shadow:0 10px 40px rgba(19,22,42,0.08);}
 </style>
 {% endblock %}
 

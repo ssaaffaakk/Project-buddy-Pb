@@ -3,19 +3,43 @@
 
 {% block extra_style %}
 <style nonce="{{ csp_nonce }}">
-.av-wrap{max-width:640px;}
-.av-intro{color:var(--soft);font-size:0.88rem;line-height:1.6;margin-bottom:22px;}
-.av-tz{margin-bottom:22px;}
+.av-layout{display:flex;gap:32px;align-items:flex-start;flex-wrap:wrap;}
+.av-wrap{flex:1 1 480px;max-width:640px;min-width:0;}
+.av-side{flex:0 1 320px;display:flex;flex-direction:column;gap:18px;}
+
+.av-explain{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px 22px;}
+.av-explain h3{font-family:'DM Serif Display',serif;font-style:italic;font-size:1.02rem;font-weight:400;margin-bottom:10px;}
+.av-explain p{color:var(--soft);font-size:0.82rem;line-height:1.65;}
+.av-explain p+p{margin-top:10px;}
+.av-explain .hl{color:var(--accent);}
+
+.av-legend{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px 22px;}
+.av-legend-title{font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:12px;}
+.av-legend-row{display:flex;align-items:center;gap:12px;padding:6px 0;}
+.av-legend-ic{width:30px;height:30px;border-radius:8px;background:var(--accent-dim);border:1px solid rgba(124,155,255,0.25);display:flex;align-items:center;justify-content:center;font-size:0.85rem;flex-shrink:0;}
+.av-legend-name{font-size:0.8rem;color:var(--text);font-weight:600;}
+.av-legend-time{font-family:'DM Mono',monospace;font-size:0.66rem;color:var(--muted);margin-left:auto;}
+
+.av-tz{margin:22px 0;}
 .av-tz label{display:block;font-family:'DM Mono',monospace;font-size:0.66rem;letter-spacing:0.06em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;}
 .av-tz input{max-width:320px;}
+.av-tz .hint{font-size:0.72rem;color:var(--muted);margin-top:6px;}
+
 .av-grid{border-collapse:separate;border-spacing:6px;}
 .av-grid th{font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.05em;text-transform:uppercase;color:var(--muted);font-weight:500;padding:2px;}
 .av-rowlabel{font-family:'DM Mono',monospace;font-size:0.66rem;color:var(--soft);text-align:right;padding-right:10px;white-space:nowrap;}
 .av-cell{width:56px;height:40px;border-radius:8px;background:var(--card);border:1px solid var(--border);cursor:pointer;transition:all .12s;}
 .av-cell:hover{border-color:rgba(124,155,255,0.4);}
 .av-cell.on{background:rgba(90,138,106,0.28);border-color:rgba(90,138,106,0.55);}
+html.light-mode .av-cell.on{background:rgba(90,138,106,0.35);}
+
+.av-quick{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;}
+.av-quick button{background:var(--card);border:1px solid var(--border);border-radius:99px;color:var(--soft);font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.05em;text-transform:uppercase;padding:6px 14px;cursor:pointer;transition:all .18s;}
+.av-quick button:hover{border-color:rgba(124,155,255,0.4);color:var(--accent);background:var(--accent-dim);}
+
 .av-actions{display:flex;align-items:center;gap:14px;margin-top:24px;}
 .av-status{font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--muted);}
+.av-count{font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--accent);}
 </style>
 {% endblock %}
 
@@ -27,36 +51,61 @@
   </div>
 </div>
 
-<div class="av-wrap fx-up">
-  <p class="av-intro">{{ _('Tap the half-days you’re usually free. Your teammates see where everyone overlaps on each project’s “Best times to meet”.') }}</p>
-
-  <div class="av-tz">
-    <label for="tz">{{ _('Your timezone (optional)') }}</label>
-    <input type="text" id="tz" value="{{ tz }}" placeholder="Europe/Sarajevo" maxlength="64">
-  </div>
-
-  <div style="overflow-x:auto;">
-    <table class="av-grid">
-      <thead>
-        <tr><th></th>{% for d in weekdays %}<th>{{ _(d) }}</th>{% endfor %}</tr>
-      </thead>
-      <tbody>
-        {% for bi in range(blocks|length) %}
-        <tr>
-          <td class="av-rowlabel">{{ _(blocks[bi]) }}</td>
-          {% for di in range(weekdays|length) %}
-            <td class="av-cell{% if grid[di][bi] %} on{% endif %}"
-                data-d="{{ di }}" data-b="{{ bi }}" role="button" aria-pressed="{{ 'true' if grid[di][bi] else 'false' }}"></td>
+<div class="av-layout fx-up">
+  <div class="av-wrap">
+    <div style="overflow-x:auto;">
+      <table class="av-grid">
+        <thead>
+          <tr><th></th>{% for d in weekdays %}<th>{{ _(d) }}</th>{% endfor %}</tr>
+        </thead>
+        <tbody>
+          {% for bi in range(blocks|length) %}
+          <tr>
+            <td class="av-rowlabel">{{ _(blocks[bi]) }}</td>
+            {% for di in range(weekdays|length) %}
+              <td class="av-cell{% if grid[di][bi] %} on{% endif %}"
+                  data-d="{{ di }}" data-b="{{ bi }}" role="button" aria-pressed="{{ 'true' if grid[di][bi] else 'false' }}"></td>
+            {% endfor %}
+          </tr>
           {% endfor %}
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="av-quick">
+      <button type="button" id="av-all">{{ _('Select all') }}</button>
+      <button type="button" id="av-evenings">{{ _('Weekday evenings') }}</button>
+      <button type="button" id="av-weekends">{{ _('Weekends') }}</button>
+      <button type="button" id="av-clear">{{ _('Clear') }}</button>
+    </div>
+
+    <div class="av-tz">
+      <label for="tz">{{ _('Your timezone (optional)') }}</label>
+      <input type="text" id="tz" value="{{ tz }}" placeholder="Europe/Sarajevo" maxlength="64">
+      <div class="hint">{{ _('Shown next to your grid so teammates in other timezones read your slots correctly.') }}</div>
+    </div>
+
+    <div class="av-actions">
+      <button type="button" class="btn-gold" id="av-save">{{ _('Save availability') }}</button>
+      <span class="av-count" id="av-count"></span>
+      <span class="av-status" id="av-status"></span>
+    </div>
   </div>
 
-  <div class="av-actions">
-    <button type="button" class="btn-gold" id="av-save">{{ _('Save availability') }}</button>
-    <span class="av-status" id="av-status"></span>
+  <div class="av-side">
+    <div class="av-explain">
+      <h3>{{ _('What is this?') }}</h3>
+      <p>{{ _('This is your weekly meeting schedule. Tap every half-day block you are') }} <span class="hl">{{ _('usually free') }}</span> {{ _('to meet — green means available.') }}</p>
+      <p>{{ _('On every project you join, ProjectBuddy compares all teammates’ grids and highlights the') }} <span class="hl">{{ _('“Best times to meet”') }}</span> {{ _('— the slots where the whole team overlaps. No more back-and-forth scheduling messages.') }}</p>
+      <p>{{ _('You can update it any time; changes apply to all your teams instantly.') }}</p>
+    </div>
+
+    <div class="av-legend">
+      <div class="av-legend-title">{{ _('Time blocks') }}</div>
+      <div class="av-legend-row"><span class="av-legend-ic">🌅</span><span class="av-legend-name">{{ _('Morning') }}</span><span class="av-legend-time">~ 08:00 – 12:00</span></div>
+      <div class="av-legend-row"><span class="av-legend-ic">☀️</span><span class="av-legend-name">{{ _('Afternoon') }}</span><span class="av-legend-time">~ 12:00 – 17:00</span></div>
+      <div class="av-legend-row"><span class="av-legend-ic">🌙</span><span class="av-legend-name">{{ _('Evening') }}</span><span class="av-legend-time">~ 17:00 – 22:00</span></div>
+    </div>
   </div>
 </div>
 {% endblock %}
@@ -64,23 +113,55 @@
 {% block extra_script %}
 <script nonce="{{ csp_nonce }}">
 (function(){
-  document.querySelectorAll('.av-cell').forEach(function(cell){
+  var cells = Array.prototype.slice.call(document.querySelectorAll('.av-cell'));
+
+  function setCell(cell, on){
+    cell.classList.toggle('on', on);
+    cell.setAttribute('aria-pressed', on ? 'true' : 'false');
+  }
+  function updateCount(){
+    var n = document.querySelectorAll('.av-cell.on').length;
+    document.getElementById('av-count').textContent =
+      n ? n + ' / ' + cells.length + ' {{ _("slots marked free") }}' : '';
+  }
+
+  cells.forEach(function(cell){
     cell.addEventListener('click', function(){
-      var on = cell.classList.toggle('on');
-      cell.setAttribute('aria-pressed', on ? 'true' : 'false');
+      setCell(cell, !cell.classList.contains('on'));
+      updateCount();
     });
   });
 
+  /* Quick presets */
+  function preset(fn){
+    cells.forEach(function(c){
+      fn(parseInt(c.dataset.d,10), parseInt(c.dataset.b,10), c);
+    });
+    updateCount();
+  }
+  document.getElementById('av-all').addEventListener('click', function(){
+    preset(function(d,b,c){ setCell(c, true); });
+  });
+  document.getElementById('av-clear').addEventListener('click', function(){
+    preset(function(d,b,c){ setCell(c, false); });
+  });
+  document.getElementById('av-evenings').addEventListener('click', function(){
+    preset(function(d,b,c){ if(d <= 4 && b === 2) setCell(c, true); });
+  });
+  document.getElementById('av-weekends').addEventListener('click', function(){
+    preset(function(d,b,c){ if(d >= 5) setCell(c, true); });
+  });
+
   document.getElementById('av-save').addEventListener('click', async function(){
-    var cells = [];
+    var picked = [];
     document.querySelectorAll('.av-cell.on').forEach(function(c){
-      cells.push([parseInt(c.dataset.d,10), parseInt(c.dataset.b,10)]);
+      picked.push([parseInt(c.dataset.d,10), parseInt(c.dataset.b,10)]);
     });
     var tz = document.getElementById('tz').value.trim();
     try {
       var r = await fetch('/availability', {
         method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({cells: cells, timezone: tz})
+        body: JSON.stringify({cells: picked, timezone: tz})
       });
       var data = await r.json();
       if (!r.ok){ window.showToast(data.error || 'Could not save', 'error'); return; }
@@ -88,6 +169,8 @@
       window.showToast('{{ _("Availability saved") }}', 'success');
     } catch(e){ window.showToast('Network error', 'error'); }
   });
+
+  updateCount();
 })();
 </script>
 {% endblock %}
