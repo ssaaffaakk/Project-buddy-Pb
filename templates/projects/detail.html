@@ -246,6 +246,19 @@
         {% else %}
           <div class="btn-action" style="background:var(--accent-dim);color:var(--accent);cursor:default;">✓ {{ _('Completed') }}</div>
         {% endif %}
+      {% else %}
+        {# Apply / withdraw for non-owners #}
+        {% if not is_member %}
+          {% if has_pending %}
+            <form method="POST" action="{{ url_for('main.withdraw_application', project_id=project.id) }}" style="margin:0;">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" class="btn-action btn-secondary">{{ _('Withdraw application') }}</button>
+            </form>
+            <div style="text-align:center;font-family:'DM Mono',monospace;font-size:0.6rem;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;">{{ _('Application pending') }}</div>
+          {% elif project.status == 'open' and not has_applied %}
+            <a href="{{ url_for('main.apply_to_project', project_id=project.id) }}" class="btn-action btn-complete" style="text-decoration:none;text-align:center;">{{ _('Apply to Join') }}</a>
+          {% endif %}
+        {% endif %}
       {% endif %}
 
       {# Save / bookmark toggle — available to everyone #}

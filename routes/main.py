@@ -651,6 +651,29 @@ def apply_to_project(project_id):
     return render_template("projects/apply_confirm.html", project=project)
 
 
+# ── WITHDRAW A PENDING APPLICATION ────────────────────────────────────────────
+@main_bp.route("/projects/<int:project_id>/withdraw", methods=["POST"])
+@login_required
+def withdraw_application(project_id):
+    """Let an applicant retract a still-pending application. This frees up their
+    "max 3 active projects" slot and removes the applicant from the owner's
+    review list. Accepted applications aren't touched here — that's 'leave'."""
+    application = Application.query.filter_by(
+        project_id=project_id, applicant_id=current_user.id
+    ).first()
+    if application is None:
+        flash("You have no application to withdraw for this project.", "error")
+    elif application.status != "pending":
+        flash("This application has already been reviewed and can't be withdrawn.", "error")
+    else:
+        db.session.delete(application)
+        analytics.track("application_withdrawn", current_user.id, "project", project_id)
+        db.session.commit()
+        flash("Application withdrawn.", "success")
+    # Prefer returning to wherever the user clicked from.
+    return redirect(request.referrer or url_for("main.project_detail", project_id=project_id))
+
+
 # ── PROJECT DETAIL ────────────────────────────────────────────────────────────
 @main_bp.route("/project/<int:project_id>")
 @login_required
@@ -669,6 +692,7 @@ def project_detail(project_id):
     is_owner = False
     is_member = False
     has_applied = False
+    has_pending = False
     is_saved = False
     if current_user.is_authenticated:
         from models import SavedProject
@@ -677,9 +701,11 @@ def project_detail(project_id):
             m.user_id == current_user.id and not m.removed
             for m in project.members
         )
-        has_applied = Application.query.filter_by(
+        my_application = Application.query.filter_by(
             project_id=project_id, applicant_id=current_user.id
-        ).first() is not None
+        ).first()
+        has_applied = my_application is not None
+        has_pending = bool(my_application and my_application.status == "pending")
         is_saved = SavedProject.query.filter_by(
             user_id=current_user.id, project_id=project_id
         ).first() is not None
@@ -711,6 +737,7 @@ def project_detail(project_id):
         is_owner=is_owner,
         is_member=is_member,
         has_applied=has_applied,
+        has_pending=has_pending,
         is_saved=is_saved,
         vote_score=vote_score,
         user_vote=user_vote,
