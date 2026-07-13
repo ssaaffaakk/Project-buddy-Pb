@@ -54,6 +54,14 @@
 .task-due input[type=date]{width:auto;min-height:0;padding:2px 4px;font-size:0.62rem;font-family:'DM Mono',monospace;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:5px;color:var(--muted);}
 .task-card.overdue{border-color:rgba(224,82,82,0.5);box-shadow:0 0 0 1px rgba(224,82,82,0.15);}
 .task-card.overdue .task-due input[type=date]{color:#e07060;border-color:rgba(224,82,82,0.4);}
+/* team availability heatmap */
+.avail-heat{border-collapse:separate;border-spacing:4px;font-family:'DM Mono',monospace;}
+.avail-heat th{font-size:0.6rem;letter-spacing:0.05em;text-transform:uppercase;color:var(--muted);font-weight:500;padding:2px 6px;}
+.avail-row-label{font-size:0.62rem;color:var(--soft);text-align:right;padding-right:8px;white-space:nowrap;}
+.avail-cell{width:52px;height:34px;text-align:center;border-radius:6px;background:rgba(255,255,255,0.02);border:1px solid var(--border);color:var(--muted);font-size:0.72rem;}
+.avail-cell.avail-some{background:rgba(124,155,255,0.12);color:var(--accent);border-color:rgba(124,155,255,0.25);}
+.avail-cell.avail-full{background:rgba(90,138,106,0.25);color:#7ab890;border-color:rgba(90,138,106,0.5);font-weight:600;}
+.avail-key{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:middle;margin-right:2px;}
 
 .back-link{display:inline-flex;align-items:center;gap:6px;color:var(--accent);text-decoration:none;
   font-size:0.85rem;font-weight:500;margin-bottom:24px;transition:all 0.2s;}
@@ -146,7 +154,13 @@
         </div>
         <div class="info-section">
           <div class="info-label">{{ _('Deadline') }}</div>
-          <div class="info-value">{{ project.deadline.strftime('%B %d, %Y') if project.deadline else 'N/A' }}</div>
+          <div class="info-value">
+            {{ project.deadline.strftime('%B %d, %Y') if project.deadline else 'N/A' }}
+            {% if project.deadline %}
+              &nbsp;·&nbsp;<a href="{{ url_for('main.project_deadline_ics', project_id=project.id) }}"
+                 style="font-family:'DM Mono',monospace;font-size:0.66rem;color:var(--accent);text-decoration:none;">{{ _('Add to calendar') }}</a>
+            {% endif %}
+          </div>
         </div>
         <div class="info-section">
           <div class="info-label">{{ _('Topic Tags') }}</div>
@@ -297,6 +311,40 @@
         {% endif %}
       </div>
       {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  {% if (is_owner or is_member) and avail_people %}
+  <div class="board-wrap" style="margin-top:20px;">
+    <div class="board-header">
+      <h2>{{ _('Best times to meet') }}</h2>
+      <span class="board-hint">{{ _('Based on') }} {{ avail_people }} {{ _('members’ weekly availability') }}</span>
+    </div>
+    <div style="overflow-x:auto;">
+      <table class="avail-heat">
+        <thead>
+          <tr><th></th>{% for d in weekdays %}<th>{{ _(d) }}</th>{% endfor %}</tr>
+        </thead>
+        <tbody>
+          {% for bi in range(blocks|length) %}
+          <tr>
+            <td class="avail-row-label">{{ _(blocks[bi]) }}</td>
+            {% for di in range(weekdays|length) %}
+              {% set c = avail_grid[di][bi] %}
+              {% set full = (c == avail_people and c > 0) %}
+              <td class="avail-cell{% if full %} avail-full{% elif c > 0 %} avail-some{% endif %}"
+                  title="{{ c }}/{{ avail_people }} {{ _('free') }}">{{ c if c else '' }}</td>
+            {% endfor %}
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div style="margin-top:12px;font-family:'DM Mono',monospace;font-size:0.62rem;color:var(--muted);letter-spacing:0.05em;">
+      <span class="avail-key avail-full"></span> {{ _('everyone free') }}
+      &nbsp;&nbsp;<span class="avail-key avail-some"></span> {{ _('some free') }}
+      &nbsp;&nbsp;·&nbsp; <a href="{{ url_for('main.availability') }}" style="color:var(--accent);text-decoration:none;">{{ _('Set my availability') }}</a>
     </div>
   </div>
   {% endif %}

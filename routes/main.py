@@ -728,6 +728,10 @@ def project_detail(project_id):
         if m.user:
             assignable.append({"id": m.user.id, "name": m.user.get_full_name()})
 
+    # Team meeting-time overlap: how many of the owner+members are free per slot.
+    team_ids = [project.owner_id] + [m.user_id for m in team_members]
+    avail_grid, avail_people = _team_availability(team_ids)
+
     return render_template(
         "projects/detail.html",
         project=project,
@@ -741,6 +745,10 @@ def project_detail(project_id):
         is_saved=is_saved,
         vote_score=vote_score,
         user_vote=user_vote,
+        avail_grid=avail_grid,
+        avail_people=avail_people,
+        weekdays=WEEKDAYS,
+        blocks=BLOCKS,
     )
 
 # ── PROJECT VOTE ──────────────────────────────────────────────────────────────
@@ -1024,6 +1032,149 @@ def saved_projects():
             .all())
     projects = [r.project for r in rows if r.project is not None]
     return render_template("projects/saved.html", projects=projects, user=current_user)
+
+
+# ── WEEKLY AVAILABILITY + TEAM MEETING-TIME OVERLAP ───────────────────────────
+WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+BLOCKS = ["Morning", "Afternoon", "Evening"]  # index 0,1,2
+
+
+def _my_availability_set(user_id):
+    """Set of (weekday, block) cells the user marked free."""
+    from models import UserAvailability
+    return {(a.weekday, a.block)
+            for a in UserAvailability.query.filter_by(user_id=user_id).all()}
+
+
+@main_bp.route("/availability")
+@login_required
+def availability():
+    """Edit my weekly availability grid (which half-days I'm free to meet)."""
+    cells = _my_availability_set(current_user.id)
+    grid = [[(d, b) in cells for b in range(len(BLOCKS))] for d in range(len(WEEKDAYS))]
+    return render_template(
+        "user/availability.html",
+        grid=grid, weekdays=WEEKDAYS, blocks=BLOCKS,
+        user=current_user, tz=current_user.timezone or "",
+    )
+
+
+@main_bp.route("/availability", methods=["POST"])
+@login_required
+def save_availability():
+    """Replace my availability with the posted cells. Body: {cells: [[d,b],...],
+    timezone: "Europe/Sarajevo"}."""
+    from models import UserAvailability
+    data = request.get_json(silent=True) or {}
+    raw = data.get("cells", [])
+    if not isinstance(raw, list) or len(raw) > 21:
+        return jsonify({"error": "Invalid payload."}), 400
+
+    valid = set()
+    for pair in raw:
+        try:
+            d, b = int(pair[0]), int(pair[1])
+        except (TypeError, ValueError, IndexError):
+            return jsonify({"error": "Invalid cell."}), 400
+        if 0 <= d < len(WEEKDAYS) and 0 <= b < len(BLOCKS):
+            valid.add((d, b))
+
+    tz = (data.get("timezone") or "").strip()[:64]
+    current_user.timezone = tz or None
+
+    UserAvailability.query.filter_by(user_id=current_user.id).delete()
+    for d, b in valid:
+        db.session.add(UserAvailability(user_id=current_user.id, weekday=d, block=b))
+    db.session.commit()
+    return jsonify({"ok": True, "count": len(valid)})
+
+
+def _team_availability(user_ids):
+    """Overlap grid for a set of users: for each (weekday, block) cell, how many
+    of them are free. Returns (grid, n_people) where grid[d][b] = count."""
+    from models import UserAvailability
+    user_ids = list(user_ids)
+    grid = [[0] * len(BLOCKS) for _ in range(len(WEEKDAYS))]
+    if not user_ids:
+        return grid, 0
+    rows = UserAvailability.query.filter(UserAvailability.user_id.in_(user_ids)).all()
+    for a in rows:
+        if 0 <= a.weekday < len(WEEKDAYS) and 0 <= a.block < len(BLOCKS):
+            grid[a.weekday][a.block] += 1
+    return grid, len(user_ids)
+
+
+# ── CALENDAR EXPORT (.ics) ────────────────────────────────────────────────────
+def _ics_escape(text):
+    return (str(text or "")
+            .replace("\\", "\\\\").replace(";", "\\;")
+            .replace(",", "\\,").replace("\n", "\\n"))
+
+
+def _ics_event(uid, dt, summary, description=""):
+    """One all-day VEVENT on the date of `dt`."""
+    day = dt.strftime("%Y%m%d")
+    stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    return "\r\n".join([
+        "BEGIN:VEVENT",
+        f"UID:{uid}",
+        f"DTSTAMP:{stamp}",
+        f"DTSTART;VALUE=DATE:{day}",
+        f"SUMMARY:{_ics_escape(summary)}",
+        f"DESCRIPTION:{_ics_escape(description)}",
+        "END:VEVENT",
+    ])
+
+
+def _ics_response(events, filename):
+    from flask import Response
+    body = "\r\n".join([
+        "BEGIN:VCALENDAR",
+        "VERSION:2.0",
+        "PRODID:-//ProjectBuddy//Deadlines//EN",
+        "CALSCALE:GREGORIAN",
+        *events,
+        "END:VCALENDAR",
+    ]) + "\r\n"
+    return Response(body, mimetype="text/calendar",
+                    headers={"Content-Disposition": f'attachment; filename="{filename}"'})
+
+
+@main_bp.route("/project/<int:project_id>/deadline.ics")
+@login_required
+def project_deadline_ics(project_id):
+    """Download a project's deadline as a calendar event."""
+    project = Project.query.get_or_404(project_id)
+    if not project.deadline:
+        flash("This project has no deadline set.", "error")
+        return redirect(url_for("main.project_detail", project_id=project_id))
+    ev = _ics_event(f"project-{project.id}@projectbuddy", project.deadline,
+                    f"Deadline: {project.title}",
+                    f"ProjectBuddy project deadline for “{project.title}”.")
+    return _ics_response([ev], f"project-{project.id}-deadline.ics")
+
+
+@main_bp.route("/calendar.ics")
+@login_required
+def my_calendar_ics():
+    """Download every deadline across the projects I own or belong to."""
+    owned = Project.query.filter(Project.owner_id == current_user.id,
+                                 Project.deadline.isnot(None)).all()
+    member_projects = (Project.query
+                       .join(ProjectMember, ProjectMember.project_id == Project.id)
+                       .filter(ProjectMember.user_id == current_user.id,
+                               ProjectMember.removed == False,  # noqa: E712
+                               Project.deadline.isnot(None))
+                       .all())
+    seen, events = set(), []
+    for p in [*owned, *member_projects]:
+        if p.id in seen:
+            continue
+        seen.add(p.id)
+        events.append(_ics_event(f"project-{p.id}@projectbuddy", p.deadline,
+                                 f"Deadline: {p.title}",
+                                 f"ProjectBuddy project deadline for “{p.title}”."))
+    return _ics_response(events, "projectbuddy-deadlines.ics")
 
 
 # ── MY PROFILE ────────────────────────────────────────────────────────────────

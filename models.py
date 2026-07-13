@@ -25,6 +25,10 @@ class User(UserMixin, db.Model):
     avatar_url: Mapped[Optional[str]] = mapped_column(String(500))
     # Profile cover image — an uploaded URL, or a "preset:<key>" gradient token
     banner_url: Mapped[Optional[str]] = mapped_column(String(500))
+    # IANA timezone name (e.g. "Europe/Sarajevo"). Informational: shown next to
+    # the weekly availability grid so teammates read each other's free slots in
+    # the right frame. Optional — blank means "unspecified / campus-local".
+    timezone: Mapped[Optional[str]] = mapped_column(String(64))
     # False until the user finishes (or skips) the first-run profile setup
     onboarded: Mapped[bool] = mapped_column(Boolean, default=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
@@ -656,3 +660,20 @@ class SavedProject(db.Model):
     project = db.relationship("Project", lazy=True)
 
     __table_args__ = (db.UniqueConstraint("user_id", "project_id", name="uq_saved_project"),)
+
+
+# ── WEEKLY AVAILABILITY (for team meeting-time overlap) ──────────────────────
+
+class UserAvailability(db.Model):
+    """One row per free half-day block a user marks on their weekly grid.
+    weekday: 0=Mon … 6=Sun. block: 0=Morning, 1=Afternoon, 2=Evening.
+    Absence of a row means "not available". Compared across a team to surface
+    the slots where everyone is free."""
+    __tablename__ = "user_availability"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(db.ForeignKey("users.id"), index=True)
+    weekday: Mapped[int] = mapped_column(Integer)   # 0..6
+    block: Mapped[int] = mapped_column(Integer)     # 0..2
+
+    __table_args__ = (db.UniqueConstraint("user_id", "weekday", "block", name="uq_availability_cell"),)

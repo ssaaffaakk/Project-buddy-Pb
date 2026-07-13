@@ -613,6 +613,8 @@ def _register_context_processors(app: Flask) -> None:
             active = "my_projects"
         elif path == "/saved":
             active = "saved"
+        elif path == "/availability":
+            active = "availability"
         elif path in ("/profile", "/edit-profile") or path.startswith("/user/"):
             active = "profile"
         elif path.startswith("/chat"):
