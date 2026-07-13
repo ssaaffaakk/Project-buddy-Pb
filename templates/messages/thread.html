@@ -10,15 +10,86 @@
 .dm-head-name{font-family:'DM Serif Display',serif;font-style:italic;font-size:1.2rem;}
 .dm-head a{color:var(--muted);text-decoration:none;font-size:0.78rem;}
 .dm-head a:hover{color:var(--accent);}
+.dm-head-actions{display:flex;align-items:center;gap:8px;flex-shrink:0;}
+.call-btn{display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:10px;background:var(--card);border:1px solid var(--border);color:var(--soft);cursor:pointer;transition:all .18s;padding:0;}
+.call-btn svg{width:17px;height:17px;}
+.call-btn:hover{background:var(--accent-dim);border-color:rgba(124,155,255,0.4);color:var(--accent);transform:translateY(-1px);}
+
 .dm-stream{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:8px;padding:4px 4px 12px;}
 .dm-msg{max-width:72%;padding:9px 13px;border-radius:14px;font-size:0.9rem;line-height:1.5;word-wrap:break-word;white-space:pre-wrap;}
 .dm-msg.them{align-self:flex-start;background:var(--card);border:1px solid var(--border);border-bottom-left-radius:4px;}
 .dm-msg.me{align-self:flex-end;background:linear-gradient(110deg,var(--accent),var(--violet));color:#fff;border-bottom-right-radius:4px;}
 .dm-msg .t{display:block;font-family:'DM Mono',monospace;font-size:0.6rem;opacity:0.6;margin-top:4px;}
-.dm-compose{display:flex;gap:10px;padding-top:14px;border-top:1px solid var(--border);}
-.dm-compose textarea{min-height:44px;max-height:140px;resize:none;flex:1;}
-.dm-compose button{flex-shrink:0;align-self:flex-end;}
 .dm-empty{color:var(--muted);font-style:italic;font-size:0.85rem;text-align:center;margin:auto;}
+
+/* Attachments in the stream */
+.dm-att-img{display:block;max-width:280px;max-height:240px;border-radius:10px;margin-top:6px;cursor:zoom-in;object-fit:cover;}
+.dm-att-file{display:flex;align-items:center;gap:10px;margin-top:6px;padding:9px 12px;border-radius:10px;background:rgba(0,0,0,0.16);text-decoration:none;color:inherit;border:1px solid rgba(255,255,255,0.14);transition:all .15s;max-width:280px;}
+.dm-msg.them .dm-att-file{background:var(--card);border-color:var(--border);}
+.dm-att-file:hover{filter:brightness(1.1);}
+.dm-att-file svg{width:18px;height:18px;flex-shrink:0;opacity:0.85;}
+.dm-att-name{font-size:0.78rem;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;}
+.dm-att-size{font-family:'DM Mono',monospace;font-size:0.62rem;opacity:0.7;flex-shrink:0;}
+
+/* Shared community post card */
+.dm-shared{display:block;margin-top:6px;border-radius:12px;overflow:hidden;text-decoration:none;color:inherit;border:1px solid rgba(255,255,255,0.18);background:rgba(0,0,0,0.18);max-width:300px;transition:all .15s;}
+.dm-msg.them .dm-shared{background:var(--card);border-color:var(--border);}
+.dm-shared:hover{filter:brightness(1.08);transform:translateY(-1px);}
+.dm-shared-tag{display:flex;align-items:center;gap:6px;padding:7px 12px 0;font-family:'DM Mono',monospace;font-size:0.58rem;letter-spacing:0.08em;text-transform:uppercase;opacity:0.7;}
+.dm-shared-tag svg{width:11px;height:11px;}
+.dm-shared-media{width:100%;max-height:150px;object-fit:cover;display:block;margin-top:7px;}
+.dm-shared-body{padding:8px 12px 11px;}
+.dm-shared-title{font-family:'DM Serif Display',serif;font-style:italic;font-size:0.9rem;line-height:1.3;margin-bottom:3px;}
+.dm-shared-excerpt{font-size:0.76rem;line-height:1.45;opacity:0.85;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.dm-shared-author{font-family:'DM Mono',monospace;font-size:0.62rem;opacity:0.65;margin-top:6px;}
+.dm-shared.gone{opacity:0.6;cursor:default;pointer-events:none;}
+
+/* Composer */
+.dm-compose{display:flex;gap:10px;padding-top:14px;border-top:1px solid var(--border);align-items:flex-end;}
+.dm-compose textarea{min-height:44px;max-height:140px;resize:none;flex:1;}
+.attach-btn{flex-shrink:0;width:44px;height:44px;border-radius:var(--r);background:var(--card);border:1px solid var(--border);color:var(--muted);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:all .18s;padding:0;}
+.attach-btn svg{width:18px;height:18px;}
+.attach-btn:hover{color:var(--accent);border-color:rgba(124,155,255,0.4);background:var(--accent-dim);}
+.pending-file{display:none;align-items:center;gap:10px;margin-top:10px;padding:8px 12px;border-radius:10px;background:var(--accent-dim);border:1px solid rgba(124,155,255,0.25);font-size:0.78rem;color:var(--soft);}
+.pending-file.show{display:flex;}
+.pending-file .x{margin-left:auto;background:none;border:none;color:var(--muted);cursor:pointer;font-size:0.9rem;padding:0 4px;}
+.pending-file .x:hover{color:#e07060;}
+
+/* Incoming call banner */
+.ring-banner{position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:9998;display:none;align-items:center;gap:14px;padding:14px 18px;border-radius:16px;background:var(--bg2);border:1px solid rgba(124,155,255,0.35);box-shadow:0 18px 60px rgba(0,0,0,0.5),0 0 40px var(--accent-glow);animation:ringPulse 1.6s ease-in-out infinite;}
+.ring-banner.show{display:flex;}
+@keyframes ringPulse{0%,100%{box-shadow:0 18px 60px rgba(0,0,0,0.5),0 0 24px var(--accent-glow);}50%{box-shadow:0 18px 60px rgba(0,0,0,0.5),0 0 52px var(--accent-glow);}}
+.ring-txt{font-size:0.86rem;color:var(--text);}
+.ring-txt strong{font-weight:600;}
+.ring-actions{display:flex;gap:8px;}
+.ring-accept,.ring-decline{border:none;border-radius:99px;width:40px;height:40px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;color:#fff;transition:all .18s;padding:0;}
+.ring-accept{background:linear-gradient(135deg,#3ad17a,#2a9d5c);}
+.ring-decline{background:linear-gradient(135deg,#e05252,#c0392b);}
+.ring-accept:hover,.ring-decline:hover{transform:translateY(-1px);filter:brightness(1.1);}
+.ring-accept svg,.ring-decline svg{width:17px;height:17px;}
+
+/* Call overlay */
+.call-overlay{position:fixed;inset:0;z-index:9990;display:none;flex-direction:column;background:rgba(4,7,16,0.92);backdrop-filter:blur(14px);}
+.call-overlay.show{display:flex;}
+.co-head{display:flex;align-items:center;gap:10px;padding:16px 22px;color:#eef1ff;}
+.co-name{font-family:'DM Serif Display',serif;font-style:italic;font-size:1.15rem;}
+.co-status{font-family:'DM Mono',monospace;font-size:0.66rem;letter-spacing:0.08em;text-transform:uppercase;color:#9aa3cc;margin-left:10px;}
+.co-stage{flex:1;position:relative;display:flex;align-items:center;justify-content:center;min-height:0;padding:0 20px;}
+#remoteVideo{max-width:100%;max-height:100%;border-radius:16px;background:#05070f;display:none;}
+.co-stage.has-remote-video #remoteVideo{display:block;}
+.co-avatar{width:110px;height:110px;border-radius:50%;background:linear-gradient(140deg,var(--accent),#4A5BA8);color:#fff;display:flex;align-items:center;justify-content:center;font-family:'DM Serif Display',serif;font-size:2.6rem;overflow:hidden;}
+.co-avatar img{width:100%;height:100%;object-fit:cover;}
+.co-stage.has-remote-video .co-avatar{display:none;}
+#localVideo{position:absolute;right:26px;bottom:20px;width:180px;max-width:28vw;aspect-ratio:16/10;object-fit:cover;border-radius:12px;border:1px solid rgba(255,255,255,0.25);background:#05070f;box-shadow:0 10px 30px rgba(0,0,0,0.5);display:none;transform:scaleX(-1);}
+#localVideo.show{display:block;}
+.co-bar{display:flex;justify-content:center;gap:12px;padding:18px 0 26px;}
+.co-btn{width:52px;height:52px;border-radius:50%;border:1px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.08);color:#eef1ff;display:grid;place-items:center;cursor:pointer;transition:all .18s;padding:0;}
+.co-btn svg{width:20px;height:20px;}
+.co-btn:hover{background:rgba(255,255,255,0.16);transform:translateY(-1px);}
+.co-btn.off{background:linear-gradient(135deg,#e05252,#c0392b);border-color:transparent;}
+.co-btn.hang{background:linear-gradient(135deg,#e05252,#c0392b);border-color:transparent;width:62px;border-radius:99px;}
+.co-btn.hang:hover{filter:brightness(1.12);}
+.co-btn[hidden]{display:none;}
 </style>
 {% endblock %}
 
@@ -28,11 +99,19 @@
     <div class="dm-head-av">
       {% if other.avatar_url %}<img src="{{ other.avatar_url }}" alt="">{% else %}{{ (other.first_name[:1] + other.last_name[:1])|upper }}{% endif %}
     </div>
-    <div style="flex:1;">
+    <div style="flex:1;min-width:0;">
       <div class="dm-head-name">{{ other.get_full_name() }}</div>
       <a href="{{ url_for('main.user_profile', user_id=other.id) }}">{{ _('View profile') }}</a>
     </div>
-    <a href="{{ url_for('messages.inbox') }}" class="btn-ghost">{{ _('All chats') }}</a>
+    <div class="dm-head-actions">
+      <button class="call-btn" id="btnVoiceCall" title="{{ _('Voice call') }}" aria-label="{{ _('Voice call') }}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+      </button>
+      <button class="call-btn" id="btnVideoCall" title="{{ _('Video call') }}" aria-label="{{ _('Video call') }}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 8.5 21 5v14l-6-3.5"/><rect x="3" y="6" width="12" height="12" rx="2"/></svg>
+      </button>
+      <a href="{{ url_for('messages.inbox') }}" class="btn-ghost">{{ _('All chats') }}</a>
+    </div>
   </div>
 
   <div class="dm-stream" id="dmStream">
@@ -41,15 +120,94 @@
     {% endif %}
     {% for m in messages %}
       <div class="dm-msg {{ 'me' if m.sender_id == user.id else 'them' }}" data-id="{{ m.id }}">
-        {{ m.body }}<span class="t">{{ m.created_at.strftime('%H:%M') }}</span>
+        {{- m.body -}}
+        {%- if m.attachment -%}
+          {%- set ext = m.attachment.filename.rsplit('.', 1)[-1].lower() -%}
+          {%- set att_url = url_for('messages.download_attachment', file_id=m.attachment.id) -%}
+          {%- if (m.attachment.mime_type or '').startswith('image/') or ext in ['png','jpg','jpeg','gif','webp'] -%}
+            <a href="{{ att_url }}" target="_blank" rel="noopener"><img class="dm-att-img" src="{{ att_url }}" alt="{{ m.attachment.filename }}"></a>
+          {%- else -%}
+            <a class="dm-att-file" href="{{ att_url }}">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              <span class="dm-att-name">{{ m.attachment.filename }}</span>
+              <span class="dm-att-size">{% if m.attachment.file_size > 1048576 %}{{ (m.attachment.file_size / 1048576) | round(1) }} MB{% else %}{{ [1, (m.attachment.file_size / 1024) | round | int] | max }} KB{% endif %}</span>
+            </a>
+          {%- endif -%}
+        {%- endif -%}
+        {%- if m.shared_post_id -%}
+          {%- set sp = m.shared_post -%}
+          {%- if sp -%}
+            <a class="dm-shared" href="{{ url_for('community.feed') }}#post-{{ sp.id }}">
+              <span class="dm-shared-tag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.6" y1="13.5" x2="15.4" y2="17.5"/><line x1="15.4" y1="6.5" x2="8.6" y2="10.5"/></svg>{{ _('Shared post') }}</span>
+              {%- if sp.media_type == 'image' and sp.media_url -%}<img class="dm-shared-media" src="{{ sp.media_url }}" alt="">{%- endif -%}
+              <span class="dm-shared-body">
+                {%- if sp.title -%}<span class="dm-shared-title">{{ sp.title }}</span>{%- endif -%}
+                <span class="dm-shared-excerpt">{{ sp.body }}</span>
+                <span class="dm-shared-author">{{ _('by') }} {{ sp.author.get_full_name() if sp.author else _('Unknown') }}</span>
+              </span>
+            </a>
+          {%- else -%}
+            <span class="dm-shared gone"><span class="dm-shared-body"><span class="dm-shared-excerpt">{{ _('This post is no longer available.') }}</span></span></span>
+          {%- endif -%}
+        {%- endif -%}
+        <span class="t">{{ m.created_at.strftime('%H:%M') }}</span>
       </div>
     {% endfor %}
   </div>
 
+  <div class="pending-file" id="pendingFile">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+    <span id="pendingName"></span>
+    <button type="button" class="x" id="pendingClear" title="{{ _('Remove file') }}">✕</button>
+  </div>
+
   <form class="dm-compose" id="dmForm" autocomplete="off">
+    <button type="button" class="attach-btn" id="attachBtn" title="{{ _('Attach a file') }}" aria-label="{{ _('Attach a file') }}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+    </button>
+    <input type="file" id="fileInput" hidden>
     <textarea id="dmInput" placeholder="{{ _('Write a message…') }}" maxlength="4000" rows="1"></textarea>
     <button type="submit" class="btn-gold btn-send">{{ _('Send') }}</button>
   </form>
+</div>
+
+<!-- Incoming call banner -->
+<div class="ring-banner" id="ringBanner" role="alertdialog" aria-live="assertive">
+  <div class="ring-txt"><strong>{{ other.get_full_name() }}</strong> <span id="ringKind">{{ _('is calling…') }}</span></div>
+  <div class="ring-actions">
+    <button class="ring-accept" id="ringAccept" title="{{ _('Accept') }}" aria-label="{{ _('Accept call') }}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+    </button>
+    <button class="ring-decline" id="ringDecline" title="{{ _('Decline') }}" aria-label="{{ _('Decline call') }}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+</div>
+
+<!-- Active call overlay -->
+<div class="call-overlay" id="callOverlay">
+  <div class="co-head">
+    <span class="co-name">{{ other.get_full_name() }}</span>
+    <span class="co-status" id="coStatus">{{ _('Calling…') }}</span>
+  </div>
+  <div class="co-stage" id="coStage">
+    <div class="co-avatar">
+      {% if other.avatar_url %}<img src="{{ other.avatar_url }}" alt="">{% else %}{{ (other.first_name[:1] + other.last_name[:1])|upper }}{% endif %}
+    </div>
+    <video id="remoteVideo" autoplay playsinline></video>
+    <video id="localVideo" autoplay playsinline muted></video>
+  </div>
+  <div class="co-bar">
+    <button class="co-btn" id="coMute" title="{{ _('Mute') }}" aria-label="{{ _('Toggle microphone') }}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
+    </button>
+    <button class="co-btn" id="coCam" title="{{ _('Toggle camera') }}" aria-label="{{ _('Toggle camera') }}" hidden>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M15 8.5 21 5v14l-6-3.5"/><rect x="3" y="6" width="12" height="12" rx="2"/></svg>
+    </button>
+    <button class="co-btn hang" id="coHang" title="{{ _('End call') }}" aria-label="{{ _('End call') }}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M3 10.5c6-4.5 12-4.5 18 0v3l-4.5.6-.7-2.6c-2.7-1-6.9-1-9.6 0l-.7 2.6L1 13.5v-3Z" transform="rotate(135 12 12)"/></svg>
+    </button>
+  </div>
 </div>
 {% endblock %}
 
@@ -60,6 +218,7 @@
   var CONV_ID  = {{ conversation.id }};
   var OTHER_ID = {{ other.id }};
   var MY_ID    = {{ user.id }};
+  var ICE_CFG  = { iceServers: {{ ice_servers | safe }} };
   var stream = document.getElementById('dmStream');
   var input  = document.getElementById('dmInput');
   var form   = document.getElementById('dmForm');
@@ -71,6 +230,39 @@
   function scrollDown(){ stream.scrollTop = stream.scrollHeight; }
   scrollDown();
 
+  function fmtSize(bytes){
+    if (bytes > 1024*1024) return (bytes/1024/1024).toFixed(1) + ' MB';
+    return Math.max(1, Math.round(bytes/1024)) + ' KB';
+  }
+
+  function attachmentHtml(att){
+    if (!att) return '';
+    if (att.is_image){
+      return '<a href="'+window._esc(att.url)+'" target="_blank" rel="noopener">' +
+             '<img class="dm-att-img" src="'+window._esc(att.url)+'" alt=""></a>';
+    }
+    return '<a class="dm-att-file" href="'+window._esc(att.url)+'">' +
+           '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>' +
+           '<span class="dm-att-name">'+window._esc(att.filename)+'</span>' +
+           '<span class="dm-att-size">'+fmtSize(att.file_size)+'</span></a>';
+  }
+
+  var SHARE_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.6" y1="13.5" x2="15.4" y2="17.5"/><line x1="15.4" y1="6.5" x2="8.6" y2="10.5"/></svg>';
+  function sharedPostHtml(sp){
+    if (!sp) return '';
+    if (sp.deleted){
+      return '<span class="dm-shared gone"><span class="dm-shared-body">' +
+             '<span class="dm-shared-excerpt">{{ _("This post is no longer available.") }}</span></span></span>';
+    }
+    var media = sp.media_url ? '<img class="dm-shared-media" src="'+window._esc(sp.media_url)+'" alt="">' : '';
+    var title = sp.title ? '<span class="dm-shared-title">'+window._esc(sp.title)+'</span>' : '';
+    return '<a class="dm-shared" href="'+window._esc(sp.url)+'">' +
+           '<span class="dm-shared-tag">'+SHARE_ICON+'{{ _("Shared post") }}</span>' + media +
+           '<span class="dm-shared-body">'+title +
+           '<span class="dm-shared-excerpt">'+window._esc(sp.excerpt)+'</span>' +
+           '<span class="dm-shared-author">{{ _("by") }} '+window._esc(sp.author)+'</span></span></a>';
+  }
+
   function render(m){
     if (document.querySelector('.dm-msg[data-id="'+m.id+'"]')) return; // dedupe by id
     var empty = document.getElementById('dmEmpty');
@@ -78,7 +270,8 @@
     var div = document.createElement('div');
     div.className = 'dm-msg ' + (m.is_mine || m.sender_id === MY_ID ? 'me' : 'them');
     div.dataset.id = m.id;
-    div.innerHTML = window._esc(m.body) + '<span class="t">' + window._esc(m.time) + '</span>';
+    div.innerHTML = window._esc(m.body) + attachmentHtml(m.attachment) + sharedPostHtml(m.shared_post) +
+                    '<span class="t">' + window._esc(m.time) + '</span>';
     stream.appendChild(div);
     if (m.id > lastId) lastId = m.id;
     scrollDown();
@@ -98,20 +291,52 @@
   }
   setInterval(poll, 8000);
 
+  // ── File attach ─────────────────────────────────────────────────────────────
+  var fileInput   = document.getElementById('fileInput');
+  var pendingBox  = document.getElementById('pendingFile');
+  var pendingName = document.getElementById('pendingName');
+  var pendingFile = null;
+
+  document.getElementById('attachBtn').addEventListener('click', function(){ fileInput.click(); });
+  fileInput.addEventListener('change', function(){
+    var f = fileInput.files[0];
+    if (!f) return;
+    if (f.size > 25*1024*1024){ window.showToast('{{ _("File too large (max 25 MB).") }}', 'error'); fileInput.value=''; return; }
+    pendingFile = f;
+    pendingName.textContent = f.name + ' · ' + fmtSize(f.size);
+    pendingBox.classList.add('show');
+  });
+  document.getElementById('pendingClear').addEventListener('click', function(){
+    pendingFile = null; fileInput.value = ''; pendingBox.classList.remove('show');
+  });
+
   // ── Send ────────────────────────────────────────────────────────────────────
+  var sending = false;
   async function send(){
+    if (sending) return;
     var body = input.value.trim();
-    if (!body) return;
-    input.value = ''; input.style.height = 'auto';
+    if (!body && !pendingFile) return;
+    sending = true;
     try{
-      var r = await fetch('/messages/with/'+OTHER_ID+'/send', {
-        method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({body: body})
-      });
+      var r;
+      if (pendingFile){
+        var fd = new FormData();
+        fd.append('file', pendingFile);
+        fd.append('body', body);
+        r = await fetch('/messages/with/'+OTHER_ID+'/send', { method:'POST', body: fd });
+      } else {
+        r = await fetch('/messages/with/'+OTHER_ID+'/send', {
+          method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({body: body})
+        });
+      }
       var data = await r.json();
       if (!r.ok){ window.showToast(data.error || 'Could not send', 'error'); return; }
+      input.value = ''; input.style.height = 'auto';
+      pendingFile = null; fileInput.value = ''; pendingBox.classList.remove('show');
       render(data); // optimistic echo (socket echo is deduped by id)
     }catch(e){ window.showToast('Network error', 'error'); }
+    finally{ sending = false; }
   }
   form.addEventListener('submit', function(e){ e.preventDefault(); send(); });
   input.addEventListener('keydown', function(e){
@@ -121,6 +346,202 @@
     input.style.height = 'auto';
     input.style.height = Math.min(input.scrollHeight, 140) + 'px';
   });
+
+  // ══ 1:1 VOICE / VIDEO CALL (WebRTC) ═════════════════════════════════════════
+  var pc = null;            // RTCPeerConnection
+  var localStream = null;
+  var isCaller = false;
+  var inCall = false;       // overlay open (ringing or connected)
+  var withVideo = false;
+  var ringTimer = null;     // caller-side "no answer" timeout
+  var callTimer = null, callSecs = 0;
+  var pendingIce = [];      // candidates that arrive before remote description
+
+  var overlay   = document.getElementById('callOverlay');
+  var coStatus  = document.getElementById('coStatus');
+  var coStage   = document.getElementById('coStage');
+  var remoteVid = document.getElementById('remoteVideo');
+  var localVid  = document.getElementById('localVideo');
+  var banner    = document.getElementById('ringBanner');
+  var incoming  = null;     // {video:bool} while banner is showing
+
+  function setStatus(t){ coStatus.textContent = t; }
+
+  function startTimer(){
+    callSecs = 0;
+    callTimer = setInterval(function(){
+      callSecs++;
+      var m = Math.floor(callSecs/60), s = callSecs%60;
+      setStatus((m<10?'0':'')+m+':'+(s<10?'0':'')+s);
+    }, 1000);
+  }
+
+  async function getMedia(video){
+    var s = await navigator.mediaDevices.getUserMedia({audio:true, video: video ? {width:{ideal:960},height:{ideal:540}} : false});
+    localStream = s;
+    if (video){
+      localVid.srcObject = s;
+      localVid.classList.add('show');
+    }
+    document.getElementById('coCam').hidden = !video;
+    return s;
+  }
+
+  function buildPc(){
+    pc = new RTCPeerConnection(ICE_CFG);
+    localStream.getTracks().forEach(function(t){ pc.addTrack(t, localStream); });
+    pc.onicecandidate = function(e){
+      if (e.candidate) signal({kind:'ice', candidate:e.candidate});
+    };
+    pc.ontrack = function(e){
+      var ms = e.streams[0];
+      remoteVid.srcObject = ms;
+      if (e.track.kind === 'video'){
+        function upd(){ coStage.classList.toggle('has-remote-video', !e.track.muted); }
+        e.track.onmute = upd; e.track.onunmute = upd; upd();
+      }
+    };
+    pc.onconnectionstatechange = function(){
+      if (!pc) return;
+      if (pc.connectionState === 'connected' && !callTimer){ startTimer(); }
+      if (pc.connectionState === 'failed'){ window.showToast('{{ _("Call connection failed.") }}', 'error'); teardown(false); }
+    };
+  }
+
+  function signal(payload){
+    socket.emit('dm_call_signal', {conversation_id: CONV_ID, payload: payload});
+  }
+
+  function openOverlay(){ overlay.classList.add('show'); inCall = true; }
+
+  function teardown(notify){
+    if (notify && inCall) socket.emit('dm_call_hangup', {conversation_id: CONV_ID});
+    clearTimeout(ringTimer); ringTimer = null;
+    clearInterval(callTimer); callTimer = null;
+    if (pc){ try{ pc.close(); }catch(e){} pc = null; }
+    if (localStream){ localStream.getTracks().forEach(function(t){ t.stop(); }); localStream = null; }
+    remoteVid.srcObject = null; localVid.srcObject = null;
+    localVid.classList.remove('show');
+    coStage.classList.remove('has-remote-video');
+    document.getElementById('coMute').classList.remove('off');
+    document.getElementById('coCam').classList.remove('off');
+    overlay.classList.remove('show');
+    inCall = false; isCaller = false; pendingIce = [];
+    setStatus('{{ _("Calling…") }}');
+  }
+
+  // ── Outgoing ──
+  async function startCall(video){
+    if (inCall) return;
+    withVideo = video; isCaller = true;
+    try { await getMedia(video); }
+    catch(e){ window.showToast('{{ _("Microphone/camera access denied. Allow it in browser settings.") }}', 'error'); isCaller = false; return; }
+    openOverlay();
+    setStatus('{{ _("Ringing…") }}');
+    socket.emit('dm_call_invite', {conversation_id: CONV_ID, video: video});
+    ringTimer = setTimeout(function(){
+      if (inCall && !pc){
+        window.showToast('{{ _("No answer — they may not have the chat open.") }}', 'warning');
+        teardown(true);
+      }
+    }, 35000);
+  }
+  document.getElementById('btnVoiceCall').addEventListener('click', function(){ startCall(false); });
+  document.getElementById('btnVideoCall').addEventListener('click', function(){ startCall(true); });
+
+  // ── Incoming ──
+  socket.on('dm_call_invite', function(d){
+    if (d.conversation_id !== CONV_ID) return;
+    if (inCall){ socket.emit('dm_call_decline', {conversation_id: CONV_ID}); return; }
+    incoming = {video: !!d.video};
+    document.getElementById('ringKind').textContent = d.video ? '{{ _("is starting a video call…") }}' : '{{ _("is calling…") }}';
+    banner.classList.add('show');
+  });
+  document.getElementById('ringAccept').addEventListener('click', async function(){
+    banner.classList.remove('show');
+    if (!incoming) return;
+    withVideo = incoming.video; incoming = null; isCaller = false;
+    try { await getMedia(withVideo); }
+    catch(e){
+      window.showToast('{{ _("Microphone/camera access denied. Allow it in browser settings.") }}', 'error');
+      socket.emit('dm_call_decline', {conversation_id: CONV_ID});
+      return;
+    }
+    openOverlay();
+    setStatus('{{ _("Connecting…") }}');
+    socket.emit('dm_call_accept', {conversation_id: CONV_ID});
+  });
+  document.getElementById('ringDecline').addEventListener('click', function(){
+    banner.classList.remove('show'); incoming = null;
+    socket.emit('dm_call_decline', {conversation_id: CONV_ID});
+  });
+
+  // ── Caller: callee accepted → send the offer ──
+  socket.on('dm_call_accept', async function(d){
+    if (d.conversation_id !== CONV_ID || !isCaller || !inCall) return;
+    clearTimeout(ringTimer);
+    setStatus('{{ _("Connecting…") }}');
+    buildPc();
+    var offer = await pc.createOffer();
+    await pc.setLocalDescription(offer);
+    signal({kind:'sdp', sdp: pc.localDescription});
+  });
+
+  socket.on('dm_call_decline', function(d){
+    if (d.conversation_id !== CONV_ID || !inCall) return;
+    window.showToast('{{ _("Call declined.") }}', 'warning');
+    teardown(false);
+  });
+
+  socket.on('dm_call_hangup', function(d){
+    if (d.conversation_id !== CONV_ID) return;
+    banner.classList.remove('show'); incoming = null;
+    if (inCall){ window.showToast('{{ _("Call ended.") }}', 'success'); teardown(false); }
+  });
+
+  // ── SDP / ICE relay ──
+  socket.on('dm_call_signal', async function(d){
+    if (d.conversation_id !== CONV_ID || !inCall) return;
+    var p = d.payload || {};
+    try{
+      if (p.kind === 'sdp' && p.sdp){
+        if (p.sdp.type === 'offer'){
+          if (!pc) buildPc();
+          await pc.setRemoteDescription(new RTCSessionDescription(p.sdp));
+          var ans = await pc.createAnswer();
+          await pc.setLocalDescription(ans);
+          signal({kind:'sdp', sdp: pc.localDescription});
+        } else if (p.sdp.type === 'answer' && pc){
+          await pc.setRemoteDescription(new RTCSessionDescription(p.sdp));
+        }
+        while (pendingIce.length && pc && pc.remoteDescription){
+          await pc.addIceCandidate(pendingIce.shift()).catch(function(){});
+        }
+      } else if (p.kind === 'ice' && p.candidate){
+        if (pc && pc.remoteDescription){ await pc.addIceCandidate(p.candidate).catch(function(){}); }
+        else pendingIce.push(p.candidate);
+      }
+    }catch(e){ /* negotiation glitch — connectionstatechange handles failures */ }
+  });
+
+  // ── In-call controls ──
+  document.getElementById('coMute').addEventListener('click', function(){
+    if (!localStream) return;
+    var track = localStream.getAudioTracks()[0];
+    if (!track) return;
+    track.enabled = !track.enabled;
+    this.classList.toggle('off', !track.enabled);
+  });
+  document.getElementById('coCam').addEventListener('click', function(){
+    if (!localStream) return;
+    var track = localStream.getVideoTracks()[0];
+    if (!track) return;
+    track.enabled = !track.enabled;
+    this.classList.toggle('off', !track.enabled);
+    localVid.classList.toggle('show', track.enabled);
+  });
+  document.getElementById('coHang').addEventListener('click', function(){ teardown(true); });
+  window.addEventListener('beforeunload', function(){ if (inCall) teardown(true); });
 })();
 </script>
 {% endblock %}

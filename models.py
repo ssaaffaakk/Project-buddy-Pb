@@ -336,6 +336,9 @@ class CommunityPost(db.Model):
     comments = db.relationship("CommunityComment", lazy=True, cascade="all, delete-orphan",
                                order_by="CommunityComment.created_at")
     likes = db.relationship("CommunityLike", lazy=True, cascade="all, delete-orphan")
+    # Bookmarks pointing at this post go away with it (no dangling FK rows).
+    saved_by = db.relationship("SavedPost", lazy=True, cascade="all, delete-orphan",
+                               overlaps="post")
 
 
 class CommunityComment(db.Model):
@@ -662,6 +665,22 @@ class SavedProject(db.Model):
     __table_args__ = (db.UniqueConstraint("user_id", "project_id", name="uq_saved_project"),)
 
 
+class SavedPost(db.Model):
+    """A user's bookmark on a community post — same "save for later" logic as
+    SavedProject. One row per (user, post); toggled from the feed; listed on
+    the Saved page next to saved projects."""
+    __tablename__ = "saved_posts"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(db.ForeignKey("users.id"), index=True)
+    post_id: Mapped[int] = mapped_column(db.ForeignKey("community_posts.id"), index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+    post = db.relationship("CommunityPost", lazy=True)
+
+    __table_args__ = (db.UniqueConstraint("user_id", "post_id", name="uq_saved_post"),)
+
+
 # ── WEEKLY AVAILABILITY (for team meeting-time overlap) ──────────────────────
 
 class UserAvailability(db.Model):
@@ -695,6 +714,13 @@ class Conversation(db.Model):
     last_message_at: Mapped[datetime] = mapped_column(
         DateTime, default=lambda: datetime.now(timezone.utc), index=True
     )
+    # Per-member inbox organisation (Instagram-style). Stored as one flag per
+    # side (a = lower id) because each member archives/pins independently.
+    # Archiving auto-clears for BOTH sides on any new message.
+    a_archived: Mapped[Optional[bool]] = mapped_column(Boolean, default=False)
+    b_archived: Mapped[Optional[bool]] = mapped_column(Boolean, default=False)
+    a_pinned: Mapped[Optional[bool]] = mapped_column(Boolean, default=False)
+    b_pinned: Mapped[Optional[bool]] = mapped_column(Boolean, default=False)
 
     user_a = db.relationship("User", foreign_keys=[user_a_id], lazy=True)
     user_b = db.relationship("User", foreign_keys=[user_b_id], lazy=True)
@@ -715,6 +741,43 @@ class Conversation(db.Model):
     def has_member(self, user_id: int) -> bool:
         return user_id in (self.user_a_id, self.user_b_id)
 
+    # ── per-member archive / pin flags (None on backfilled rows == False) ──
+    def archived_for(self, user_id: int) -> bool:
+        return bool(self.a_archived if user_id == self.user_a_id else self.b_archived)
+
+    def pinned_for(self, user_id: int) -> bool:
+        return bool(self.a_pinned if user_id == self.user_a_id else self.b_pinned)
+
+    def set_archived(self, user_id: int, value: bool) -> None:
+        if user_id == self.user_a_id:
+            self.a_archived = value
+        else:
+            self.b_archived = value
+
+    def set_pinned(self, user_id: int, value: bool) -> None:
+        if user_id == self.user_a_id:
+            self.a_pinned = value
+        else:
+            self.b_pinned = value
+
+
+class DmAttachment(db.Model):
+    """A file shared inside a 1:1 conversation. Mirrors SharedFile (study
+    groups) but is scoped to a Conversation so only its two members can
+    download it."""
+    __tablename__ = "dm_attachments"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    conversation_id: Mapped[int] = mapped_column(db.ForeignKey("conversations.id"), index=True)
+    uploader_id: Mapped[int] = mapped_column(db.ForeignKey("users.id"))
+    filename: Mapped[str] = mapped_column(String(255))
+    stored_name: Mapped[str] = mapped_column(String(255))
+    file_size: Mapped[int] = mapped_column(Integer, default=0)
+    mime_type: Mapped[str] = mapped_column(String(120), default='application/octet-stream')
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+    conversation = db.relationship("Conversation", lazy=True)
+
 
 class DirectMessage(db.Model):
     __tablename__ = "direct_messages"
@@ -723,7 +786,21 @@ class DirectMessage(db.Model):
     conversation_id: Mapped[int] = mapped_column(db.ForeignKey("conversations.id"), index=True)
     sender_id: Mapped[int] = mapped_column(db.ForeignKey("users.id"))
     body: Mapped[str] = mapped_column(Text)
+    # Optional file dropped straight into the chat (rendered inline in the stream)
+    attachment_id: Mapped[Optional[int]] = mapped_column(db.ForeignKey("dm_attachments.id"), nullable=True)
+    # Optional community post shared into the chat (rendered as a preview card).
+    # Plain integer on purpose — no FK, so deleting the post never breaks the
+    # thread; the card degrades to "post unavailable" instead.
+    shared_post_id: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     is_read: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     sender = db.relationship("User", lazy=True)
+    attachment = db.relationship("DmAttachment", lazy=True, foreign_keys=[attachment_id])
+
+    @property
+    def shared_post(self):
+        """The shared CommunityPost, or None if never set / since deleted."""
+        if not self.shared_post_id:
+            return None
+        return db.session.get(CommunityPost, self.shared_post_id)

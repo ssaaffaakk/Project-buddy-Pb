@@ -461,13 +461,19 @@ def _ensure_feature_columns(app: Flask) -> None:
     500s essentially every page. This idempotently adds those columns so the
     app self-heals on the next restart regardless of migration state.
     """
-    from sqlalchemy import inspect as sa_inspect, String, DateTime
+    from sqlalchemy import inspect as sa_inspect, String, DateTime, Integer, Boolean
 
     # (table, column, SQLAlchemy type) for every column this app added to a
     # pre-existing table. New TABLES are handled by create_all and need no entry.
     wanted = [
         ("users", "timezone", String(64)),
         ("project_tasks", "due_date", DateTime()),
+        ("direct_messages", "attachment_id", Integer()),
+        ("direct_messages", "shared_post_id", Integer()),
+        ("conversations", "a_archived", Boolean()),
+        ("conversations", "b_archived", Boolean()),
+        ("conversations", "a_pinned", Boolean()),
+        ("conversations", "b_pinned", Boolean()),
     ]
     try:
         insp = sa_inspect(db.engine)

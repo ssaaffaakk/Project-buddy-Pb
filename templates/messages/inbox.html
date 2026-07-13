@@ -3,19 +3,105 @@
 
 {% block extra_style %}
 <style nonce="{{ csp_nonce }}">
-.dm-list{max-width:720px;}
-.dm-row{display:flex;align-items:center;gap:14px;padding:14px 16px;border:1px solid var(--border);border-radius:var(--r);background:var(--card);text-decoration:none;color:var(--text);margin-bottom:10px;transition:all .18s;}
+.dm-layout{display:grid;grid-template-columns:minmax(0,720px) 300px;gap:32px;align-items:start;}
+@media(max-width:1024px){.dm-layout{grid-template-columns:1fr;}}
+.dm-row{position:relative;display:flex;align-items:center;gap:14px;padding:14px 16px;border:1px solid var(--border);border-radius:var(--r);background:var(--card);text-decoration:none;color:var(--text);margin-bottom:10px;transition:all .18s;}
 .dm-row:hover{background:var(--card-h);border-color:rgba(124,155,255,0.3);transform:translateY(-1px);}
+.dm-row.pinned{border-color:rgba(124,155,255,0.3);background:linear-gradient(155deg,var(--accent-dim),var(--card));}
 .dm-av{width:44px;height:44px;border-radius:50%;flex-shrink:0;background:linear-gradient(135deg,var(--accent),#4A5BA8);color:#fff;display:flex;align-items:center;justify-content:center;font-size:0.85rem;font-weight:600;overflow:hidden;}
 .dm-av img{width:100%;height:100%;object-fit:cover;}
 .dm-main{flex:1;min-width:0;}
-.dm-name{font-weight:600;font-size:0.92rem;display:flex;align-items:center;gap:8px;}
+.dm-name{font-weight:600;font-size:0.92rem;display:flex;align-items:center;gap:8px;min-width:0;}
+.dm-name .pin-flag{flex-shrink:0;color:var(--accent);display:inline-flex;}
+.dm-name .pin-flag svg{width:12px;height:12px;}
 .dm-preview{color:var(--muted);font-size:0.82rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px;}
-.dm-meta{display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0;}
+.dm-meta{display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0;transition:opacity .15s;}
 .dm-time{font-family:'DM Mono',monospace;font-size:0.66rem;color:var(--muted);}
 .dm-unread{background:var(--coral);color:#fff;border-radius:99px;font-size:0.66rem;font-family:'DM Mono',monospace;padding:1px 7px;min-width:18px;text-align:center;}
+
+/* Hover actions (pin / archive) */
+.dm-acts{position:absolute;right:12px;top:50%;transform:translateY(-50%);display:flex;gap:6px;opacity:0;pointer-events:none;transition:opacity .15s;}
+.dm-row:hover .dm-acts{opacity:1;pointer-events:auto;}
+.dm-row:hover .dm-meta{opacity:0;}
+.dm-act{width:32px;height:32px;border-radius:9px;background:var(--bg2);border:1px solid var(--border);color:var(--soft);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s;padding:0;}
+.dm-act svg{width:14px;height:14px;}
+.dm-act:hover{color:var(--accent);border-color:rgba(124,155,255,0.45);background:var(--accent-dim);}
+.dm-act.on{color:var(--accent);background:var(--accent-dim);border-color:rgba(124,155,255,0.45);}
+
+/* Archived section */
+.arch-toggle{display:flex;align-items:center;gap:10px;width:100%;background:none;border:1px dashed var(--border);border-radius:var(--r);padding:12px 16px;margin:18px 0 12px;color:var(--muted);font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;transition:all .18s;}
+.arch-toggle:hover{color:var(--soft);border-color:rgba(124,155,255,0.35);}
+.arch-toggle svg{width:14px;height:14px;flex-shrink:0;}
+.arch-toggle .chev{margin-left:auto;transition:transform .2s;}
+.arch-toggle.open .chev{transform:rotate(90deg);}
+.arch-list{display:none;}
+.arch-list.open{display:block;}
+.arch-list .dm-row{opacity:0.75;}
+.arch-list .dm-row:hover{opacity:1;}
+
+/* Empty state */
+.dm-empty-wrap{text-align:center;padding:60px 20px;border:1px dashed var(--border);border-radius:16px;}
+.dm-empty-wrap .big-ic{width:52px;height:52px;margin:0 auto 16px;border-radius:16px;background:var(--accent-dim);border:1px solid rgba(124,155,255,0.25);display:flex;align-items:center;justify-content:center;color:var(--accent);}
+.dm-empty-wrap .big-ic svg{width:22px;height:22px;}
+.dm-empty-wrap h3{font-family:'DM Serif Display',serif;font-style:italic;font-size:1.25rem;font-weight:400;margin-bottom:8px;}
+.dm-empty-wrap p{color:var(--muted);font-size:0.84rem;line-height:1.7;max-width:400px;margin:0 auto;}
+
+/* People sidebar */
+.people-panel{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px;position:sticky;top:40px;}
+.people-title{font-family:'DM Serif Display',serif;font-style:italic;font-size:0.98rem;font-weight:400;margin-bottom:4px;}
+.people-sub{font-family:'DM Mono',monospace;font-size:0.6rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);margin-bottom:14px;}
+.person{display:flex;align-items:center;gap:10px;padding:9px 8px;border-radius:10px;transition:background .15s;}
+.person:hover{background:var(--card-h);}
+.person-av{width:34px;height:34px;border-radius:50%;flex-shrink:0;background:linear-gradient(135deg,var(--accent),#4A5BA8);color:#fff;display:flex;align-items:center;justify-content:center;font-size:0.68rem;font-weight:600;overflow:hidden;}
+.person-av img{width:100%;height:100%;object-fit:cover;}
+.person-main{flex:1;min-width:0;}
+.person-name{font-size:0.8rem;font-weight:600;color:var(--text);text-decoration:none;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.person-name:hover{color:var(--accent);}
+.person-why{font-family:'DM Mono',monospace;font-size:0.58rem;letter-spacing:0.04em;text-transform:uppercase;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.person-msg{flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:8px;background:var(--accent-dim);border:1px solid rgba(124,155,255,0.25);color:var(--accent);text-decoration:none;transition:all .18s;}
+.person-msg:hover{background:linear-gradient(135deg,var(--accent),var(--violet));color:#fff;border-color:transparent;}
+.person-msg svg{width:14px;height:14px;}
+.people-more{display:block;text-align:center;margin-top:10px;font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);text-decoration:none;padding:8px;border-radius:8px;border:1px dashed var(--border);transition:all .18s;}
+.people-more:hover{color:var(--accent);border-color:rgba(124,155,255,0.35);}
 </style>
 {% endblock %}
+
+{% macro dm_row(t, in_archive) %}
+<a class="dm-row {% if t.pinned and not in_archive %}pinned{% endif %}" href="{{ url_for('messages.thread', user_id=t.user_id) }}">
+  <div class="dm-av">
+    {% if t.avatar_url %}<img src="{{ t.avatar_url }}" alt="">{% else %}{{ t.initials }}{% endif %}
+  </div>
+  <div class="dm-main">
+    <div class="dm-name">
+      {% if t.pinned and not in_archive %}
+      <span class="pin-flag" title="{{ _('Pinned') }}"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 3a1 1 0 0 1 .97 1.24l-1.1 4.4 3.84 3.84a1 1 0 0 1-.42 1.66l-4.87 1.4-1.4 4.87a1 1 0 0 1-1.66.42l-3.84-3.84-4.4 1.1A1 1 0 0 1 2.1 16.4l9.2-9.2 3.46-3.9A1 1 0 0 1 16 3z"/></svg></span>
+      {% endif %}
+      <span style="min-width:0;overflow:hidden;text-overflow:ellipsis;">{{ t.name }}</span>
+    </div>
+    <div class="dm-preview">{% if t.preview_mine %}{{ _('You') }}: {% endif %}{{ t.preview }}</div>
+  </div>
+  <div class="dm-meta">
+    <span class="dm-time">{{ t.time }}</span>
+    {% if t.unread %}<span class="dm-unread">{{ t.unread }}</span>{% endif %}
+  </div>
+  <div class="dm-acts">
+    {% if not in_archive %}
+    <button class="dm-act {% if t.pinned %}on{% endif %}" title="{{ _('Unpin') if t.pinned else _('Pin to top') }}"
+            onclick="dmToggle(event, {{ t.conversation_id }}, 'pin')">
+      <svg viewBox="0 0 24 24" fill="{{ 'currentColor' if t.pinned else 'none' }}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 17v5"/><path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16h14v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1z"/></svg>
+    </button>
+    {% endif %}
+    <button class="dm-act" title="{{ _('Unarchive') if in_archive else _('Archive') }}"
+            onclick="dmToggle(event, {{ t.conversation_id }}, 'archive'{{ ', true' if in_archive else '' }})">
+      {% if in_archive %}
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="5" rx="1"/><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"/><path d="m9.5 14.5 2.5-2.5 2.5 2.5"/><path d="M12 12v5"/></svg>
+      {% else %}
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="5" rx="1"/><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"/><path d="M10 12h4"/></svg>
+      {% endif %}
+    </button>
+  </div>
+</a>
+{% endmacro %}
 
 {% block content %}
 <div class="page-header">
@@ -25,25 +111,87 @@
   </div>
 </div>
 
-<div class="dm-list fx-stagger">
-  {% if threads %}
-    {% for t in threads %}
-    <a class="dm-row" href="{{ url_for('messages.thread', user_id=t.user_id) }}">
-      <div class="dm-av">
-        {% if t.avatar_url %}<img src="{{ t.avatar_url }}" alt="">{% else %}{{ t.initials }}{% endif %}
+<div class="dm-layout">
+  <div>
+    <div class="dm-list fx-stagger">
+      {% if threads %}
+        {% for t in threads %}{{ dm_row(t, False) }}{% endfor %}
+      {% elif not archived %}
+        <div class="dm-empty-wrap">
+          <div class="big-ic">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          </div>
+          <h3>{{ _('No messages yet') }}</h3>
+          <p>{{ _('Start a conversation with a teammate or someone from the suggestions — say hi, share a file, or hop on a call.') }}</p>
+        </div>
+      {% else %}
+        <p class="empty">{{ _('Everything is archived. New messages bring a chat back automatically.') }}</p>
+      {% endif %}
+    </div>
+
+    {% if archived %}
+    <button class="arch-toggle" id="archToggle" onclick="toggleArchList()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="5" rx="1"/><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"/><path d="M10 12h4"/></svg>
+      {{ _('Archived') }} ({{ archived|length }})
+      <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+    </button>
+    <div class="arch-list" id="archList">
+      {% for t in archived %}{{ dm_row(t, True) }}{% endfor %}
+    </div>
+    {% endif %}
+  </div>
+
+  {% if suggestions %}
+  <aside class="people-panel fx-up">
+    <div class="people-title">{{ _('People you may know') }}</div>
+    <div class="people-sub">{{ _('Teammates & classmates') }}</div>
+    {% for p in suggestions %}
+    <div class="person">
+      <div class="person-av">
+        {% if p.avatar_url %}<img src="{{ p.avatar_url }}" alt="">{% else %}{{ p.initials }}{% endif %}
       </div>
-      <div class="dm-main">
-        <div class="dm-name">{{ t.name }}</div>
-        <div class="dm-preview">{% if t.preview_mine %}{{ _('You') }}: {% endif %}{{ t.preview }}</div>
+      <div class="person-main">
+        <a class="person-name" href="/user/{{ p.id }}">{{ p.name }}</a>
+        <div class="person-why">{{ _(p.reason) }}{% if p.department %} · {{ p.department }}{% endif %}</div>
       </div>
-      <div class="dm-meta">
-        <span class="dm-time">{{ t.time }}</span>
-        {% if t.unread %}<span class="dm-unread">{{ t.unread }}</span>{% endif %}
-      </div>
-    </a>
+      <a class="person-msg" href="{{ url_for('messages.thread', user_id=p.id) }}" title="{{ _('Message') }} {{ p.name }}" aria-label="{{ _('Message') }} {{ p.name }}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      </a>
+    </div>
     {% endfor %}
-  {% else %}
-    <p class="empty">{{ _('No messages yet. Visit a teammate or profile and hit “Message” to start a conversation.') }}</p>
+    <a class="people-more" href="/teammates">{{ _('Find more teammates') }} →</a>
+  </aside>
   {% endif %}
 </div>
+{% endblock %}
+
+{% block extra_script %}
+<script nonce="{{ csp_nonce }}">
+function toggleArchList(){
+  var open = document.getElementById('archList').classList.toggle('open');
+  document.getElementById('archToggle').classList.toggle('open', open);
+  if (open) { location.hash = 'archived'; }
+  else if (location.hash === '#archived') { history.replaceState(null, '', location.pathname); }
+}
+if (location.hash === '#archived' && document.getElementById('archList')) toggleArchList();
+
+async function dmToggle(ev, convId, kind, fromArchive){
+  ev.preventDefault();
+  ev.stopPropagation();
+  try {
+    var r = await fetch('/messages/' + convId + '/' + kind, { method:'POST' });
+    if (!r.ok){ window.showToast('Could not update.', 'error'); return; }
+    var d = await r.json();
+    if (kind === 'archive'){
+      window.showToast(d.archived ? '{{ _("Archived — it comes back on new messages") }}'
+                                  : '{{ _("Moved back to your inbox") }}', 'success');
+      // Keep the archived section open when acting from inside it
+      if (fromArchive && d.archived === false && location.hash !== '#archived') location.hash = 'archived';
+    } else {
+      window.showToast(d.pinned ? '{{ _("Pinned to top") }}' : '{{ _("Unpinned") }}', 'success');
+    }
+    window.location.reload();
+  } catch(e){ window.showToast('Network error', 'error'); }
+}
+</script>
 {% endblock %}
