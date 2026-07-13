@@ -203,6 +203,9 @@ class ProjectTask(db.Model):
     assignee_id: Mapped[Optional[int]] = mapped_column(db.ForeignKey("users.id"))
     created_by: Mapped[int] = mapped_column(db.ForeignKey("users.id"))
     position: Mapped[int] = mapped_column(Integer, default=0)
+    # Optional target date (date-only). Drives the "overdue" flag on the board
+    # and feeds the instructor deadline-risk view.
+    due_date: Mapped[Optional[datetime]] = mapped_column(DateTime)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     assignee = db.relationship("User", foreign_keys=[assignee_id], lazy=True)

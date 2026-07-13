@@ -818,6 +818,7 @@ def _project_if_member(project_id):
 
 
 def _task_json(t):
+    due = t.due_date.date() if t.due_date else None
     return {
         "id": t.id,
         "title": t.title,
@@ -826,8 +827,20 @@ def _task_json(t):
         "assignee_name": t.assignee.get_full_name() if t.assignee else None,
         "assignee_initials": ((t.assignee.first_name[:1] + t.assignee.last_name[:1]).upper()
                               if t.assignee else None),
+        "due_date": due.isoformat() if due else None,
+        # Overdue only matters while the task is still open.
+        "overdue": bool(due and t.status != "done" and due < datetime.now(timezone.utc).date()),
         "can_delete": t.created_by == current_user.id or _is_owner_of(t.project_id),
     }
+
+
+def _parse_due(raw):
+    """Parse a 'YYYY-MM-DD' string into a datetime (midnight), or None. Raises
+    ValueError on a malformed non-empty value."""
+    raw = (raw or "").strip()
+    if not raw:
+        return None
+    return datetime.strptime(raw, "%Y-%m-%d")
 
 
 def _is_owner_of(project_id):
@@ -860,11 +873,34 @@ def create_task(project_id):
         return jsonify({"error": "Task title required."}), 400
     if len(title) > 200:
         return jsonify({"error": "Title too long (max 200)."}), 400
+    try:
+        due = _parse_due(data.get("due_date"))
+    except ValueError:
+        return jsonify({"error": "Invalid due date."}), 400
     task = ProjectTask(project_id=project_id, title=title, status=status,
-                       created_by=current_user.id)
+                       created_by=current_user.id, due_date=due)
     db.session.add(task)
     db.session.commit()
     return jsonify({"task": _task_json(task)}), 201
+
+
+@main_bp.route("/project/<int:project_id>/tasks/<int:task_id>/due", methods=["POST"])
+@login_required
+def set_task_due(project_id, task_id):
+    """Set or clear a task's due date. Any project member may adjust it."""
+    from models import ProjectTask
+    if _project_if_member(project_id) is None:
+        return jsonify({"error": "Not a member of this project."}), 403
+    task = ProjectTask.query.filter_by(id=task_id, project_id=project_id).first()
+    if task is None:
+        return jsonify({"error": "Task not found."}), 404
+    data = request.get_json(silent=True) or {}
+    try:
+        task.due_date = _parse_due(data.get("due_date"))
+    except ValueError:
+        return jsonify({"error": "Invalid due date."}), 400
+    db.session.commit()
+    return jsonify({"task": _task_json(task)})
 
 
 @main_bp.route("/project/<int:project_id>/tasks/<int:task_id>/move", methods=["POST"])

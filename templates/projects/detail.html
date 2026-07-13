@@ -49,6 +49,11 @@
 .board-add button:hover{border-color:rgba(124,155,255,0.4);background:var(--card-h);}
 .board-empty{color:var(--muted);font-size:0.74rem;font-style:italic;text-align:center;padding:14px 0;}
 @media(max-width:720px){.board-cols{grid-template-columns:1fr;}}
+/* task due date */
+.task-due{display:inline-flex;align-items:center;gap:4px;}
+.task-due input[type=date]{width:auto;min-height:0;padding:2px 4px;font-size:0.62rem;font-family:'DM Mono',monospace;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:5px;color:var(--muted);}
+.task-card.overdue{border-color:rgba(224,82,82,0.5);box-shadow:0 0 0 1px rgba(224,82,82,0.15);}
+.task-card.overdue .task-due input[type=date]{color:#e07060;border-color:rgba(224,82,82,0.4);}
 
 .back-link{display:inline-flex;align-items:center;gap:6px;color:var(--accent);text-decoration:none;
   font-size:0.85rem;font-weight:500;margin-bottom:24px;transition:all 0.2s;}
@@ -373,13 +378,21 @@ if (messageForm) {
       '<button ' + (i>=2?'disabled':'') + ' onclick="pbMoveTask(' + t.id + ',1)" aria-label="right">›</button></span>';
   }
 
+  function dueControl(t){
+    return '<span class="task-due"><input type="date" value="' + (t.due_date || '') +
+      '" onchange="pbSetDue(' + t.id + ', this.value)" ' +
+      'title="' + '{{ _("Set due date") }}' + '"></span>';
+  }
+
   function cardHTML(t){
     var del = t.can_delete
       ? '<button class="task-del" onclick="pbDeleteTask(' + t.id + ')" aria-label="delete">×</button>' : '';
-    return '<div class="task-card" draggable="true" data-tid="' + t.id + '" data-status="' + t.status + '">' +
+    var cls = 'task-card' + (t.overdue ? ' overdue' : '');
+    return '<div class="' + cls + '" draggable="true" data-tid="' + t.id + '" data-status="' + t.status + '">' +
       del +
       '<div class="task-title">' + esc(t.title) + '</div>' +
-      '<div class="task-foot">' + moveControl(t) + assigneeControl(t) + '</div></div>';
+      '<div class="task-foot">' + moveControl(t) + assigneeControl(t) + '</div>' +
+      '<div class="task-foot" style="margin-top:6px;">' + dueControl(t) + '</div></div>';
   }
 
   var TASKS = [];
@@ -431,6 +444,19 @@ if (messageForm) {
         body: JSON.stringify({user_id: val || null})
       });
       if (!r.ok){ showToast('Could not assign task.', 'error'); return; }
+      var data = await r.json();
+      var idx = TASKS.findIndex(function(x){ return x.id === tid; });
+      if (idx > -1){ TASKS[idx] = data.task; render(); }
+    } catch(e){}
+  };
+
+  window.pbSetDue = async function(tid, val){
+    try {
+      var r = await fetch(api + '/' + tid + '/due', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({due_date: val || null})
+      });
+      if (!r.ok){ showToast('Could not set due date.', 'error'); return; }
       var data = await r.json();
       var idx = TASKS.findIndex(function(x){ return x.id === tid; });
       if (idx > -1){ TASKS[idx] = data.task; render(); }
