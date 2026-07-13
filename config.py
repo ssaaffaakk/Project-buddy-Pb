@@ -59,6 +59,10 @@ class Config:
 
     # ── Security ───────────────────────────────────────────────────────────────
     PASSWORD_RESET_TOKEN_EXPIRY = int(os.environ.get('PASSWORD_RESET_TOKEN_EXPIRY', 3600))
+    # Auto sign-out after this many minutes without user-driven activity.
+    # Background polls (notifications, chat fallback) do not reset the clock.
+    # 0 disables the idle timeout entirely.
+    SESSION_IDLE_TIMEOUT_MIN = int(os.environ.get('SESSION_IDLE_TIMEOUT_MIN', 30))
 
     # ── Admin (startup sync in app.py) ─────────────────────────────────────────
     ADMIN_EMAIL    = os.environ.get('ADMIN_EMAIL', '')

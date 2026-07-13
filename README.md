@@ -216,7 +216,7 @@ Tech Stack
 |File Storage|Local disk (dev) · AWS S3 / S3-compatible (prod)               |
 |Deployment  |Render (hosting) · PostgreSQL (prod DB)                        |
 |Rate Limiting|Flask-Limiter · Redis (prod) / in-memory (dev)               |
-|Security    |CSRF (Flask-WTF) · CSP nonces · HSTS · security headers        |
+|Security    |CSRF (Flask-WTF) · CSP nonces · HSTS · security headers · idle-session auto-logout|
 |ML          |scikit-learn recommender · LSA embeddings · A/B testing · MLflow (optional)|
 |Analytics   |Event stream (ActivityEvent) · DAU/WAU/MAU · funnel · retention cohorts|
 |Observability|Prometheus `/metrics` · Sentry (optional)                     |

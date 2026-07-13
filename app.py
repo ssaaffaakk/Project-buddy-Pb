@@ -305,6 +305,41 @@ def _initialize_extensions(app: Flask) -> None:
         _flash('Session expired. Please try again.', 'error')
         return _redir(_req.referrer or _url_for('auth.login'))
 
+    # ── Idle-session timeout: sign out after SESSION_IDLE_TIMEOUT_MIN of ──────
+    # inactivity. Timer-driven background requests (the 30s notifications poll,
+    # the chat fallback poll) CHECK expiry but don't RESET the clock — so a user
+    # who walks away with a tab open still gets signed out, while any real
+    # click/navigation keeps the session alive.
+    from time import time as _now
+    from flask import session as _session
+    from flask_login import current_user as _cu, logout_user as _logout_user
+
+    _IDLE_EXEMPT_ENDPOINTS = {
+        'main.get_notifications',       # polled every 30s from every page
+        'study_groups.poll_messages',   # chat fallback poll / reconnect catch-up
+        'main.service_worker',          # browser-driven SW update checks
+        'main.manifest',                # PWA manifest fetch — not user activity
+    }
+
+    @app.before_request
+    def _enforce_idle_timeout():
+        timeout_min = app.config.get('SESSION_IDLE_TIMEOUT_MIN', 30)
+        if not timeout_min or not _cu.is_authenticated:
+            return
+        # Leave the realtime transport and static assets out of this entirely.
+        p = _req.path
+        if p.startswith('/socket.io') or p.startswith('/static'):
+            return
+        now = _now()
+        last = _session.get('_last_active')
+        if last is not None and now - float(last) > timeout_min * 60:
+            _logout_user()
+            _session.clear()
+            _flash('You were signed out after a period of inactivity. Please log in again.', 'error')
+            return  # proceed anonymously; @login_required redirects to login
+        if last is None or _req.endpoint not in _IDLE_EXEMPT_ENDPOINTS:
+            _session['_last_active'] = now
+
     # ── Generic HTTP error pages ───────────────────────────────────────────────
     from flask import render_template
 

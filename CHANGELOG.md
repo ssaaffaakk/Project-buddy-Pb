@@ -10,6 +10,8 @@ All notable changes to this project are documented here. The format is based on
 - Group-chat presence: live typing indicators and an online-member count.
 - Jump-to-latest pill so incoming messages don't yank readers away from history.
 - Delete a chat message (author, group creator, or admin), removed for everyone live.
+- Idle-session timeout: users are signed out after 30 minutes of inactivity
+  (`SESSION_IDLE_TIMEOUT_MIN`); background polls don't keep an AFK session alive.
 - Email-address confirmation flow scaffolding was explored and reverted (see history).
 - Accessibility pass: skip-to-content link, keyboard focus ring, `#main-content` landmark.
 
