@@ -426,27 +426,54 @@ def _register_api(app: Flask) -> None:
 
 
 def _apply_schema(app: Flask) -> None:
-    """Apply database schema safely.
+    """Apply database schema.
 
-    - Production (FLASK_ENV=production):
-        Runs `flask db upgrade` via Alembic so migrations are the single
-        source of truth. db.create_all() is NOT called — it would silently
-        skip columns/constraints added by migrations and cause drift.
+    Alembic is NOT a complete source of truth in this project, despite what the
+    old docstring here claimed. The baseline migration (3f60331bcca5) is an empty
+    stamp that creates nothing, and 68ce403fbd55 ("add study_group_notes") is
+    empty too — `study_group_notes` has no migration at all. Building from
+    migrations alone dies on the first ALTER with "NoSuchTableError: users".
+    create_all() is what actually builds tables; Alembic only carries deltas on
+    top of it. So create_all() stays — dropping it would break a fresh deploy.
 
-    - Development / Testing:
-        Falls back to db.create_all() for convenience (no migration needed
-        to spin up a fresh local DB). If migrations exist they are also
-        applied so the dev DB stays consistent.
+    What was genuinely broken is that Alembic failures were swallowed. create_all()
+    built the dw_* tables from models.py before their migration existed, so every
+    later `db upgrade` died on "dw_dim_user already exists" — and since the error
+    was only ever a log line, ten migrations silently never applied, leaving the
+    16 hot-path indexes from c3e8f5a71d29 absent from the database entirely.
+
+    - Fresh DB (any env): build from the models, then stamp head, so the
+      migrations creating those same tables can never collide with create_all().
+    - Existing DB, production: an Alembic failure is FATAL. A drifted chain must
+      fail the deploy rather than limp along unnoticed for ten migrations.
+    - Existing DB, development: failures stay non-fatal.
+    - Testing: create_all() only — conftest wants a migration-free schema.
     """
-    # Run Alembic migrations first (no-op if none exist), then create_all as
-    # a safety net for any tables not covered by migrations.
-    # create_all is idempotent — it skips tables that already exist.
-    try:
-        from flask_migrate import upgrade as db_upgrade
-        db_upgrade()
+    from flask_migrate import stamp as db_stamp, upgrade as db_upgrade
+    from sqlalchemy import inspect as sa_inspect
+
+    if app.config.get("TESTING"):
+        db.create_all()
+        return
+
+    if not sa_inspect(db.engine).has_table("alembic_version"):
+        db.create_all()
+        db_stamp()
+        app.logger.info("Fresh database built from models and stamped head.")
+        return
+
+    if not app.debug:  # production — app.debug is the prod signal (see CORS note)
+        db_upgrade()   # deliberately unguarded: a drifted chain must fail the deploy
         app.logger.info("Database migrations applied.")
-    except Exception as e:
-        app.logger.warning("Migration step skipped: %s", e)
+    else:
+        try:
+            db_upgrade()
+            app.logger.info("Database migrations applied.")
+        except Exception as e:
+            app.logger.warning("Migration step skipped: %s", e)
+
+    # Load-bearing: models whose migration is empty or missing (study_group_notes)
+    # exist only because of this. Idempotent — existing tables are skipped.
     db.create_all()
 
 
