@@ -142,6 +142,10 @@ def register():
         from services.analytics import track
         track("signup", user.id)
         db.session.commit()
+
+        from routes.email import send_welcome_email
+        send_welcome_email(user.email, user.first_name)
+
         login_user(user)
         flash(f'Welcome, {user.first_name}! Your account has been created.', 'success')
         # First-run: let them pick an avatar + banner before landing on the dashboard
@@ -429,6 +433,9 @@ def github_callback():
         from services.analytics import track
         track("signup", new_user.id)
         db.session.commit()
+
+        from routes.email import send_welcome_email
+        send_welcome_email(new_user.email, first_name)
 
         login_user(new_user)
         flash(f'Welcome to ProjectBuddy, {first_name}! Complete your profile to get started.', 'success')

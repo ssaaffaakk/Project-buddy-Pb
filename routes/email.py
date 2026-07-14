@@ -117,6 +117,69 @@ def send_password_reset_email(user_email, user_name, reset_token):
     return send_email(user_email, subject, html_body, is_html=True)
 
 
+def send_welcome_email(user_email, user_name):
+    """Greet a brand-new account.
+
+    Strictly best-effort. The account is already committed by the time this
+    runs, so *nothing* in here may raise: a signup that 500s after the user
+    row exists is worse than a signup with no welcome mail. Everything —
+    url_for, template building, dispatch — is inside the guard.
+    """
+    try:
+        return _welcome_email_body(user_email, user_name)
+    except Exception as e:
+        logger.exception("Welcome email failed for %s: %s", user_email, e)
+        return False
+
+
+def _welcome_email_body(user_email, user_name):
+    from flask import url_for
+
+    dashboard_url = url_for('main.dashboard', _external=True)
+
+    html_body = f"""
+    <html>
+        <head>
+            <style>
+                body {{ margin:0;padding:0;background-color:#0d0c0b;font-family:'Segoe UI',sans-serif; }}
+                .wrapper {{ padding:40px 20px; }}
+                .container {{ background:#141210;border:1px solid rgba(255,255,255,0.06);border-radius:8px;max-width:480px;margin:0 auto;padding:40px; }}
+                .logo {{ font-size:1.1rem;color:#ede8df;margin-bottom:32px;letter-spacing:0.01em; }}
+                .logo span {{ color:#FFD700;font-style:italic; }}
+                h2 {{ color:#ede8df;font-size:1.4rem;font-weight:400;margin:0 0 12px 0;letter-spacing:-0.01em; }}
+                p {{ color:#8a8078;line-height:1.7;font-size:0.88rem;margin:0 0 16px 0; }}
+                ul {{ color:#8a8078;line-height:1.9;font-size:0.88rem;margin:0 0 20px 0;padding-left:20px; }}
+                li strong {{ color:#ede8df;font-weight:600; }}
+                .btn {{ display:inline-block;background:#FFD700;color:#0d0c0b;padding:13px 28px;border-radius:8px;text-decoration:none;font-weight:700;font-size:0.76rem;letter-spacing:0.08em;text-transform:uppercase;margin:8px 0 24px 0; }}
+                .divider {{ border:none;border-top:1px solid rgba(255,255,255,0.06);margin:24px 0; }}
+                .footer {{ color:#4a4540;font-size:0.75rem;text-align:center; }}
+            </style>
+        </head>
+        <body>
+            <div class="wrapper">
+                <div class="container">
+                    <div class="logo">Project<span>Buddy</span></div>
+                    <h2>Welcome to ProjectBuddy, {user_name}!</h2>
+                    <p>Your account is ready. ProjectBuddy is where students find the right teammates — and build a track record that follows them into the next project.</p>
+                    <p>A good first move:</p>
+                    <ul>
+                        <li><strong>Pick your interests</strong> — they drive what we recommend to you.</li>
+                        <li><strong>Browse open projects</strong> — apply to the ones that fit.</li>
+                        <li><strong>Find teammates</strong> — ranked by how well they complement you.</li>
+                    </ul>
+                    <a href="{dashboard_url}" class="btn">Open ProjectBuddy →</a>
+                    <hr class="divider">
+                    <div class="footer">© 2025 ProjectBuddy</div>
+                </div>
+            </div>
+        </body>
+    </html>
+    """
+
+    subject = "Welcome to ProjectBuddy"
+    return send_email(user_email, subject, html_body, is_html=True)
+
+
 def generate_reset_token():
     """Generate a secure random token for password reset."""
     return secrets.token_urlsafe(32)
