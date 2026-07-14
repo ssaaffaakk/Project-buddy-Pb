@@ -3,7 +3,7 @@
 **Author:** Safak Surmeli  
 **Institution:** International University of Sarajevo (IUS)  
 **Date:** July 2026  
-**Version:** 3.0  
+**Version:** 3.1  
 **Classification:** Public  
 **License:** MIT  
 **Contact:** surmeliisafak@gmail.com
@@ -18,7 +18,9 @@ ProjectBuddy is an open-source, web-based platform designed to address the persi
 
 Version 2.1 established three axes: (1) **live collaboration rooms** layering video, screen sharing, and a shared live-synced notepad on the voice mesh; (2) a **learned recommendation engine** — a logistic-regression model with an LSA (Latent Semantic Analysis) embedding tower, trained on the platform's own interaction signals and benchmarked leakage-free against a rule-based baseline, with a public model card; and (3) a **social and identity layer** (a 120-tag interdisciplinary interest taxonomy, first-run onboarding, public profile walls, and in-chat file attachments).
 
-**Version 3.0** broadens ProjectBuddy from a feature-complete collaboration tool into a full-stack data platform, and adds a substantial product layer. On the engineering side it introduces: a versioned, OpenAPI-documented **JSON API** (`/api/v1`) with JWT authentication and schema validation; a **Celery task queue** (with a transparent in-process fallback) for retried background delivery and scheduled jobs; a nightly **ELT pipeline** that loads a star-schema **data warehouse** under data-quality gates; an **MLOps loop** around the recommender (artifact versioning and rollback, scheduled retraining, and feature-drift monitoring); production **observability** via Prometheus metrics and optional Sentry; a feature-flagged **React + TypeScript client** over the API; and **infrastructure-as-code** with a local Prometheus/Grafana stack. On the product side it adds nine features: a **teammate finder** (user-to-user matching), **explainable applicant fit scores**, a **weekly recommendation digest**, **semantic project search with duplicate detection**, public-profile **contribution analytics**, an **instructor team-health dashboard**, a per-project **kanban board**, an **AI quiz generator** from uploaded notes, and **AI meeting notes** (Whisper transcription plus LLM summarization) for study-group voice rooms. The codebase is covered by an automated test suite (120+ backend tests plus a frontend suite) gated in continuous integration. These additions are documented in Section 9.
+**Version 3.0** broadens ProjectBuddy from a feature-complete collaboration tool into a full-stack data platform, and adds a substantial product layer. On the engineering side it introduces: a versioned, OpenAPI-documented **JSON API** (`/api/v1`) with JWT authentication and schema validation; a **Celery task queue** (with a transparent in-process fallback) for retried background delivery and scheduled jobs; a nightly **ELT pipeline** that loads a star-schema **data warehouse** under data-quality gates; an **MLOps loop** around the recommender (artifact versioning and rollback, scheduled retraining, and feature-drift monitoring); production **observability** via Prometheus metrics and optional Sentry; a feature-flagged **React + TypeScript client** over the API; and **infrastructure-as-code** with a local Prometheus/Grafana stack. On the product side it adds nine features: a **teammate finder** (user-to-user matching), **explainable applicant fit scores**, a **weekly recommendation digest**, **semantic project search with duplicate detection**, public-profile **contribution analytics**, an **instructor team-health dashboard**, a per-project **kanban board**, an **AI quiz generator** from uploaded notes, and **AI meeting notes** (Whisper transcription plus LLM summarization) for study-group voice rooms. These additions are documented in Section 9.
+
+**Version 3.1** closes the last gap between "a platform that hosts your project" and "a platform you actually live in day to day." Where earlier versions could put two students in the same *room*, they could not put them in touch **one-to-one**: v3.1 adds a full **direct-messaging system** — private 1:1 threads with in-chat file sharing, WebRTC voice and video calls, archive/pin inbox organization, and contact suggestions drawn from real collaboration history — and makes the community feed shareable *into* it. It further adds a **weekly availability grid** with team meeting-time overlap and `.ics` calendar export (answering "when can we all actually meet?"), **bookmarks** across projects and posts, **task due dates**, **application withdrawal**, an **idle-session timeout**, a persisted **light/dark theme**, and the first tranche of accessibility work. The codebase is covered by an automated test suite (150+ backend tests plus a frontend suite) gated in continuous integration. These additions are documented in Section 10.
 
 The platform has been developed and deployed at the International University of Sarajevo, serving as both a functional tool and a research contribution to the field of Computer-Supported Collaborative Learning (CSCL).
 
@@ -79,11 +81,17 @@ The platform has been developed and deployed at the International University of 
    - 9.5 [Observability, CI/CD, and Infrastructure as Code](#95-observability-cicd-and-infrastructure-as-code)
    - 9.6 [React + TypeScript Client](#96-react--typescript-client)
    - 9.7 [Feature Expansion](#97-feature-expansion)
-10. [Limitations and Future Work](#10-limitations-and-future-work)
-    - 10.1 [Current Limitations](#101-current-limitations)
-    - 10.2 [Planned Improvements](#102-planned-improvements)
-11. [Conclusion](#11-conclusion)
-12. [References](#12-references)
+10. [Version 3.1: Direct Messaging, Scheduling, and Personal Workflow](#10-version-31-direct-messaging-scheduling-and-personal-workflow)
+    - 10.1 [Direct Messaging with 1:1 Calls](#101-direct-messaging-with-11-calls)
+    - 10.2 [Availability, Meeting-Time Overlap, and Calendar Export](#102-availability-meeting-time-overlap-and-calendar-export)
+    - 10.3 [Bookmarks and the Saved Watchlist](#103-bookmarks-and-the-saved-watchlist)
+    - 10.4 [Project Workflow Refinements](#104-project-workflow-refinements)
+    - 10.5 [Theming, Accessibility, and Session Hygiene](#105-theming-accessibility-and-session-hygiene)
+11. [Limitations and Future Work](#11-limitations-and-future-work)
+    - 11.1 [Current Limitations](#111-current-limitations)
+    - 11.2 [Planned Improvements](#112-planned-improvements)
+12. [Conclusion](#12-conclusion)
+13. [References](#13-references)
 
 ---
 
@@ -185,9 +193,9 @@ ProjectBuddy follows a modular monolithic architecture organized around the Flas
 The architecture is organized into four logical layers:
 
 1. **Presentation Layer:** Jinja2 server-rendered HTML templates with responsive CSS, vanilla JavaScript, and Socket.IO client for real-time updates.
-2. **Application Layer:** Flask blueprints (9 modules) implementing RESTful API endpoints and server-side rendering routes, with cross-cutting concerns (authentication, rate limiting, CSRF protection) handled by middleware and decorators.
-3. **Service Layer:** Business logic encapsulated in dedicated service modules (recommendation engine, badge system, deadline checker, file storage abstraction).
-4. **Data Layer:** SQLAlchemy 2.0 ORM with 25 mapped models, PostgreSQL in production, SQLite for development, managed through Alembic migrations.
+2. **Application Layer:** Flask blueprints (10 server-rendered modules plus the versioned `flask-smorest` API blueprint) implementing RESTful API endpoints and server-side rendering routes, with cross-cutting concerns (authentication, rate limiting, CSRF protection, idle-session enforcement) handled by middleware and decorators.
+3. **Service Layer:** Business logic encapsulated in dedicated service modules (recommendation engine, badge system, deadline checker, file storage abstraction, analytics, ELT, and the ML pipeline).
+4. **Data Layer:** SQLAlchemy 2.0 ORM with 45 mapped models, PostgreSQL in production, SQLite for development, managed through Alembic migrations.
 
 ### 3.2 Technology Stack
 
@@ -216,14 +224,17 @@ The technology stack was selected to balance developer productivity, ecosystem m
 
 ### 3.3 Data Model
 
-The data model comprises 38 SQLAlchemy models organized into seven functional domains. All models use the modern SQLAlchemy 2.0 `mapped_column` / `Mapped[type]` declarative syntax with full type annotations. The final two domains — behavioural instrumentation and the analytics warehouse — were introduced in Version 3.0 and are discussed further in Sections 9.1 and 9.2.
+The data model comprises 45 SQLAlchemy models organized into ten functional domains. All models use the modern SQLAlchemy 2.0 `mapped_column` / `Mapped[type]` declarative syntax with full type annotations. Behavioural instrumentation and the analytics warehouse were introduced in Version 3.0 (Sections 9.1 and 9.2); direct messaging, availability, and saved items were introduced in Version 3.1 (Section 10).
 
 | Domain | Models | Key Relationships |
 |--------|--------|-------------------|
 | **User Identity & Social** | User, UserInterest, UserSkill, UserCourse, ProfileComment, ProfileCommentLike | User has many interests, skills, and courses; student/instructor/admin roles; users carry an avatar and cover banner and an `onboarded` flag; public profile walls (comments + likes) let any member post on any profile |
-| **Project Lifecycle** | Project, ProjectTag, ProjectSkill, ProjectMember, Application, ProjectMessage, ProjectVote, ProjectTask | Project owned by User; members join via Application; votes enable community ranking; ProjectTask backs the per-project Kanban board (todo / doing / done) |
+| **Project Lifecycle** | Project, ProjectTag, ProjectSkill, ProjectMember, Application, ProjectMessage, ProjectVote, ProjectTask | Project owned by User; members join via Application; votes enable community ranking; ProjectTask backs the per-project Kanban board (todo / doing / done) with an optional `due_date` driving the overdue flag |
 | **Assessment** | Feedback, Endorsement, Badge, UserBadge | Feedback links giver/receiver/project with rating constraint (1–5); endorsements require shared project completion |
 | **Communication & Community** | Chat, ChatMessage, StudyGroup, StudyGroupMember, StudyGroupMessage, StudyGroupNote, SharedFile, ChatbotSession, CommunityPost, CommunityComment, CommunityLike | Admin support chat; group chat with in-message file attachments and a live-synced shared note; AI chatbot session persistence; community feed with posts, comments, and likes |
+| **Direct Messaging** | Conversation, DirectMessage, DmAttachment | Exactly one `Conversation` per user pair, stored canonically (`user_a_id < user_b_id`) so either side opens the same thread; per-member archive/pin flags; messages may carry a file attachment or a shared community post (the latter by plain id, so deleting the post degrades the card rather than breaking the thread) |
+| **Scheduling** | UserAvailability | One row per free half-day block (weekday × morning/afternoon/evening); absence of a row means unavailable. Intersected across a team to compute meeting-time overlap |
+| **Saved Items** | SavedProject, SavedPost | A user's bookmarks on projects and community posts; one row per (user, target), toggled from the card and surfaced on the Saved watchlist |
 | **Moderation & Delivery** | Report, AdminMessage, Notification, PushSubscription, PasswordReset | Report targets user or project (including profile-wall comments); admin can warn/ban/dismiss; notifications link to originating action; PushSubscription stores Web-Push endpoints for the weekly digest |
 | **Instrumentation** | ActivityEvent | Append-only behavioural event log (actor, verb, target, timestamp) that feeds the ELT pipeline and product-analytics queries |
 | **Analytics Warehouse** | DwDimUser, DwDimProject, DwFactDailyActivity, DwDailyMetrics | Star-schema dimension and fact tables populated by the nightly ELT job from `ActivityEvent`; source for dashboards and A/B read-outs |
@@ -235,8 +246,8 @@ ProjectBuddy uses the Flask application factory pattern (`create_app()`) to ensu
 1. **Configuration Loading:** From environment-specific classes (DevelopmentConfig, ProductionConfig, TestingConfig).
 2. **Proxy Fix:** Werkzeug ProxyFix middleware installation for correct header handling behind reverse proxies (Render, Heroku).
 3. **Extension Initialization:** SQLAlchemy, Migrate, LoginManager, Limiter, CSRFProtect, SocketIO (with Redis message queue when available).
-4. **Blueprint Registration:** 9 route modules plus SocketIO handlers for voice/video signaling, shared-note sync, and participant state relay.
-5. **Security Middleware:** CSP nonce generation per request, comprehensive security headers on every response, cache-control policies per path.
+4. **Blueprint Registration:** 10 route modules and the versioned API blueprint, plus SocketIO handlers for voice/video signaling, shared-note sync, participant state relay, and 1:1 call setup.
+5. **Security Middleware:** CSP nonce generation per request, comprehensive security headers on every response, cache-control policies per path, and a `before_request` idle-session guard.
 6. **Error Handlers:** Custom 404/500 pages, graceful CSRF failure handling, rate-limit exceeded flash messages.
 7. **Startup Tasks (OS Thread):** Schema migration, badge seeding, admin sync, avatar backfill, mock data seeding — run in a genuine OS thread to avoid eventlet hub conflicts.
 8. **Background Scheduler:** Hourly deadline checker running in a genuine OS thread (not eventlet greenlet).
@@ -252,6 +263,7 @@ Security is implemented as a defense-in-depth strategy with multiple overlapping
 | **Rate Limiting** | Global: 200/day, 50/hour; Login: 20/min, 100/hour; Register: 10/hour; Admin login: 10/min, 30/hour; Chatbot: 20/min, 200/day | Brute force, credential stuffing, API abuse |
 | **Password Security** | PBKDF2-SHA256 hashing via Werkzeug; min 8 chars + digit + special character | Credential theft, rainbow table attacks |
 | **Session Security** | HttpOnly, Secure, SameSite=Lax cookies; 8-hour session lifetime; `__Host-` prefix in production | Session hijacking, cookie theft |
+| **Idle Timeout** | `before_request` guard signs the user out after `SESSION_IDLE_TIMEOUT_MIN` (default 30) minutes without *user-driven* activity; background polls (notifications, chat fallback), the SocketIO transport, and static assets are exempt so they cannot keep a session alive on an unattended machine | Unattended-session takeover on shared/lab computers |
 | **HSTS** | `max-age=63072000; includeSubDomains; preload` (production only) | SSL stripping, downgrade attacks |
 | **OAuth CSRF** | HMAC-SHA256 signed timestamp state parameter (no session dependency); 10-minute window; `hmac.compare_digest` for constant-time comparison | OAuth state tampering, timing attacks |
 | **Permissions Policy** | `camera=(), microphone=(self), geolocation=(), payment=(), usb=()` | Unauthorized browser API access |
@@ -554,7 +566,10 @@ Each major feature maps directly to a pain point observed in real university pro
 | "I'm in too many projects and can't keep up" | Hard cap of 3 active projects per student |
 | "I can't find projects that match my interests" | Interest-based recommendation engine |
 | "Our team chat is scattered across 4 apps" | Built-in project chat, study groups, voice rooms |
-| "The deadline passed and nobody noticed" | Auto-complete scheduler (hourly check) |
+| "I found someone promising but had no way to reach them" | Direct 1:1 messaging with voice/video calls (v3.1) |
+| "It took 40 messages to agree on a meeting time" | Weekly availability grid + team overlap heatmap (v3.1) |
+| "I saw a good project while on the bus and never found it again" | Bookmarks and the Saved watchlist (v3.1) |
+| "The deadline passed and nobody noticed" | Auto-complete scheduler (hourly check), task due dates, `.ics` calendar export |
 | "There's no incentive to be a good teammate" | Badge system rewarding completion and endorsements |
 | "Abusive or inactive users face no consequences" | Admin moderation: warnings, bans, report queue |
 
@@ -580,14 +595,14 @@ We evaluate ProjectBuddy against the seven CSCL affordances framework proposed b
 | CSCL Affordance | ProjectBuddy Implementation | Coverage |
 |-----------------|----------------------------|----------|
 | **Joint Task Performance** | Project lifecycle management with shared membership, role assignment, and state transitions | Full |
-| **Communication** | Text messaging (study groups), WebRTC voice chat, admin messaging, AI chatbot | Full |
-| **Resource Sharing** | File upload/download in study groups (40+ formats, 25 MB limit), community media posts (50 MB) | Full |
-| **Group Awareness** | Live voice presence indicators, member lists, application status tracking, notification system | Partial |
-| **Regulation** | Deadline enforcement (automatic), project membership limits (max 3), rate limiting | Partial |
+| **Communication** | Direct 1:1 messaging with voice/video calls, group text messaging, WebRTC live rooms, admin messaging, AI chatbot | Full |
+| **Resource Sharing** | File upload/download in study groups (40+ formats, 25 MB limit) and in direct messages, community media posts (50 MB), shared live notes | Full |
+| **Group Awareness** | Live voice presence, typing indicators, member lists, kanban task boards, contribution analytics on public profiles, team availability overlap, instructor team-health dashboard | Full |
+| **Regulation** | Deadline enforcement (automatic), task due dates, project membership limits (max 3), idle-session timeout, rate limiting | Partial |
 | **Engagement** | Badge gamification, skill endorsements, community likes/comments, project voting | Full |
 | **Assessment** | Peer feedback (1–5 rating + comment), skill endorsements, instructor ratings | Full |
 
-**Group Awareness** is rated "Partial" because while the platform provides real-time voice presence and member status, it does not yet implement task progress dashboards or contribution analytics. **Regulation** is "Partial" because while deadlines and membership limits are enforced, the platform does not yet support instructor-defined milestones or automated progress gates.
+**Group Awareness** was rated "Partial" through v2.1 because the platform surfaced presence but no view of *who was actually doing the work*. Versions 3.0 and 3.1 closed that gap from three directions — per-project kanban boards, contribution analytics on public profiles, and the instructor team-health dashboard — and added a scheduling dimension (team availability overlap), so the affordance is now rated Full. **Regulation** remains "Partial": deadlines, task due dates, and membership limits are enforced, but the platform still does not support instructor-defined milestones or automated progress gates.
 
 ### 8.2 Functional Completeness
 
@@ -610,6 +625,16 @@ We evaluate ProjectBuddy against the seven CSCL affordances framework proposed b
 | Max 3 active projects | **Complete** | Enforced on both create and apply |
 | Email notifications | **Complete** | Password reset, application events |
 | GitHub OAuth | **Complete** | HMAC-signed state, no session dependency |
+| Direct 1:1 messaging | **Complete** | Canonical thread per pair; in-chat files; archive/pin; contact suggestions |
+| 1:1 voice/video calls | **Complete** | WebRTC over the DM thread; membership re-validated on every signaling event |
+| Block / mute a user | **Not implemented** | Report + admin ban only — see Section 11.1, limitation 11 |
+| Withdraw an application | **Complete** | Frees the reviewer's queue and the applicant's 3-project allowance |
+| Kanban task due dates | **Complete** | Drives the overdue flag and the instructor deadline-risk view |
+| Weekly availability + team overlap | **Complete** | 7 × 3 half-day grid, intersected across the team into a heatmap |
+| Calendar export (`.ics`) | **Complete** | Per-project deadline, or all deadlines in one file |
+| Bookmarks (projects + posts) | **Complete** | Toggle from the card; unified Saved watchlist |
+| Light / dark theme | **Complete** | Persisted, applied before first paint |
+| Idle-session timeout | **Complete** | 30 min default; background polls do not count as activity |
 
 ### 8.3 Security Assessment
 
@@ -639,9 +664,11 @@ We evaluate ProjectBuddy against the seven CSCL affordances framework proposed b
 - Graceful degradation — chatbot falls back through three providers; storage falls back from S3 to local disk; rate limiting falls back from Redis to memory.
 
 **Areas for Improvement:**
-- No automated test suite — the application was manually tested, but unit and integration tests would improve confidence in future changes.
-- No API documentation (OpenAPI / Swagger) — the JSON API endpoints are undocumented beyond code comments.
-- No WebSocket authentication beyond `current_user.is_authenticated` — a malicious client could potentially forge SocketIO events if they obtain a valid session cookie.
+- WebSocket authorization is per-event rather than systematic. Handlers do validate membership before relaying (the DM call events in Section 10.1 re-check conversation membership on every event), but this is enforced handler-by-handler rather than by a single gate, so a new handler can omit the check by accident.
+- `routes/main.py` has accreted responsibilities — profiles, availability, calendar export, bookmarks, and the admin analytics view all live there — and would benefit from being split along the lines the other blueprints already follow.
+- The boot-time column backfill (Section 10.4) is a pragmatic safety net, but it overlaps with Alembic's job; migrations should remain the single source of schema truth.
+
+*(The two items previously listed here — the absence of an automated test suite and of API documentation — were resolved in Version 3.0: a CI-gated pytest suite and an OpenAPI/Swagger specification served at `/api/docs`.)*
 
 ### 8.5 Scalability Considerations
 
@@ -710,23 +737,73 @@ Every feature was built to the same bar: locked to the existing design system (p
 
 ---
 
-## 10. Limitations and Future Work
+## 10. Version 3.1: Direct Messaging, Scheduling, and Personal Workflow
 
-### 10.1 Current Limitations
+Versions 1.x–3.0 built the platform and then the data and ML infrastructure beneath it. Version 3.1 addresses a gap that had persisted through all of them, and that is easy to miss when reading a feature list: **ProjectBuddy could put two students in the same room, but it could not put them in touch.** Every communication channel was *many-to-many* — a project chat, a study group, a community feed. If a student saw a promising teammate on the Teammate Finder (Section 9.7) and wanted to say "hey, are you free for the database project?", the platform had no answer. They had to fall back to WhatsApp — the exact fragmentation Section 1.1 identifies as pain point #3.
+
+Version 3.1 closes that loop, then builds the coordination layer that a 1:1 channel makes possible.
+
+### 10.1 Direct Messaging with 1:1 Calls
+
+A dedicated `messages` blueprint (`routes/messages.py`) adds private threads between any two members.
+
+**Canonical thread identity.** Exactly one `Conversation` row exists per user pair. The two ids are stored canonically (`user_a_id < user_b_id`) and looked up that way, so opening a chat from either direction lands in the same thread — there is no way to end up with two half-populated conversations between the same people.
+
+**Message content.** Beyond text, a message can carry an **in-chat file attachment** (`DmAttachment`, scoped to the conversation so only its two members can download it, routed through the same S3/local storage abstraction as every other upload) or a **shared community post**, which renders as a preview card. The shared post is referenced by plain integer id rather than a foreign key — a deliberate choice, so that deleting the post degrades the card to "post unavailable" instead of breaking the thread it was shared into.
+
+**1:1 voice and video calls.** The study-group live rooms (Section 5.2) established a WebRTC mesh with SocketIO signaling; v3.1 reuses that transport for two-party calls. A five-event protocol (`dm_call_invite` → `accept` / `decline` → `signal` → `hangup`) rings the other side, negotiates the peer connection, and tears it down. Every call event is re-validated server-side against conversation membership before it is relayed — a client cannot ring, or listen in on, a conversation it does not belong to. Because a 1:1 call is a mesh of exactly two peers, it sidesteps the O(n²) scaling limit that constrains group rooms (Section 11.1).
+
+**Inbox organization.** Threads can be **archived** and **pinned**, with the flags stored per member (`a_archived` / `b_archived`, `a_pinned` / `b_pinned`) rather than per conversation — two people organize their own inboxes independently, and one person archiving a thread does not hide it from the other. Archiving auto-clears on any new message, so an archived thread resurfaces rather than silently swallowing mail.
+
+**Contact suggestions.** An empty inbox is a dead end, so the inbox seeds itself from real collaboration history: project teammates first, then study-group co-members, then the newest active members — each labelled with *why* they are being suggested, and excluding anyone the user already has a thread with (as well as banned, deactivated, and admin accounts). This is the same design principle as the recommender: never show a ranked list without showing its reasons.
+
+### 10.2 Availability, Meeting-Time Overlap, and Calendar Export
+
+Team formation was solved in v1; *scheduling* was not. "When can we all meet?" is the question that fills group chats with dozens of messages and still ends in a bad slot.
+
+Each user marks a **weekly availability grid** — 7 weekdays × 3 half-day blocks (morning / afternoon / evening), 21 cells — alongside an optional timezone. Absence of a cell means "not available", which keeps the storage sparse and the semantics unambiguous. On a project page, the team's grids are **intersected into an overlap heatmap**: for each cell, how many members are free. The slot where the whole team is free stops being a negotiation and becomes a lookup.
+
+Deadlines also leave the platform: any project's deadline downloads as an **`.ics` calendar event**, and `/calendar.ics` exports every deadline across the projects a user owns or belongs to, in one file, importable into Google Calendar, Apple Calendar, or Outlook. ProjectBuddy does not attempt to replace the calendar a student already lives in — it feeds it.
+
+### 10.3 Bookmarks and the Saved Watchlist
+
+Students browse projects when they have five minutes, and decide when they have an hour. Previously there was nothing between "read it and forget it" and "apply now" — a browse-time discovery had to be re-found later, or lost.
+
+`SavedProject` and `SavedPost` add a **bookmark toggle** to project cards (on Browse and on the detail page) and to community posts. Both feed a single **Saved watchlist** that shows projects and posts together, newest first. The models are deliberately parallel — one row per (user, target), a unique constraint preventing duplicates — so the two surfaces behave identically and the code that drives them is the same shape.
+
+### 10.4 Project Workflow Refinements
+
+Three smaller changes close gaps in the project lifecycle that surfaced only once the platform had real use:
+
+- **Application withdrawal.** A pending application could previously be neither cancelled nor taken back; a student who changed their mind was stuck occupying a slot in someone's review queue and one of their own three concurrent-project allowances. Applicants can now withdraw a pending application, which frees both.
+- **Task due dates.** Kanban tasks (Section 9.7) carry an optional `due_date`, which drives an overdue flag on the board and gives the instructor deadline-risk view (also Section 9.7) task-level rather than only project-level signal.
+- **Schema resilience on boot.** A boot-time backfill adds newly-introduced columns to a database that is behind on migrations, so a half-migrated deployment degrades to missing *data* rather than a 500 on every request — a lesson learned from shipping several schema-touching features in quick succession.
+
+### 10.5 Theming, Accessibility, and Session Hygiene
+
+- **Light/dark theme.** The interface ships a persisted light mode alongside the original dark theme, applied before first paint (so there is no flash of the wrong theme) and remembered in `localStorage`. Bringing it in required auditing every hard-coded colour across the surface area added since v2 — voice-call bars, availability heatmaps, apply and post-project flows — and replacing it with theme-aware tokens.
+- **Accessibility groundwork.** A skip-to-content link, a visible keyboard focus ring, and a named `<main>` landmark are the first tranche of accessibility work. This is a start, not a compliance claim: no formal WCAG audit has been conducted (Section 11.1).
+- **Idle-session timeout.** Sessions expire after 30 minutes without user-driven activity (configurable via `SESSION_IDLE_TIMEOUT_MIN`). The distinction that makes this work is that **background polls do not count as activity** — a notification poll or a chat fallback poll cannot hold a session open on an unattended lab machine, which is precisely the threat the feature exists to address.
+
+---
+
+## 11. Limitations and Future Work
+
+### 11.1 Current Limitations
 
 1. **Full-Mesh Voice Topology:** The peer-to-peer WebRTC mesh topology has O(n²) connection complexity, making it unsuitable for rooms with more than 6–8 participants. A selective forwarding unit (SFU) architecture would be needed for larger rooms.
 
-2. **Single-Worker Real-Time Fan-Out:** Group chat now delivers messages in real time over SocketIO — a v3.x change that replaced the former 3-second HTTP polling — with a slow reconnect/​fallback poll for resilience. The broadcast, however, relies on a single eventlet worker holding every room member in-process; scaling SocketIO across multiple workers would require a shared message queue (e.g., Redis) to fan events out between processes.
+2. **Real-Time Fan-Out Depends on Redis:** Group chat, direct messages, and call signaling all deliver in real time over SocketIO — a v3.x change that replaced the former 3-second HTTP polling — with a slow reconnect/​fallback poll for resilience. Cross-worker fan-out is handled by the Redis message queue (Section 5.3), but only when `REDIS_URL` is set: without it the app silently degrades to in-process broadcast, which is correct on a single worker and **silently lossy across several**. A multi-worker deployment without Redis is a misconfiguration the application does not currently refuse to start on.
 
 3. **Single-Server Recommendation Engine:** The recommender scores all open projects on each request (O(n) projects). A v3.0 performance pass batched the embedding transforms and eager-loaded relationships to remove an N+1 pattern, but for very large deployments this path would still need indexing, caching, or an approximate-nearest-neighbour index over the embedding space.
 
 4. **Recommender Data Scarcity:** The learned recommender is trained on a small number of interaction pairs (memberships and applications). Its reported ROC-AUC, while measured leakage-free, rests on few positive examples and is therefore a fragile estimate; the semantic embedding tower adds no aggregate lift at this corpus size. Model quality is expected to improve substantially only as interaction data accumulates and the model is retrained. This is disclosed transparently on the public model card rather than obscured.
 
-5. **Partial Test Coverage:** Version 3.0 introduced an automated suite (120+ backend `pytest` tests plus a frontend suite) gated in CI with a coverage floor, resolving the earlier absence of testing. Coverage is concentrated on business logic, authorization gates, and the data/ML pipelines rather than being exhaustive; broad template-rendering and end-to-end (Playwright) coverage remain future work.
+5. **Partial Test Coverage:** Version 3.0 introduced an automated suite — now 150+ backend `pytest` tests plus a frontend suite — gated in CI with a coverage floor, resolving the earlier absence of testing. Coverage is concentrated on business logic, authorization gates, and the data/ML pipelines rather than being exhaustive; broad template-rendering and end-to-end (Playwright) coverage remain future work.
 
 6. **CSP `unsafe-inline`:** The nonce infrastructure exists but is not fully utilized due to inline event handlers in templates. Removing `unsafe-inline` requires a frontend refactor.
 
-7. **Limited Accessibility:** While the UI is responsive, it has not undergone formal WCAG 2.1 accessibility auditing.
+7. **Limited Accessibility:** Version 3.1 added a skip-to-content link, a visible keyboard focus ring, and a named `<main>` landmark (Section 10.5), but this is groundwork rather than compliance: the UI has not undergone a formal WCAG 2.1 audit, and screen-reader semantics, colour contrast across both themes, and full keyboard operability of the interactive surfaces (kanban drag-and-drop, the availability grid, the call stage) remain unverified.
 
 8. **AI Response Quality:** The free-tier Groq/LLaMA models may produce lower-quality responses compared to commercial alternatives. The keyword-based fallback provides minimal utility.
 
@@ -734,44 +811,52 @@ Every feature was built to the same bar: locked to the existing design system (p
 
 10. **Single-Institution Design:** The platform assumes a single university context. Multi-institution support would require tenant isolation.
 
-### 10.2 Planned Improvements
+11. **No Per-User Block in Direct Messages:** Any member can open a thread with any other member. Platform-wide moderation exists — a user can be reported and an admin can warn or ban them (Section 4.8) — but there is no *self-serve* control: a student cannot block or mute an individual, nor restrict who may message them, without escalating to an administrator. For a 1:1 channel this is the most significant gap in v3.1, and it is the first item on the roadmap below.
 
-**Delivered since v2.1.** Several items previously listed here were implemented in Version 3.0 (Section 9): a comprehensive test suite and CI; OpenAPI/Swagger documentation with a versioned JSON API; contribution analytics and the instructor dashboard; AI-powered exam preparation (the quiz generator, including PDF upload); multi-language support (English, Turkish, Bosnian); real-time SocketIO group chat (replacing the former polling, with typing indicators, online presence, and message deletion); and the MLOps, data-warehouse, and observability infrastructure. The roadmap below reflects what remains outstanding.
+### 11.2 Planned Improvements
+
+**Delivered since v2.1.** Several items previously listed here were implemented in Versions 3.0 and 3.1 (Sections 9 and 10): a comprehensive test suite and CI; OpenAPI/Swagger documentation with a versioned JSON API; contribution analytics and the instructor dashboard; AI-powered exam preparation (the quiz generator, including PDF upload); multi-language support (English, Turkish, Bosnian); real-time SocketIO group chat (replacing the former polling, with typing indicators, online presence, and message deletion); direct messaging with 1:1 voice/video calls and in-chat files; availability overlap and calendar export; bookmarks; a light/dark theme; an idle-session timeout; and the MLOps, data-warehouse, and observability infrastructure. The roadmap below reflects what remains outstanding.
 
 
-1. **SFU-Based Voice Architecture:** Migrate from full-mesh WebRTC to a Selective Forwarding Unit (e.g., mediasoup or Janus) to support voice rooms with 20+ concurrent participants while reducing client-side bandwidth requirements.
+1. **Self-Serve Blocking and Message Controls:** Add per-user block/mute and a "who can message me" setting (e.g. teammates and study-group members only), plus a report path from inside a thread. This is the highest-priority item: direct messaging (Section 10.1) shipped without it, and platform-wide admin moderation is too blunt an instrument for an unwanted 1:1 conversation.
 
-2. **Read Receipts and Cross-Worker Fan-Out:** Group chat now delivers in real time with typing indicators and online presence; the remaining enhancements are read receipts and a shared message queue (e.g., Redis) so SocketIO events fan out across multiple workers rather than a single in-process room.
+2. **SFU-Based Voice Architecture:** Migrate group rooms from full-mesh WebRTC to a Selective Forwarding Unit (e.g., mediasoup or Janus) to support 20+ concurrent participants while reducing client-side bandwidth. (1:1 calls, being a two-peer mesh, are unaffected.)
 
-3. **Deeper Recommender Modelling:** The trained recommender (Section 4.3) ships in v2.1 with a logistic-regression + LSA-embedding hybrid. As interaction volume grows, planned work includes contrastive fine-tuning of the embedding towers on real interaction pairs, transformer-based embeddings (served via a lightweight ONNX runtime to avoid a torch dependency), and collaborative-filtering signals from completion rates and feedback scores.
+3. **Read Receipts and Fan-Out Safety:** Direct messages already track an `is_read` flag; surfacing it as read receipts (with a privacy toggle) is the remaining work. Separately, the app should refuse to start — rather than silently degrade — when several workers are configured without `REDIS_URL` (Section 11.1, limitation 2).
 
-4. **End-to-End Testing and Higher Coverage:** Add Playwright end-to-end tests for critical user flows and raise the coverage floor toward 80%, complementing the existing unit and integration suite.
+4. **Deeper Recommender Modelling:** The trained recommender (Section 4.3) ships with a logistic-regression + LSA-embedding hybrid. As interaction volume grows, planned work includes contrastive fine-tuning of the embedding towers on real interaction pairs, transformer-based embeddings (served via a lightweight ONNX runtime to avoid a torch dependency), and collaborative-filtering signals from completion rates and feedback scores. The direct-messaging and bookmark streams introduced in v3.1 are themselves new interaction signals the model does not yet consume.
 
-5. **CSP Hardening:** Refactor inline event handlers to external scripts with nonce attributes, remove `unsafe-inline` from CSP.
+5. **End-to-End Testing and Higher Coverage:** Add Playwright end-to-end tests for critical user flows and raise the coverage floor toward 80%, complementing the existing unit and integration suite.
 
-6. **Email Verification:** Confirmation link on registration to prevent impersonation.
+6. **CSP Hardening:** Refactor inline event handlers to external scripts with nonce attributes, remove `unsafe-inline` from CSP.
 
-7. **WCAG 2.1 AA Compliance:** Conduct a formal accessibility audit and remediate identified issues including keyboard navigation, screen reader compatibility, and color contrast ratios.
+7. **Email Verification:** Confirmation link on registration to prevent impersonation.
 
-8. **Mobile Application:** Develop a React Native or Flutter companion application for native push notifications, offline access, and optimized voice chat on mobile networks.
+8. **WCAG 2.1 AA Compliance:** Build on the v3.1 groundwork (Section 10.5) with a formal accessibility audit, remediating screen-reader semantics, colour contrast in both themes, and keyboard operability of the kanban board, availability grid, and call stage.
 
-9. **Persistent File Storage in Production:** Route avatar and banner uploads through the S3 storage abstraction by default so user-uploaded imagery survives redeploys on ephemeral-disk hosts.
+9. **Mobile Application:** Develop a React Native or Flutter companion application for native push notifications, offline access, and optimized voice chat on mobile networks.
 
-10. **LTI Integration:** Implement Learning Tools Interoperability (LTI 1.3) to enable seamless embedding within institutional LMS platforms (Moodle, Canvas) and automated grade passback.
+10. **Persistent File Storage in Production:** Route avatar and banner uploads through the S3 storage abstraction by default so user-uploaded imagery survives redeploys on ephemeral-disk hosts.
 
-11. **Team-Success Prediction:** Train a model on the accumulating warehouse data to predict whether a project will complete on time from team composition and activity, surfacing at-risk teams to instructors ahead of the rule-based flags in Section 9.7.
+11. **LTI Integration:** Implement Learning Tools Interoperability (LTI 1.3) to enable seamless embedding within institutional LMS platforms (Moodle, Canvas) and automated grade passback.
 
-12. **Mid-Project Check-Ins:** Periodic teammate pulse surveys during active projects to surface issues before completion.
+12. **Team-Success Prediction:** Train a model on the accumulating warehouse data to predict whether a project will complete on time from team composition and activity, surfacing at-risk teams to instructors ahead of the rule-based flags in Section 9.7.
+
+13. **Mid-Project Check-Ins:** Periodic teammate pulse surveys during active projects to surface issues before completion.
+
+14. **Scheduling Beyond the Grid:** The availability overlap (Section 10.2) reports *when* a team is free but does not act on it — proposing, booking, and reminding on a chosen slot, and reconciling the declared grid against real timezones, remain open.
 
 ---
 
-## 11. Conclusion
+## 12. Conclusion
 
 This white paper has presented ProjectBuddy, an open-source web-based platform that addresses the fundamental challenges of collaborative project-based learning in higher education. By integrating intelligent team formation, real-time multi-modal communication, structured peer assessment, skill endorsement, AI-powered assistance, and administrative tooling into a single cohesive environment, ProjectBuddy represents a significant contribution to the Computer-Supported Collaborative Learning (CSCL) technology landscape. Version 3.0 further demonstrates that a student-built product can be operated with production-grade engineering practice — a versioned API, a data warehouse under quality gates, an MLOps loop with drift monitoring and online experimentation, observability, and CI — without abandoning the honest reporting of negative results (for instance, the recommender's fragile small-sample estimates and the semantic tower's lack of aggregate lift, both disclosed on the public model card).
 
+Version 3.1 then closed a loop the earlier versions had left open. A platform can recommend a teammate, score their fit, and explain the reasoning — and still fail, if the student's only way to *reach* that person is to leave for WhatsApp. Direct messaging, availability overlap, and bookmarks are individually unremarkable features; together they are what turns a recommendation into a conversation, a conversation into a meeting, and a meeting into a team. Their absence, not their presence, was the notable thing — and shipping them surfaced the platform's most significant outstanding gap, the lack of a self-serve block control on a channel that is now genuinely one-to-one (Section 11.1).
+
 The platform's technical architecture demonstrates that modern web technologies — Flask, SQLAlchemy 2.0, WebRTC, Redis, scikit-learn, and large language models — can be composed into a robust, secure, and maintainable system suitable for university-scale deployment. The defense-in-depth security approach, with its comprehensive header suite, rate limiting, CSRF protection, and multi-layer file validation, establishes a security baseline appropriate for handling student data in an educational context.
 
-The platform's core contribution is not any single feature but the *combination* of structured listings, gated reputation mechanisms, and consolidated collaboration tools into a single system. A project listing alone is a job board; peer feedback alone is a survey; chat alone is Discord. The value emerges from connecting these elements into a lifecycle: **post → match → form → collaborate → complete → review → carry reputation forward**.
+The platform's core contribution is not any single feature but the *combination* of structured listings, gated reputation mechanisms, and consolidated collaboration tools into a single system. A project listing alone is a job board; peer feedback alone is a survey; chat alone is Discord. The value emerges from connecting these elements into a lifecycle: **discover → match → reach out → form → collaborate → complete → review → carry reputation forward**.
 
 The broader lesson is that tools shape behavior. When team formation is invisible and unaccountable, students optimize for convenience — picking whoever responds first. When it is visible and reputation-bearing, they optimize for quality — picking teammates with a demonstrated track record. ProjectBuddy provides the infrastructure for the second mode.
 
@@ -779,7 +864,7 @@ ProjectBuddy is deployed and actively used at the International University of Sa
 
 ---
 
-## 12. References
+## 13. References
 
 [1] Dillenbourg, P. (1999). *Collaborative Learning: Cognitive and Computational Approaches.* Elsevier Science. ISBN: 978-0-08-043073-7.
 
