@@ -268,7 +268,10 @@
     var empty = document.getElementById('dmEmpty');
     if (empty) empty.remove();
     var div = document.createElement('div');
-    div.className = 'dm-msg ' + (m.is_mine || m.sender_id === MY_ID ? 'me' : 'them');
+    // Side is decided by sender_id only: the socket broadcast's is_mine is
+    // computed relative to the SENDER, so trusting it would render the other
+    // person's live messages on the wrong (right) side for the recipient.
+    div.className = 'dm-msg ' + (m.sender_id === MY_ID ? 'me' : 'them');
     div.dataset.id = m.id;
     div.innerHTML = window._esc(m.body) + attachmentHtml(m.attachment) + sharedPostHtml(m.shared_post) +
                     '<span class="t">' + window._esc(m.time) + '</span>';
