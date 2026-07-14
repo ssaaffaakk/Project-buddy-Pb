@@ -155,6 +155,9 @@ html.lm nav.sc{background:rgba(247,245,241,.95);}
 .lang-menu-item:hover{background:rgba(124,155,255,.12);color:var(--text);}
 .lang-menu-item.on{color:var(--gold);}
 .lm-flag{font-size:1rem;line-height:1;}
+/* Narrow screens wrap the nav, so .lang-dd lands on the left edge. A right-aligned
+   menu would then open past x=0 and be untappable — anchor it to the left instead. */
+@media(max-width:768px){.lang-menu{left:0;right:auto;}.lang-menu-item{padding:11px 12px;}}
 .btn-th{font-size:.66rem;padding:7px 13px;border-radius:7px;background:transparent;border:1px solid var(--border);color:var(--muted);cursor:pointer;font-family:'DM Mono',monospace;letter-spacing:.06em;text-transform:uppercase;transition:all .18s;}
 .btn-th:hover{border-color:var(--border-m);color:var(--text);}
 @media(max-width:768px){.btn-th{cursor:auto;}}
