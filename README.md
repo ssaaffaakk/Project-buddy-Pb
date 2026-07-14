@@ -329,7 +329,7 @@ coverage floor, on Python 3.9 (dev floor) and 3.11 (production runtime).
 
 Documentation
 
-- [docs/WHITEPAPER.md](docs/WHITEPAPER.md) — the academic white paper (design, evaluation, v3.0 work)
+- [docs/WHITEPAPER.md](docs/WHITEPAPER.md) — the academic white paper (design, evaluation, v3.1 work)
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — engineering architecture notes
 - [CONTRIBUTING.md](CONTRIBUTING.md) · [SECURITY.md](SECURITY.md) · [CHANGELOG.md](CHANGELOG.md)
 
