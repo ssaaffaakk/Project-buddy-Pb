@@ -1406,6 +1406,9 @@ def _render_profile(user):
     user_badges = UserBadge.query.filter_by(user_id=user.id).all()
     badges = [ub.badge for ub in user_badges if ub.badge]
 
+    from services.profile_completion import profile_completion
+    completion_pct, completion_items = profile_completion(user)
+
     return render_template(
         "user/profile.html",
         user=user,
@@ -1415,6 +1418,8 @@ def _render_profile(user):
         feedbacks=feedbacks,
         endorsements=endorsements,
         badges=badges,
+        completion_pct=completion_pct,
+        completion_items=completion_items,
     )
 
 
