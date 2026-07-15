@@ -395,6 +395,10 @@ def dashboard():
                         variant=rec_variant, value=rec_score)
     analytics.commit_quietly()
 
+    # Human-readable "why this fits you" line per recommended card.
+    from services.recommendation_service import match_reason
+    rec_reasons = {p.id: match_reason(user, p) for p, _ in recommendations}
+
     # Badges
     user_badges = (
         UserBadge.query
@@ -423,6 +427,7 @@ def dashboard():
         endorsement_count=endorsement_count,
         recommendations=recommendations,
         rec_variant=rec_variant,
+        rec_reasons=rec_reasons,
         badges=badges,
         open_support_chat=open_support_chat,
         warnings=warnings,

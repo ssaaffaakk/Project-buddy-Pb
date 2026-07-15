@@ -115,3 +115,35 @@ def expand_user_interests(tags):
 
 def normalize_tag(tag):
     return tag.strip().lower()
+
+
+def match_reason(user, project):
+    """One short, human sentence explaining why `project` fits `user`.
+
+    Deterministic and built from the same overlap signals the recommender
+    scores on — shared skills, interests/topics, and course — so it needs no
+    LLM call and is instant/free to render on every recommendation card.
+    Returns a plain English phrase (falls back to a generic line).
+    """
+    def _norm(value):
+        return value.strip().lower()
+
+    user_skills = {_norm(s.skill) for s in user.skills}
+    shared_skills = [ps.skill for ps in project.required_skills if _norm(ps.skill) in user_skills]
+
+    user_courses = {_norm(c.course) for c in user.courses}
+    course_match = bool(project.course) and _norm(project.course) in user_courses
+
+    user_topics = expand_user_interests([ui.tag for ui in user.interest_tags])
+    shared_topics = [normalize_tag(t.tag) for t in project.topic_tags
+                     if normalize_tag(t.tag) in user_topics]
+
+    if shared_skills:
+        names = shared_skills[:2]
+        return "Matches your {} skill{}".format(" and ".join(names), "s" if len(names) > 1 else "")
+    if course_match:
+        return "From your course {}".format(project.course)
+    if shared_topics:
+        names = [t.title() for t in shared_topics[:2]]
+        return "Fits your interest in {}".format(" and ".join(names))
+    return "Picked from your profile"
