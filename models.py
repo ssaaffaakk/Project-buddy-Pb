@@ -804,3 +804,28 @@ class DirectMessage(db.Model):
         if not self.shared_post_id:
             return None
         return db.session.get(CommunityPost, self.shared_post_id)
+
+
+# ── MESSAGE REACTIONS (emoji on DMs and study-group messages) ─────────────────
+
+class MessageReaction(db.Model):
+    """One emoji reaction by one user on one message.
+
+    Generic across message types via `scope` ('dm' | 'group') + `message_id`
+    (a plain integer, no FK, so a single table serves both DirectMessage and
+    StudyGroupMessage). One row per (scope, message, user, emoji); toggled on
+    and off. A user may add several different emojis to the same message.
+    """
+    __tablename__ = "message_reactions"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    scope: Mapped[str] = mapped_column(String(10))            # 'dm' | 'group'
+    message_id: Mapped[int] = mapped_column(Integer, index=True)
+    user_id: Mapped[int] = mapped_column(db.ForeignKey("users.id"), index=True)
+    emoji: Mapped[str] = mapped_column(String(16))
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+    __table_args__ = (
+        db.UniqueConstraint("scope", "message_id", "user_id", "emoji", name="uq_message_reaction"),
+        db.Index("ix_message_reactions_scope_msg", "scope", "message_id"),
+    )

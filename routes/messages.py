@@ -296,6 +296,9 @@ def thread(user_id):
     from routes.study_groups import _ice_servers, _servers_include_turn
     ice = _ice_servers()
 
+    from services.reactions import summarize, ALLOWED
+    reactions_map = summarize("dm", [m.id for m in msgs])
+
     return render_template(
         "messages/thread.html",
         other=other,
@@ -304,6 +307,8 @@ def thread(user_id):
         user=current_user,
         ice_servers=json.dumps(ice),
         call_has_turn=_servers_include_turn(ice),
+        reactions_map=reactions_map,
+        react_emojis=ALLOWED,
     )
 
 
@@ -344,6 +349,35 @@ def send(user_id):
     payload = _deliver_dm(conv, other, body,
                           attachment_id=attachment.id if attachment else None)
     return jsonify(payload), 201
+
+
+# ── REACT TO A MESSAGE (emoji) ────────────────────────────────────────────────
+@messages_bp.route("/react", methods=["POST"])
+@login_required
+@limiter.limit("120 per minute")
+def react():
+    from services.reactions import is_allowed, toggle
+    data = request.get_json(silent=True) or {}
+    try:
+        mid = int(data.get("message_id"))
+    except (TypeError, ValueError):
+        return jsonify({"error": "Bad message id."}), 400
+    emoji = (data.get("emoji") or "").strip()
+    if not is_allowed(emoji):
+        return jsonify({"error": "Unsupported emoji."}), 400
+
+    msg = db.session.get(DirectMessage, mid)
+    if msg is None:
+        return jsonify({"error": "Message not found."}), 404
+    conv = db.session.get(Conversation, msg.conversation_id)
+    if conv is None or not conv.has_member(current_user.id):
+        return jsonify({"error": "Not allowed."}), 403
+
+    pills = toggle("dm", mid, current_user.id, emoji)
+    socketio.emit("dm_reaction",
+                  {"message_id": mid, "reactions": pills, "conversation_id": conv.id},
+                  to=f"dm_{conv.id}")
+    return jsonify({"message_id": mid, "reactions": pills})
 
 
 def _deliver_dm(conv, other, body, attachment_id=None, shared_post_id=None,

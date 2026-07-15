@@ -152,6 +152,12 @@
           {%- endif -%}
         {%- endif -%}
         <span class="t">{{ m.created_at.strftime('%H:%M') }}</span>
+        <div class="dm-rx" data-mid="{{ m.id }}">
+          {%- for r in reactions_map.get(m.id, []) -%}
+          <button type="button" class="dm-rx-pill{% if user.id in r.user_ids %} mine{% endif %}" data-emoji="{{ r.emoji }}">{{ r.emoji }}<span class="c">{{ r.count }}</span></button>
+          {%- endfor -%}
+        </div>
+        <button type="button" class="dm-rx-add" title="{{ _('React') }}" aria-label="{{ _('React') }}">☺</button>
       </div>
     {% endfor %}
   </div>
@@ -213,6 +219,26 @@
 {% endblock %}
 
 {% block extra_script %}
+<style nonce="{{ csp_nonce }}">
+.dm-msg{position:relative;}
+.dm-rx{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px;}
+.dm-rx:empty{display:none;margin:0;}
+.dm-rx-pill{display:inline-flex;align-items:center;gap:3px;font-size:0.82rem;line-height:1;padding:3px 8px;border-radius:99px;background:rgba(255,255,255,0.09);border:1px solid rgba(255,255,255,0.14);color:var(--text);cursor:pointer;transition:transform .12s,background .15s,border-color .15s;}
+.dm-rx-pill .c{font-family:'DM Mono',monospace;font-size:0.66rem;opacity:.85;}
+.dm-rx-pill.mine{background:var(--accent-dim);border-color:rgba(124,155,255,0.55);}
+.dm-rx-pill:hover{transform:translateY(-1px);}
+.dm-rx-add{position:absolute;top:3px;right:-32px;width:25px;height:25px;border-radius:50%;border:1px solid var(--border);background:var(--card);color:var(--muted);font-size:0.9rem;line-height:1;cursor:pointer;opacity:0;transition:opacity .15s,color .15s,border-color .15s;display:flex;align-items:center;justify-content:center;}
+.dm-msg:hover .dm-rx-add{opacity:1;}
+.dm-rx-add:hover{color:var(--accent);border-color:rgba(124,155,255,0.4);}
+.dm-msg.me .dm-rx-add{right:auto;left:-32px;}
+#rxPalette{position:fixed;z-index:9999;display:none;gap:2px;padding:5px 7px;border-radius:99px;background:var(--card);border:1px solid var(--border);box-shadow:0 8px 26px rgba(0,0,0,.5);}
+#rxPalette.show{display:flex;}
+#rxPalette button{background:none;border:none;font-size:1.2rem;line-height:1;cursor:pointer;padding:3px 4px;border-radius:8px;transition:transform .12s,background .12s;}
+#rxPalette button:hover{transform:scale(1.28);background:rgba(255,255,255,0.08);}
+</style>
+<div id="rxPalette" role="menu" aria-label="{{ _('React') }}">
+  {% for e in react_emojis %}<button type="button" data-emoji="{{ e }}">{{ e }}</button>{% endfor %}
+</div>
 <script src="https://cdn.jsdelivr.net/npm/socket.io-client@4.7.5/dist/socket.io.min.js"></script>
 <script nonce="{{ csp_nonce }}">
 (function(){
@@ -275,7 +301,9 @@
     div.className = 'dm-msg ' + (m.sender_id === MY_ID ? 'me' : 'them');
     div.dataset.id = m.id;
     div.innerHTML = window._esc(m.body) + attachmentHtml(m.attachment) + sharedPostHtml(m.shared_post) +
-                    '<span class="t">' + window._esc(m.time) + '</span>';
+                    '<span class="t">' + window._esc(m.time) + '</span>' +
+                    '<div class="dm-rx" data-mid="' + m.id + '"></div>' +
+                    '<button type="button" class="dm-rx-add" title="React" aria-label="React">☺</button>';
     stream.appendChild(div);
     if (m.id > lastId) lastId = m.id;
     scrollDown();
@@ -285,6 +313,54 @@
   var socket = io();
   socket.on('connect', function(){ socket.emit('join_dm', {conversation_id: CONV_ID}); });
   socket.on('dm_message', function(m){ if (m.conversation_id === CONV_ID) render(m); });
+
+  // ── Emoji reactions ─────────────────────────────────────────────────────────
+  function rxHtml(pills){
+    if (!pills || !pills.length) return '';
+    return pills.map(function(p){
+      var mine = (p.user_ids || []).indexOf(MY_ID) >= 0 ? ' mine' : '';
+      return '<button type="button" class="dm-rx-pill' + mine + '" data-emoji="' + p.emoji + '">' +
+             p.emoji + '<span class="c">' + p.count + '</span></button>';
+    }).join('');
+  }
+  function applyReactions(mid, pills){
+    var box = stream.querySelector('.dm-rx[data-mid="' + mid + '"]');
+    if (box) box.innerHTML = rxHtml(pills);
+  }
+  async function react(mid, emoji){
+    try{
+      var r = await fetch('/messages/react', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({message_id: mid, emoji: emoji})
+      });
+      if (r.ok){ var d = await r.json(); applyReactions(d.message_id, d.reactions); }
+    }catch(e){}
+  }
+  socket.on('dm_reaction', function(d){ if (d.conversation_id === CONV_ID) applyReactions(d.message_id, d.reactions); });
+
+  var palette = document.getElementById('rxPalette');
+  var curMid = null;
+  function openPalette(btn, mid){
+    curMid = mid;
+    var r = btn.getBoundingClientRect();
+    palette.style.left = Math.max(8, Math.min(window.innerWidth - 230, r.left - 90)) + 'px';
+    palette.style.top  = Math.max(8, r.top - 46) + 'px';
+    palette.classList.add('show');
+  }
+  function closePalette(){ palette.classList.remove('show'); curMid = null; }
+  stream.addEventListener('click', function(e){
+    var add = e.target.closest('.dm-rx-add');
+    if (add){ e.stopPropagation(); var msg = add.closest('.dm-msg'); if (msg) openPalette(add, parseInt(msg.dataset.id, 10)); return; }
+    var pill = e.target.closest('.dm-rx-pill');
+    if (pill){ var box = pill.closest('.dm-rx'); if (box) react(parseInt(box.dataset.mid, 10), pill.dataset.emoji); }
+  });
+  palette.addEventListener('click', function(e){
+    var b = e.target.closest('button[data-emoji]');
+    if (b && curMid != null){ react(curMid, b.dataset.emoji); closePalette(); }
+  });
+  document.addEventListener('click', function(e){
+    if (palette.classList.contains('show') && !e.target.closest('#rxPalette') && !e.target.closest('.dm-rx-add')) closePalette();
+  });
 
   // ── Fallback poll (covers socket-down / reconnect gaps) ─────────────────────
   async function poll(){
