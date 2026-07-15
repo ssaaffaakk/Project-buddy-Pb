@@ -497,6 +497,8 @@ def _ensure_feature_columns(app: Flask) -> None:
         ("project_tasks", "due_date", DateTime()),
         ("direct_messages", "attachment_id", Integer()),
         ("direct_messages", "shared_post_id", Integer()),
+        ("direct_messages", "reply_to_id", Integer()),
+        ("study_group_messages", "reply_to_id", Integer()),
         ("conversations", "a_archived", Boolean()),
         ("conversations", "b_archived", Boolean()),
         ("conversations", "a_pinned", Boolean()),

@@ -84,6 +84,20 @@ def _shared_post_json(post):
     }
 
 
+def _reply_json(reply_msg):
+    """Compact quote payload for the message being replied to (or None)."""
+    if reply_msg is None:
+        return None
+    author = reply_msg.sender.get_full_name() if reply_msg.sender else "Unknown"
+    if reply_msg.body:
+        text = reply_msg.body
+    elif reply_msg.attachment is not None:
+        text = "📎 " + reply_msg.attachment.filename
+    else:
+        text = "Message"
+    return {"id": reply_msg.id, "author": author, "snippet": text[:90]}
+
+
 def _msg_json(m: DirectMessage) -> dict:
     return {
         "id": m.id,
@@ -93,6 +107,7 @@ def _msg_json(m: DirectMessage) -> dict:
         "time": m.created_at.strftime("%H:%M"),
         "attachment": _attachment_json(m.attachment) if m.attachment_id else None,
         "shared_post": _shared_post_json(m.shared_post) if m.shared_post_id else None,
+        "reply": _reply_json(m.reply_to) if m.reply_to_id else None,
     }
 
 
@@ -327,15 +342,26 @@ def send(user_id):
     f = request.files.get("file")
     if f is not None and f.filename:
         body = (request.form.get("body") or "").strip()
+        reply_to_id = request.form.get("reply_to_id", type=int)
     else:
         f = None
         data = request.get_json(silent=True) or {}
         body = (data.get("body") or "").strip()
+        try:
+            reply_to_id = int(data.get("reply_to_id")) if data.get("reply_to_id") else None
+        except (TypeError, ValueError):
+            reply_to_id = None
 
     if len(body) > MAX_BODY:
         return jsonify({"error": f"Too long (max {MAX_BODY} chars)."}), 400
 
     conv = _get_or_create_conversation(other.id)
+
+    # Only allow quoting a message from this same conversation.
+    if reply_to_id is not None:
+        quoted = db.session.get(DirectMessage, reply_to_id)
+        if quoted is None or quoted.conversation_id != conv.id:
+            reply_to_id = None
 
     attachment = None
     if f is not None:
@@ -347,7 +373,8 @@ def send(user_id):
         return jsonify({"error": "Message cannot be empty."}), 400
 
     payload = _deliver_dm(conv, other, body,
-                          attachment_id=attachment.id if attachment else None)
+                          attachment_id=attachment.id if attachment else None,
+                          reply_to_id=reply_to_id)
     return jsonify(payload), 201
 
 
@@ -381,13 +408,14 @@ def react():
 
 
 def _deliver_dm(conv, other, body, attachment_id=None, shared_post_id=None,
-                notif_message=None):
+                notif_message=None, reply_to_id=None):
     """Persist a DM, bump/unarchive the conversation, notify the recipient, log
     the event and broadcast it over SocketIO. Returns the JSON payload.
     Shared by the normal send route and the "share a post" route. Assumes the
     caller has validated `other` and the body/attachment/post."""
     msg = DirectMessage(conversation_id=conv.id, sender_id=current_user.id, body=body,
-                        attachment_id=attachment_id, shared_post_id=shared_post_id)
+                        attachment_id=attachment_id, shared_post_id=shared_post_id,
+                        reply_to_id=reply_to_id)
     db.session.add(msg)
     conv.last_message_at = datetime.now(timezone.utc)
     # Fresh activity pulls an archived chat back into both inboxes.

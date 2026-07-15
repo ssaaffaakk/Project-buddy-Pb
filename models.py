@@ -510,10 +510,20 @@ class StudyGroupMessage(db.Model):
     body: Mapped[str] = mapped_column(Text)
     # Optional file dropped straight into the chat (rendered inline in the stream)
     attachment_id: Mapped[Optional[int]] = mapped_column(db.ForeignKey("shared_files.id"), nullable=True)
+    # Optional message this one replies to (same group). Plain integer, no FK —
+    # deleting the quoted message degrades the quote to "message unavailable".
+    reply_to_id: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     author = db.relationship("User", lazy=True)
     attachment = db.relationship("SharedFile", lazy=True, foreign_keys=[attachment_id])
+
+    @property
+    def reply_to(self):
+        """The StudyGroupMessage this one quotes, or None if unset / deleted."""
+        if not self.reply_to_id:
+            return None
+        return db.session.get(StudyGroupMessage, self.reply_to_id)
 
 
 class StudyGroupNote(db.Model):
@@ -792,6 +802,10 @@ class DirectMessage(db.Model):
     # Plain integer on purpose — no FK, so deleting the post never breaks the
     # thread; the card degrades to "post unavailable" instead.
     shared_post_id: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    # Optional message this one replies to (same conversation). Plain integer,
+    # no FK — deleting the quoted message never breaks the reply; the quote
+    # degrades to "message unavailable".
+    reply_to_id: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     is_read: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
 
@@ -804,6 +818,13 @@ class DirectMessage(db.Model):
         if not self.shared_post_id:
             return None
         return db.session.get(CommunityPost, self.shared_post_id)
+
+    @property
+    def reply_to(self):
+        """The DirectMessage this one quotes, or None if unset / since deleted."""
+        if not self.reply_to_id:
+            return None
+        return db.session.get(DirectMessage, self.reply_to_id)
 
 
 # ── MESSAGE REACTIONS (emoji on DMs and study-group messages) ─────────────────

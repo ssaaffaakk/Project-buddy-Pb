@@ -296,6 +296,7 @@ html.light-mode .cbtn-lbl{color:var(--soft);}
               <span class="msg-time">{{ msg.created_at.strftime('%H:%M') }}</span>
               {% if mine or group.creator_id == user.id or user.role == 'admin' %}<button class="msg-del" onclick="deleteMsg({{ msg.id }})" title="{{ _('Delete') }}" aria-label="{{ _('Delete message') }}">&times;</button>{% endif %}
             </div>
+            {% if msg.reply_to %}<div class="sg-quote {% if mine %}mine{% endif %}"><span class="who">{{ msg.reply_to.author.get_full_name() if msg.reply_to.author else _('Unknown') }}</span><span class="txt">{{ (msg.reply_to.body or _('Attachment'))[:90] }}</span></div>{% endif %}
             {% if msg.body %}<div class="msg-bubble {% if mine %}mine{% endif %}">{{ msg.body }}</div>{% endif %}
             {% if msg.attachment %}
               {% set aurl = url_for('study_groups.download_file', group_id=group.id, file_id=msg.attachment.id) %}
@@ -316,6 +317,7 @@ html.light-mode .cbtn-lbl{color:var(--soft);}
               {%- endfor -%}
             </div>
             <button type="button" class="sg-rx-add" data-mid="{{ msg.id }}" title="{{ _('React') }}" aria-label="{{ _('React') }}">☺</button>
+            <button type="button" class="sg-reply-btn" data-id="{{ msg.id }}" data-author="{{ _('You') if mine else msg.author.first_name }}" data-snippet="{{ (msg.body or _('Attachment'))[:60] }}" title="{{ _('Reply') }}" aria-label="{{ _('Reply') }}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 17 4 12 9 7"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/></svg></button>
           </div>
         {% endfor %}
       </div>
@@ -328,6 +330,10 @@ html.light-mode .cbtn-lbl{color:var(--soft);}
           <span class="sf-ic"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></span>
           <span class="sf-name" id="sf-name"></span>
           <button class="sf-x" onclick="clearStaged()" title="Remove" aria-label="Remove file">&times;</button>
+        </div>
+        <div class="sg-replying" id="sgReplying" style="display:none;">
+          <div class="dr-info"><span class="dr-to" id="sgDrTo"></span><span class="dr-snip" id="sgDrSnip"></span></div>
+          <button type="button" class="x" id="sgDrCancel" title="{{ _('Cancel reply') }}">✕</button>
         </div>
         <div class="input-wrap">
           <input type="file" id="chat-file" style="display:none;" onchange="stageFile(this)">
@@ -414,6 +420,21 @@ html.light-mode .cbtn-lbl{color:var(--soft);}
 #rxPalette.show{display:flex;}
 #rxPalette button{background:none;border:none;font-size:1.2rem;line-height:1;cursor:pointer;padding:3px 4px;border-radius:8px;transition:transform .12s,background .12s;}
 #rxPalette button:hover{transform:scale(1.28);background:rgba(255,255,255,0.08);}
+.sg-quote{border-left:3px solid rgba(124,155,255,0.6);padding:3px 8px;margin:0 0 4px 40px;border-radius:4px;background:rgba(255,255,255,0.06);font-size:0.75rem;line-height:1.35;max-width:70%;}
+.msg-mine-row .sg-quote{margin:0 0 4px auto;}
+.sg-quote .who{display:block;color:var(--accent);font-weight:600;font-size:0.64rem;}
+.sg-quote .txt{display:block;color:var(--soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sg-reply-btn{position:absolute;bottom:6px;right:36px;width:24px;height:24px;border-radius:50%;border:1px solid var(--border);background:var(--card);color:var(--muted);cursor:pointer;opacity:0;transition:opacity .15s,color .15s,border-color .15s;display:flex;align-items:center;justify-content:center;}
+.sg-reply-btn svg{width:12px;height:12px;}
+.msg-group:hover .sg-reply-btn{opacity:1;}
+.sg-reply-btn:hover{color:var(--accent);border-color:rgba(124,155,255,0.4);}
+.msg-mine-row .sg-reply-btn{right:auto;left:36px;}
+.sg-replying{display:flex;align-items:center;gap:10px;padding:8px 14px;background:rgba(124,155,255,0.06);border-top:1px solid var(--border);}
+.sg-replying .dr-info{flex:1;min-width:0;border-left:3px solid var(--accent);padding-left:9px;}
+.sg-replying .dr-to{display:block;font-size:0.7rem;color:var(--accent);font-weight:600;}
+.sg-replying .dr-snip{display:block;font-size:0.74rem;color:var(--soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sg-replying .x{background:none;border:none;color:var(--muted);cursor:pointer;font-size:1rem;padding:4px 8px;border-radius:6px;line-height:1;}
+.sg-replying .x:hover{color:var(--text);}
 </style>
 <div id="rxPalette" role="menu" aria-label="{{ _('React') }}">
   {% for e in react_emojis %}<button type="button" data-emoji="{{ e }}">{{ e }}</button>{% endfor %}
@@ -464,13 +485,14 @@ async function sendMessage(){
       var form=new FormData();
       form.append('file',stagedFile);
       form.append('body',body);
+      if(sgReplyToId!=null) form.append('reply_to_id',sgReplyToId);
       r=await fetch('/study-groups/'+GROUP_ID+'/send',{method:'POST',body:form});
     }else{
-      r=await fetch('/study-groups/'+GROUP_ID+'/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({body:body})});
+      r=await fetch('/study-groups/'+GROUP_ID+'/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({body:body,reply_to_id:sgReplyToId})});
     }
     var d=await r.json();
     if(d.id){
-      input.value='';input.style.height='auto';clearStaged();
+      input.value='';input.style.height='auto';clearStaged();clearReplyTo();
       appendMessage(d,true);lastMsgId=d.id;scrollBottom(true);hideJump();
       filesLoaded=false; // gallery will refresh next time it's opened
     }else{toast(d.error||'{{ _('Could not send.') }}','error');}
@@ -499,13 +521,25 @@ function appendMessage(m,mine){
   var av=m.author_avatar?'<img src="'+m.author_avatar+'" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">':m.author_initials;
   var delBtn=(mine||CAN_MANAGE)?'<button class="msg-del" onclick="deleteMsg('+m.id+')" title="Delete" aria-label="Delete message">&times;</button>':'';
   var html='<div class="msg-author-row"><div class="msg-av">'+av+'</div><span class="msg-author-name'+(mine?' mine':'')+'">'+escHtml(m.author_name)+'</span><span class="msg-time">'+m.time+'</span>'+delBtn+'</div>';
+  if(m.reply){html+='<div class="sg-quote'+(mine?' mine':'')+'"><span class="who">'+escHtml(m.reply.author)+'</span><span class="txt">'+escHtml(m.reply.snippet)+'</span></div>';}
   if(m.body){html+='<div class="msg-bubble'+(mine?' mine':'')+'">'+escHtml(m.body)+'</div>';}
   if(m.attachment){html+=attachHtml(m.attachment,mine);}
   html+='<div class="sg-rx" data-mid="'+m.id+'"></div>'+
-        '<button type="button" class="sg-rx-add" data-mid="'+m.id+'" title="React" aria-label="React">☺</button>';
+        '<button type="button" class="sg-rx-add" data-mid="'+m.id+'" title="React" aria-label="React">☺</button>'+
+        '<button type="button" class="sg-reply-btn" data-id="'+m.id+'" data-author="'+escAttr(mine?'You':m.author_name)+'" data-snippet="'+escAttr((m.body||'Attachment').slice(0,60))+'" title="Reply" aria-label="Reply"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 17 4 12 9 7"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/></svg></button>';
   div.innerHTML=html;
   feed.appendChild(div);
 }
+/* ── Reply state ─────────────────────────────────────────────────────────────*/
+var sgReplyToId=null;
+function setReplyTo(id,author,snippet){
+  sgReplyToId=id;
+  document.getElementById('sgDrTo').textContent='{{ _("Replying to") }} '+author;
+  document.getElementById('sgDrSnip').textContent=snippet;
+  document.getElementById('sgReplying').style.display='flex';
+  var inp=document.getElementById('msg-input'); if(inp) inp.focus();
+}
+function clearReplyTo(){ sgReplyToId=null; var b=document.getElementById('sgReplying'); if(b) b.style.display='none'; }
 
 /* ── Emoji reactions ─────────────────────────────────────────────────────────*/
 function rxHtml(pills){
@@ -540,8 +574,12 @@ async function reactMsg(mid,emoji){
     var add=e.target.closest('.sg-rx-add');
     if(add){e.stopPropagation();openPalette(add,parseInt(add.dataset.mid,10));return;}
     var pill=e.target.closest('.sg-rx-pill');
-    if(pill){var box=pill.closest('.sg-rx');if(box)reactMsg(parseInt(box.dataset.mid,10),pill.dataset.emoji);}
+    if(pill){var box=pill.closest('.sg-rx');if(box)reactMsg(parseInt(box.dataset.mid,10),pill.dataset.emoji);return;}
+    var rb=e.target.closest('.sg-reply-btn');
+    if(rb){setReplyTo(parseInt(rb.dataset.id,10),rb.dataset.author,rb.dataset.snippet);}
   });
+  var sgCancel=document.getElementById('sgDrCancel');
+  if(sgCancel) sgCancel.addEventListener('click',clearReplyTo);
   palette.addEventListener('click',function(e){
     var b=e.target.closest('button[data-emoji]');
     if(b&&curMid!=null){reactMsg(curMid,b.dataset.emoji);closePalette();}

@@ -247,6 +247,20 @@ def _store_attachment(group_id, f):
 
 
 # ── SEND MESSAGE (optionally with a file dropped into chat) ──────────────────
+def _group_reply_json(reply_msg):
+    """Compact quote payload for the group message being replied to (or None)."""
+    if reply_msg is None:
+        return None
+    author = reply_msg.author.get_full_name() if reply_msg.author else "Unknown"
+    if reply_msg.body:
+        text = reply_msg.body
+    elif reply_msg.attachment is not None:
+        text = "📎 " + reply_msg.attachment.filename
+    else:
+        text = "Message"
+    return {"id": reply_msg.id, "author": author, "snippet": text[:90]}
+
+
 @study_groups_bp.route("/<int:group_id>/send", methods=["POST"])
 @login_required
 def send_message(group_id):
@@ -257,13 +271,24 @@ def send_message(group_id):
     f = request.files.get("file")
     if f is not None and f.filename:
         body = (request.form.get("body") or "").strip()
+        reply_to_id = request.form.get("reply_to_id", type=int)
     else:
         f = None
         data = request.get_json(silent=True) or {}
         body = (data.get("body") or "").strip()
+        try:
+            reply_to_id = int(data.get("reply_to_id")) if data.get("reply_to_id") else None
+        except (TypeError, ValueError):
+            reply_to_id = None
 
     if len(body) > 2000:
         return jsonify({"error": "Too long (max 2000 chars)."}), 400
+
+    # Only allow quoting a message from this same group.
+    if reply_to_id is not None:
+        quoted = StudyGroupMessage.query.filter_by(id=reply_to_id, group_id=group_id).first()
+        if quoted is None:
+            reply_to_id = None
 
     attachment = None
     if f is not None:
@@ -277,6 +302,7 @@ def send_message(group_id):
     msg = StudyGroupMessage(
         group_id=group_id, author_id=current_user.id, body=body,
         attachment_id=attachment.id if attachment else None,
+        reply_to_id=reply_to_id,
     )
     db.session.add(msg)
     db.session.commit()
@@ -291,6 +317,7 @@ def send_message(group_id):
         "author_id":       u.id,
         "time":            msg.created_at.strftime("%H:%M"),
         "attachment":      _attachment_json(attachment, group_id),
+        "reply":           _group_reply_json(msg.reply_to),
     }
 
     # Push to everyone in the group's collab room in real time (the same room
@@ -354,6 +381,7 @@ def poll_messages(group_id):
         "time":            m.created_at.strftime("%H:%M"),
         "is_mine":         m.author_id == current_user.id,
         "attachment":      _attachment_json(m.attachment, group_id) if m.attachment_id else None,
+        "reply":           _group_reply_json(m.reply_to),
     } for m in msgs])
 
 

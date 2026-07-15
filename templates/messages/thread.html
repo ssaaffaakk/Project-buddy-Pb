@@ -121,6 +121,9 @@
     {% endif %}
     {% for m in messages %}
       <div class="dm-msg {{ 'me' if m.sender_id == user.id else 'them' }}" data-id="{{ m.id }}">
+        {%- if m.reply_to -%}
+        <span class="dm-quote"><span class="who">{{ m.reply_to.sender.get_full_name() if m.reply_to.sender else _('Unknown') }}</span><span class="txt">{{ (m.reply_to.body or _('Attachment'))[:90] }}</span></span>
+        {%- endif -%}
         {{- m.body -}}
         {%- if m.attachment -%}
           {%- set ext = m.attachment.filename.rsplit('.', 1)[-1].lower() -%}
@@ -158,6 +161,7 @@
           {%- endfor -%}
         </div>
         <button type="button" class="dm-rx-add" title="{{ _('React') }}" aria-label="{{ _('React') }}">☺</button>
+        <button type="button" class="dm-reply-btn" data-id="{{ m.id }}" data-author="{{ _('You') if m.sender_id == user.id else other.first_name }}" data-snippet="{{ (m.body or _('Attachment'))[:60] }}" title="{{ _('Reply') }}" aria-label="{{ _('Reply') }}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 17 4 12 9 7"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/></svg></button>
       </div>
     {% endfor %}
   </div>
@@ -168,6 +172,10 @@
     <button type="button" class="x" id="pendingClear" title="{{ _('Remove file') }}">✕</button>
   </div>
 
+  <div class="dm-replying" id="dmReplying" style="display:none;">
+    <div class="dr-info"><span class="dr-to" id="drTo"></span><span class="dr-snip" id="drSnip"></span></div>
+    <button type="button" class="x" id="drCancel" title="{{ _('Cancel reply') }}">✕</button>
+  </div>
   <form class="dm-compose" id="dmForm" autocomplete="off">
     <button type="button" class="attach-btn" id="attachBtn" title="{{ _('Attach a file') }}" aria-label="{{ _('Attach a file') }}">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
@@ -235,6 +243,20 @@
 #rxPalette.show{display:flex;}
 #rxPalette button{background:none;border:none;font-size:1.2rem;line-height:1;cursor:pointer;padding:3px 4px;border-radius:8px;transition:transform .12s,background .12s;}
 #rxPalette button:hover{transform:scale(1.28);background:rgba(255,255,255,0.08);}
+.dm-quote{display:block;border-left:3px solid rgba(124,155,255,0.6);padding:3px 8px;margin-bottom:6px;border-radius:4px;background:rgba(255,255,255,0.06);font-size:0.76rem;line-height:1.35;text-decoration:none;}
+.dm-quote .who{display:block;color:var(--accent);font-weight:600;font-size:0.66rem;}
+.dm-quote .txt{display:block;color:var(--soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:240px;}
+.dm-reply-btn{position:absolute;top:3px;right:-62px;width:25px;height:25px;border-radius:50%;border:1px solid var(--border);background:var(--card);color:var(--muted);cursor:pointer;opacity:0;transition:opacity .15s,color .15s,border-color .15s;display:flex;align-items:center;justify-content:center;}
+.dm-reply-btn svg{width:13px;height:13px;}
+.dm-msg:hover .dm-reply-btn{opacity:1;}
+.dm-reply-btn:hover{color:var(--accent);border-color:rgba(124,155,255,0.4);}
+.dm-msg.me .dm-reply-btn{right:auto;left:-62px;}
+.dm-replying{display:flex;align-items:center;gap:10px;padding:8px 14px;border-top:1px solid var(--border);background:rgba(124,155,255,0.06);}
+.dm-replying .dr-info{flex:1;min-width:0;border-left:3px solid var(--accent);padding-left:9px;}
+.dm-replying .dr-to{display:block;font-size:0.7rem;color:var(--accent);font-weight:600;}
+.dm-replying .dr-snip{display:block;font-size:0.74rem;color:var(--soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.dm-replying .x{background:none;border:none;color:var(--muted);cursor:pointer;font-size:1rem;padding:4px 8px;border-radius:6px;line-height:1;}
+.dm-replying .x:hover{color:var(--text);}
 </style>
 <div id="rxPalette" role="menu" aria-label="{{ _('React') }}">
   {% for e in react_emojis %}<button type="button" data-emoji="{{ e }}">{{ e }}</button>{% endfor %}
@@ -245,6 +267,8 @@
   var CONV_ID  = {{ conversation.id }};
   var OTHER_ID = {{ other.id }};
   var MY_ID    = {{ user.id }};
+  var OTHER_NAME = {{ other.first_name|tojson }};
+  var YOU_LABEL  = {{ _('You')|tojson }};
   var ICE_CFG  = { iceServers: {{ ice_servers | safe }} };
   var stream = document.getElementById('dmStream');
   var input  = document.getElementById('dmInput');
@@ -300,10 +324,17 @@
     // person's live messages on the wrong (right) side for the recipient.
     div.className = 'dm-msg ' + (m.sender_id === MY_ID ? 'me' : 'them');
     div.dataset.id = m.id;
-    div.innerHTML = window._esc(m.body) + attachmentHtml(m.attachment) + sharedPostHtml(m.shared_post) +
+    var quote = m.reply ? ('<span class="dm-quote"><span class="who">' + window._esc(m.reply.author) +
+                '</span><span class="txt">' + window._esc(m.reply.snippet) + '</span></span>') : '';
+    var replyAuthor = m.sender_id === MY_ID ? YOU_LABEL : OTHER_NAME;
+    var replySnippet = (m.body || 'Attachment').slice(0, 60);
+    div.innerHTML = quote + window._esc(m.body) + attachmentHtml(m.attachment) + sharedPostHtml(m.shared_post) +
                     '<span class="t">' + window._esc(m.time) + '</span>' +
                     '<div class="dm-rx" data-mid="' + m.id + '"></div>' +
-                    '<button type="button" class="dm-rx-add" title="React" aria-label="React">☺</button>';
+                    '<button type="button" class="dm-rx-add" title="React" aria-label="React">☺</button>' +
+                    '<button type="button" class="dm-reply-btn" data-id="' + m.id + '" data-author="' + window._esc(replyAuthor) +
+                    '" data-snippet="' + window._esc(replySnippet) + '" title="Reply" aria-label="Reply">' +
+                    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 17 4 12 9 7"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/></svg></button>';
     stream.appendChild(div);
     if (m.id > lastId) lastId = m.id;
     scrollDown();
@@ -352,8 +383,23 @@
     var add = e.target.closest('.dm-rx-add');
     if (add){ e.stopPropagation(); var msg = add.closest('.dm-msg'); if (msg) openPalette(add, parseInt(msg.dataset.id, 10)); return; }
     var pill = e.target.closest('.dm-rx-pill');
-    if (pill){ var box = pill.closest('.dm-rx'); if (box) react(parseInt(box.dataset.mid, 10), pill.dataset.emoji); }
+    if (pill){ var box = pill.closest('.dm-rx'); if (box) react(parseInt(box.dataset.mid, 10), pill.dataset.emoji); return; }
+    var rbtn = e.target.closest('.dm-reply-btn');
+    if (rbtn){ setReply(parseInt(rbtn.dataset.id, 10), rbtn.dataset.author, rbtn.dataset.snippet); }
   });
+
+  // ── Reply state ─────────────────────────────────────────────────────────────
+  var replyToId = null;
+  var dmReplying = document.getElementById('dmReplying');
+  function setReply(id, author, snippet){
+    replyToId = id;
+    document.getElementById('drTo').textContent = '{{ _("Replying to") }} ' + author;
+    document.getElementById('drSnip').textContent = snippet;
+    dmReplying.style.display = 'flex';
+    input.focus();
+  }
+  function clearReply(){ replyToId = null; if (dmReplying) dmReplying.style.display = 'none'; }
+  document.getElementById('drCancel').addEventListener('click', clearReply);
   palette.addEventListener('click', function(e){
     var b = e.target.closest('button[data-emoji]');
     if (b && curMid != null){ react(curMid, b.dataset.emoji); closePalette(); }
@@ -403,17 +449,19 @@
         var fd = new FormData();
         fd.append('file', pendingFile);
         fd.append('body', body);
+        if (replyToId != null) fd.append('reply_to_id', replyToId);
         r = await fetch('/messages/with/'+OTHER_ID+'/send', { method:'POST', body: fd });
       } else {
         r = await fetch('/messages/with/'+OTHER_ID+'/send', {
           method:'POST', headers:{'Content-Type':'application/json'},
-          body: JSON.stringify({body: body})
+          body: JSON.stringify({body: body, reply_to_id: replyToId})
         });
       }
       var data = await r.json();
       if (!r.ok){ window.showToast(data.error || 'Could not send', 'error'); return; }
       input.value = ''; input.style.height = 'auto';
       pendingFile = null; fileInput.value = ''; pendingBox.classList.remove('show');
+      clearReply();
       render(data); // optimistic echo (socket echo is deduped by id)
     }catch(e){ window.showToast('Network error', 'error'); }
     finally{ sending = false; }
