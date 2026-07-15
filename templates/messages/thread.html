@@ -96,8 +96,9 @@
 {% block content %}
 <div class="dm-wrap">
   <div class="dm-head">
-    <div class="dm-head-av">
+    <div class="dm-head-av" style="position:relative;">
       {% if other.avatar_url %}<img src="{{ other.avatar_url }}" alt="">{% else %}{{ (other.first_name[:1] + other.last_name[:1])|upper }}{% endif %}
+      <span class="presence-dot" data-uid="{{ other.id }}"></span>
     </div>
     <div style="flex:1;min-width:0;">
       <div class="dm-head-name">{{ other.get_full_name() }}</div>

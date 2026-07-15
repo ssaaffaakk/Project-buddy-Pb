@@ -165,10 +165,11 @@
 
   <!-- PROFILE HEADER -->
   <div class="ph">
-    <div class="avatar-big" style="overflow:hidden;">
+    <div class="avatar-big" style="overflow:visible;">
       {% if profile_user.avatar_url %}
         <img src="{{ profile_user.avatar_url }}" alt="">
       {% else %}{{ profile_user.first_name[0] }}{{ profile_user.last_name[0] }}{% endif %}
+      <span class="presence-dot" data-uid="{{ profile_user.id }}"></span>
     </div>
     <div class="ph-info">
       <div>

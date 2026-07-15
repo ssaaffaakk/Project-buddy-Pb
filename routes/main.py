@@ -446,6 +446,24 @@ def dismiss_warnings():
     return redirect(url_for("main.dashboard"))
 
 
+# ── PRESENCE (green online dot) ───────────────────────────────────────────────
+@main_bp.before_app_request
+def _presence_touch():
+    """Keep the current user marked online on every page they load."""
+    if current_user.is_authenticated:
+        from services.presence import touch
+        touch(current_user.id)
+
+
+@main_bp.route("/presence/heartbeat")
+@login_required
+def presence_heartbeat():
+    """Client pings this while a tab is open; returns who is currently online."""
+    from services.presence import touch, online_ids
+    touch(current_user.id)
+    return jsonify({"online": online_ids()})
+
+
 # ── PROJECTS PAGE ─────────────────────────────────────────────────────────────
 @main_bp.route("/projects-page")
 @login_required

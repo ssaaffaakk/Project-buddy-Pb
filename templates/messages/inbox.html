@@ -68,8 +68,9 @@
 
 {% macro dm_row(t, in_archive) %}
 <a class="dm-row {% if t.pinned and not in_archive %}pinned{% endif %}" href="{{ url_for('messages.thread', user_id=t.user_id) }}">
-  <div class="dm-av">
+  <div class="dm-av" style="position:relative;">
     {% if t.avatar_url %}<img src="{{ t.avatar_url }}" alt="">{% else %}{{ t.initials }}{% endif %}
+    <span class="presence-dot" data-uid="{{ t.user_id }}"></span>
   </div>
   <div class="dm-main">
     <div class="dm-name">

@@ -343,5 +343,29 @@ document.addEventListener('click', function(e){
 });
 </script>
 {% block extra_script %}{% endblock %}
+
+{% if current_user.is_authenticated %}
+<style nonce="{{ csp_nonce }}">
+.presence-dot{position:absolute;right:-2px;bottom:-2px;width:13px;height:13px;border-radius:50%;background:#3ad17a;border:2.5px solid var(--bg);box-shadow:0 0 7px rgba(58,209,122,.65);display:none;z-index:3;pointer-events:none;}
+.presence-dot.is-online{display:block;}
+</style>
+<script nonce="{{ csp_nonce }}">
+(function(){
+  function beat(){
+    fetch('/presence/heartbeat',{headers:{'X-Requested-With':'fetch'}})
+      .then(function(r){return r.ok?r.json():null;})
+      .then(function(d){ if(!d||!d.online)return;
+        var on={}; d.online.forEach(function(x){on[String(x)]=1;});
+        document.querySelectorAll('.presence-dot[data-uid]').forEach(function(el){
+          el.classList.toggle('is-online', !!on[el.getAttribute('data-uid')]);
+        });
+      }).catch(function(){});
+  }
+  beat();
+  setInterval(beat, 45000);
+  document.addEventListener('visibilitychange', function(){ if(!document.hidden) beat(); });
+})();
+</script>
+{% endif %}
 </body>
 </html>
