@@ -510,8 +510,8 @@ footer p{font-family:'DM Mono',monospace;font-size:.6rem;letter-spacing:.04em;co
 .feat-h2{font-family:'DM Serif Display',serif;font-size:clamp(2.4rem,5vw,4.4rem);font-weight:400;letter-spacing:-.045em;line-height:1;margin-bottom:18px;}
 .feat-h2 em{font-style:italic;color:var(--gold);}
 .feat-lead{font-size:.9rem;color:var(--soft);line-height:1.72;max-width:500px;margin:0 auto;}
-.feat-trio{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;align-items:start;}
-@media(max-width:920px){.feat-trio{grid-template-columns:1fr;}}
+.feat-trio{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;align-items:start;}
+@media(max-width:1180px){.feat-trio{grid-template-columns:repeat(2,1fr);}}
 .fcard{border:1px solid var(--border);border-radius:18px;overflow:hidden;background:rgba(14,22,48,.55);backdrop-filter:blur(12px);transition:border-color .3s,transform .4s cubic-bezier(.16,1,.3,1);}
 .fcard:hover{border-color:rgba(124,155,255,.28);transform:translateY(-5px);}
 .fcard-mock{height:270px;background:#060A18;position:relative;overflow:hidden;border-bottom:1px solid var(--border);display:flex;flex-direction:column;}
@@ -565,6 +565,23 @@ footer p{font-family:'DM Mono',monospace;font-size:.6rem;letter-spacing:.04em;co
 .grp-acts{padding:8px 14px 12px;display:flex;gap:7px;flex-shrink:0;}
 .grp-btn{font-family:'DM Mono',monospace;font-size:.53rem;letter-spacing:.04em;padding:6px 12px;border-radius:7px;border:1px solid var(--border-m);background:rgba(255,255,255,.04);color:var(--muted);cursor:default;display:flex;align-items:center;gap:5px;}
 .grp-btn.prim{background:var(--gold-lo);color:var(--gold);border-color:rgba(124,155,255,.22);}
+/* direct messages */
+.dm-thread{flex:1;display:flex;flex-direction:column;justify-content:flex-end;gap:8px;padding:14px 14px 6px;overflow:hidden;}
+.dm-row{display:flex;align-items:flex-end;gap:7px;opacity:0;animation:dm-in .55s cubic-bezier(.16,1,.3,1) forwards;animation-delay:var(--dd,0s);}
+.dm-row.out{flex-direction:row-reverse;}
+@keyframes dm-in{from{transform:translateY(9px);opacity:0;}to{transform:none;opacity:1;}}
+.dm-av{width:22px;height:22px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--violet));display:grid;place-items:center;font-size:.55rem;font-family:'DM Serif Display',serif;color:#0a0f1e;flex-shrink:0;}
+.dm-bub{max-width:76%;padding:8px 11px;border-radius:13px 13px 13px 4px;font-size:.62rem;line-height:1.5;color:#cdd4ee;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.06);}
+.dm-row.out .dm-bub{border-radius:13px 13px 4px 13px;background:var(--gold-lo);border-color:rgba(124,155,255,.22);color:#dbe3ff;}
+.dm-file{display:flex;align-items:center;gap:7px;margin-top:6px;padding:6px 8px;border-radius:7px;background:rgba(0,0,0,.18);border:1px solid rgba(255,255,255,.06);}
+.dm-file .di{width:20px;height:20px;border-radius:5px;background:rgba(255,107,107,.15);display:grid;place-items:center;font-size:.6rem;flex-shrink:0;}
+.dm-file .dn{font-family:'DM Mono',monospace;font-size:.49rem;color:#bbc3e0;white-space:nowrap;}
+.dm-seen{align-self:flex-end;font-family:'DM Mono',monospace;font-size:.46rem;letter-spacing:.06em;color:var(--muted);padding-right:2px;opacity:0;animation:dm-in .4s ease forwards;animation-delay:var(--dd,0s);}
+.dm-typing .dm-bub{display:flex;gap:3px;align-items:center;padding:10px 11px;}
+.dm-typing i{width:4px;height:4px;border-radius:50%;background:var(--muted);animation:tdots 1.2s ease-in-out infinite;animation-delay:var(--td,0s);}
+.dm-input{margin:6px 14px 12px;display:flex;align-items:center;gap:9px;padding:7px 7px 7px 13px;border-radius:99px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);flex-shrink:0;}
+.dm-input .ph{font-family:'DM Mono',monospace;font-size:.54rem;color:var(--muted);flex:1;}
+.dm-send{width:24px;height:24px;border-radius:50%;background:var(--gold);display:grid;place-items:center;flex-shrink:0;color:#0a0f1e;}
 /* fcard info */
 .fcard-info{padding:24px 24px 28px;}
 .fcard-num{font-family:'DM Mono',monospace;font-size:.52rem;letter-spacing:.18em;color:var(--gold);opacity:.4;margin-bottom:11px;}
@@ -837,7 +854,7 @@ document.addEventListener('click',function(e){
   <div class="feat-hd rv">
     <div class="feat-sup">{{ _("Don't miss these") }} — 04</div>
     <h2 class="feat-h2">{{ _('You had') }} <em>{{ _('superpowers.') }}</em><br>{{ _('Now you know.') }}</h2>
-    <p class="feat-lead">{{ _('Voice rooms, file sharing, study groups — and now full live collaboration with video, screen sharing and shared notes. All built in. Zero setup, zero extras, zero excuses.') }}</p>
+    <p class="feat-lead">{{ _('Voice rooms, file sharing, direct messages, study groups — and now full live collaboration with video, screen sharing and shared notes. All built in. Zero setup, zero extras, zero excuses.') }}</p>
   </div>
   <div class="feat-trio">
 
@@ -942,6 +959,33 @@ document.addEventListener('click',function(e){
       </div>
     </div>
 
+    <!-- ─── 04 DIRECT MESSAGES ─── -->
+    <div class="fcard rv" style="transition-delay:.3s">
+      <div class="fcard-mock">
+        <div class="mock-topbar">
+          <span class="mock-live-dot"></span>
+          <span class="mock-title">Direct Message · Aylin</span>
+          <span class="mock-badge">online</span>
+        </div>
+        <div class="dm-thread">
+          <div class="dm-row" style="--dd:.3s"><div class="dm-av">A</div><div class="dm-bub">Are you free to pair on the API today?</div></div>
+          <div class="dm-row out" style="--dd:.75s"><div class="dm-bub">Yes — sending the repo now<div class="dm-file"><span class="di">📄</span><span class="dn">api-spec.pdf · 1.2 MB</span></div></div></div>
+          <div class="dm-seen" style="--dd:1.15s">Seen · 2:41 PM</div>
+          <div class="dm-row dm-typing" style="--dd:1.4s"><div class="dm-av">A</div><div class="dm-bub"><i style="--td:0s"></i><i style="--td:.15s"></i><i style="--td:.3s"></i></div></div>
+        </div>
+        <div class="dm-input">
+          <span class="ph">Message Aylin…</span>
+          <span class="dm-send"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></span>
+        </div>
+      </div>
+      <div class="fcard-info">
+        <div class="fcard-num">04 — {{ _('Feature') }}</div>
+        <div class="fcard-name">{{ _('Direct Messages') }}</div>
+        <p class="fcard-desc">{{ _('Private 1:1 chat with anyone on campus — share files, send read receipts, and pick up right where you left off, delivered in real time.') }}</p>
+        <div class="fcard-tags"><span>{{ _('Real-time') }}</span><span class="v">{{ _('File sharing') }}</span><span class="c">{{ _('Read receipts') }}</span></div>
+      </div>
+    </div>
+
   </div>
 
   <!-- ─── 04 LIVE COLLAB ROOM — full-width flagship showcase ─── -->
@@ -992,7 +1036,7 @@ document.addEventListener('click',function(e){
     </div>
     <div class="collab-info">
       <div>
-        <div class="fcard-num">04 — {{ _('Just shipped') }}</div>
+        <div class="fcard-num">05 — {{ _('Just shipped') }}</div>
         <div class="collab-name">{{ _('One room.') }} <em>{{ _('Voice, video, screen & notes.') }}</em></div>
         <p class="fcard-desc" style="max-width:560px;margin-bottom:16px;">{{ _('Turn any study group into a live workspace: talk, turn on cameras, present your screen, and take notes together — everyone sees every keystroke, live. No Zoom, no Google Docs, no tab-juggling.') }}</p>
         <div class="fcard-tags"><span>{{ _('Video calls') }}</span><span class="c">{{ _('Screen sharing') }}</span><span class="v">{{ _('Live shared notes') }}</span><span>{{ _('Zero installs') }}</span></div>
