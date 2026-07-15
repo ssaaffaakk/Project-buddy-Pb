@@ -262,7 +262,7 @@
     <p>{{ _('Your data is stored in a PostgreSQL database hosted on') }} <a href="https://render.com" target="_blank" rel="noopener">Render</a>. {{ _('Profile photos and files are stored on') }} <a href="https://aws.amazon.com/s3/" target="_blank" rel="noopener">AWS S3</a>.</p>
     <p>{{ _('We apply the following security measures:') }}</p>
     <ul>
-      <li>{{ _('Passwords are hashed using bcrypt — we never store plaintext passwords') }}</li>
+      <li>{{ _('Passwords are hashed using PBKDF2-SHA256 — we never store plaintext passwords') }}</li>
       <li>{{ _('All connections use HTTPS with HSTS enabled') }}</li>
       <li>{{ _('Session cookies are HttpOnly and Secure') }}</li>
       <li>{{ _('CSRF protection on all forms') }}</li>
