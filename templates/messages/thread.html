@@ -90,10 +90,51 @@
 .co-btn.hang{background:linear-gradient(135deg,#e05252,#c0392b);border-color:transparent;width:62px;border-radius:99px;}
 .co-btn.hang:hover{filter:brightness(1.12);}
 .co-btn[hidden]{display:none;}
+/* TWO-PANE LAYOUT (conversation rail + active thread) */
+.dm-split{display:flex;gap:18px;height:calc(100vh - 120px);}
+.dm-side{width:300px;flex-shrink:0;display:flex;flex-direction:column;border-right:1px solid var(--border);padding-right:16px;overflow:hidden;}
+.dm-side-top{display:flex;align-items:center;gap:8px;font-size:0.8rem;color:var(--muted);text-decoration:none;padding:2px 6px 12px;flex-shrink:0;}
+.dm-side-top:hover{color:var(--accent);}
+.dm-side-top svg{width:15px;height:15px;}
+.dm-side-list{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:2px;margin-right:-6px;padding-right:6px;}
+.dm-side-row{display:flex;align-items:center;gap:11px;padding:9px 10px;border-radius:var(--r);text-decoration:none;color:var(--text);transition:background .15s;}
+.dm-side-row:hover{background:var(--card);}
+.dm-side-row.active{background:var(--accent-dim);}
+.dm-side-av{position:relative;width:38px;height:38px;border-radius:50%;flex-shrink:0;background:linear-gradient(135deg,var(--accent),#4A5BA8);color:#fff;display:flex;align-items:center;justify-content:center;font-size:0.72rem;font-weight:600;overflow:hidden;}
+.dm-side-av img{width:100%;height:100%;object-fit:cover;}
+.dm-side-main{flex:1;min-width:0;}
+.dm-side-name{font-size:0.82rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.dm-side-row.unread .dm-side-name{font-weight:700;}
+.dm-side-prev{font-size:0.72rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px;}
+.dm-side-row.unread .dm-side-prev{color:var(--soft);}
+.dm-side-badge{flex-shrink:0;background:var(--accent);color:#fff;border-radius:99px;font-size:0.62rem;font-family:'DM Mono',monospace;padding:1px 6px;min-width:16px;text-align:center;}
+.dm-main{flex:1;min-width:0;}
+.dm-main .dm-wrap{max-width:none;height:100%;}
+@media(max-width:820px){.dm-side{display:none;}.dm-split{gap:0;height:calc(100vh - 110px);}.dm-main .dm-wrap{max-width:760px;}}
 </style>
 {% endblock %}
 
 {% block content %}
+<div class="dm-split">
+  <aside class="dm-side">
+    <a class="dm-side-top" href="{{ url_for('messages.inbox') }}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+      {{ _('All chats') }}
+    </a>
+    <div class="dm-side-list">
+      {% for t in threads %}
+      <a class="dm-side-row{% if t.user_id == active_user_id %} active{% endif %}{% if t.unread %} unread{% endif %}" href="{{ url_for('messages.thread', user_id=t.user_id) }}">
+        <div class="dm-side-av">{% if t.avatar_url %}<img src="{{ t.avatar_url }}" alt="">{% else %}{{ t.initials }}{% endif %}<span class="presence-dot" data-uid="{{ t.user_id }}"></span></div>
+        <div class="dm-side-main">
+          <div class="dm-side-name">{{ t.name }}</div>
+          <div class="dm-side-prev">{% if t.preview_mine %}{{ _('You') }}: {% endif %}{{ t.preview }}</div>
+        </div>
+        {% if t.unread %}<span class="dm-side-badge">{{ t.unread }}</span>{% endif %}
+      </a>
+      {% endfor %}
+    </div>
+  </aside>
+  <div class="dm-main">
 <div class="dm-wrap">
   <div class="dm-head">
     <div class="dm-head-av" style="position:relative;">
@@ -184,6 +225,8 @@
     <textarea id="dmInput" placeholder="{{ _('Write a message…') }}" maxlength="4000" rows="1"></textarea>
     <button type="submit" class="btn-gold btn-send">{{ _('Send') }}</button>
   </form>
+</div>
+  </div>
 </div>
 
 <!-- Incoming call banner -->

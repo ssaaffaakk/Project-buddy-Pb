@@ -207,19 +207,18 @@ def _people_suggestions(limit=8):
 
 
 # ── INBOX ─────────────────────────────────────────────────────────────────────
-@messages_bp.route("/")
-@login_required
-def inbox():
-    """All conversations the user is part of — pinned first, then by recency,
-    with the ones the user archived tucked into a collapsed section."""
+def _conversation_rows(user):
+    """Build (threads, archived) conversation rows for `user`, newest first with
+    pinned floated to the top and empty conversations hidden. Shared by the inbox
+    page and the thread side-rail so both show the same list."""
     convs = (Conversation.query
-             .filter((Conversation.user_a_id == current_user.id) |
-                     (Conversation.user_b_id == current_user.id))
+             .filter((Conversation.user_a_id == user.id) |
+                     (Conversation.user_b_id == user.id))
              .order_by(Conversation.last_message_at.desc())
              .all())
     threads, archived = [], []
     for c in convs:
-        other = c.other(current_user.id)
+        other = c.other(user.id)
         if other is None:
             continue
         last = (DirectMessage.query.filter_by(conversation_id=c.id)
@@ -228,7 +227,7 @@ def inbox():
             continue  # empty conversation (created but never used) — hide it
         unread = (DirectMessage.query
                   .filter(DirectMessage.conversation_id == c.id,
-                          DirectMessage.sender_id != current_user.id,
+                          DirectMessage.sender_id != user.id,
                           DirectMessage.is_read == False)  # noqa: E712
                   .count())
         preview = last.body or ("📎 Attachment" if last.attachment_id else "")
@@ -239,14 +238,23 @@ def inbox():
             "avatar_url": other.avatar_url,
             "initials": (other.first_name[:1] + other.last_name[:1]).upper(),
             "preview": (preview[:60] + "…") if len(preview) > 60 else preview,
-            "preview_mine": last.sender_id == current_user.id,
+            "preview_mine": last.sender_id == user.id,
             "time": last.created_at.strftime("%b %d, %H:%M"),
             "unread": unread,
-            "pinned": c.pinned_for(current_user.id),
+            "pinned": c.pinned_for(user.id),
         }
-        (archived if c.archived_for(current_user.id) else threads).append(entry)
+        (archived if c.archived_for(user.id) else threads).append(entry)
     # Pinned conversations float to the top; both groups stay recency-sorted.
     threads.sort(key=lambda t: not t["pinned"])
+    return threads, archived
+
+
+@messages_bp.route("/")
+@login_required
+def inbox():
+    """All conversations the user is part of — pinned first, then by recency,
+    with the ones the user archived tucked into a collapsed section."""
+    threads, archived = _conversation_rows(current_user)
     return render_template("messages/inbox.html", threads=threads, archived=archived,
                            suggestions=_people_suggestions(), user=current_user)
 
@@ -314,6 +322,9 @@ def thread(user_id):
     from services.reactions import summarize, ALLOWED
     reactions_map = summarize("dm", [m.id for m in msgs])
 
+    # Conversation list for the left rail so opening a chat stays on one screen.
+    threads, _archived = _conversation_rows(current_user)
+
     return render_template(
         "messages/thread.html",
         other=other,
@@ -324,6 +335,8 @@ def thread(user_id):
         call_has_turn=_servers_include_turn(ice),
         reactions_map=reactions_map,
         react_emojis=ALLOWED,
+        threads=threads,
+        active_user_id=other.id,
     )
 
 
