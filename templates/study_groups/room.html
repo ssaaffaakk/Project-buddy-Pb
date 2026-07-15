@@ -310,6 +310,12 @@ html.light-mode .cbtn-lbl{color:var(--soft);}
                 </a>
               {% endif %}
             {% endif %}
+            <div class="sg-rx" data-mid="{{ msg.id }}">
+              {%- for r in reactions_map.get(msg.id, []) -%}
+              <button type="button" class="sg-rx-pill{% if user.id in r.user_ids %} mine{% endif %}" data-emoji="{{ r.emoji }}">{{ r.emoji }}<span class="c">{{ r.count }}</span></button>
+              {%- endfor -%}
+            </div>
+            <button type="button" class="sg-rx-add" data-mid="{{ msg.id }}" title="{{ _('React') }}" aria-label="{{ _('React') }}">☺</button>
           </div>
         {% endfor %}
       </div>
@@ -391,6 +397,27 @@ html.light-mode .cbtn-lbl{color:var(--soft);}
 {% endblock %}
 
 {% block extra_script %}
+<style nonce="{{ csp_nonce }}">
+.msg-group{position:relative;}
+.sg-rx{display:flex;flex-wrap:wrap;gap:4px;margin:5px 0 2px 40px;}
+.sg-rx:empty{display:none;margin:0;}
+.msg-mine-row .sg-rx{justify-content:flex-end;margin:5px 40px 2px 0;}
+.sg-rx-pill{display:inline-flex;align-items:center;gap:3px;font-size:0.82rem;line-height:1;padding:3px 8px;border-radius:99px;background:rgba(255,255,255,0.09);border:1px solid rgba(255,255,255,0.14);color:var(--text);cursor:pointer;transition:transform .12s,background .15s,border-color .15s;}
+.sg-rx-pill .c{font-family:'DM Mono',monospace;font-size:0.66rem;opacity:.85;}
+.sg-rx-pill.mine{background:var(--accent-dim);border-color:rgba(124,155,255,0.55);}
+.sg-rx-pill:hover{transform:translateY(-1px);}
+.sg-rx-add{position:absolute;bottom:6px;right:6px;width:24px;height:24px;border-radius:50%;border:1px solid var(--border);background:var(--card);color:var(--muted);font-size:0.85rem;line-height:1;cursor:pointer;opacity:0;transition:opacity .15s,color .15s,border-color .15s;display:flex;align-items:center;justify-content:center;}
+.msg-group:hover .sg-rx-add{opacity:1;}
+.sg-rx-add:hover{color:var(--accent);border-color:rgba(124,155,255,0.4);}
+.msg-mine-row .sg-rx-add{right:auto;left:6px;}
+#rxPalette{position:fixed;z-index:9999;display:none;gap:2px;padding:5px 7px;border-radius:99px;background:var(--card);border:1px solid var(--border);box-shadow:0 8px 26px rgba(0,0,0,.5);}
+#rxPalette.show{display:flex;}
+#rxPalette button{background:none;border:none;font-size:1.2rem;line-height:1;cursor:pointer;padding:3px 4px;border-radius:8px;transition:transform .12s,background .12s;}
+#rxPalette button:hover{transform:scale(1.28);background:rgba(255,255,255,0.08);}
+</style>
+<div id="rxPalette" role="menu" aria-label="{{ _('React') }}">
+  {% for e in react_emojis %}<button type="button" data-emoji="{{ e }}">{{ e }}</button>{% endfor %}
+</div>
 <script src="https://cdn.jsdelivr.net/npm/socket.io-client@4.7.5/dist/socket.io.min.js"></script>
 <script nonce="{{ csp_nonce }}">
 var GROUP_ID   = {{ group.id }};
@@ -474,9 +501,55 @@ function appendMessage(m,mine){
   var html='<div class="msg-author-row"><div class="msg-av">'+av+'</div><span class="msg-author-name'+(mine?' mine':'')+'">'+escHtml(m.author_name)+'</span><span class="msg-time">'+m.time+'</span>'+delBtn+'</div>';
   if(m.body){html+='<div class="msg-bubble'+(mine?' mine':'')+'">'+escHtml(m.body)+'</div>';}
   if(m.attachment){html+=attachHtml(m.attachment,mine);}
+  html+='<div class="sg-rx" data-mid="'+m.id+'"></div>'+
+        '<button type="button" class="sg-rx-add" data-mid="'+m.id+'" title="React" aria-label="React">☺</button>';
   div.innerHTML=html;
   feed.appendChild(div);
 }
+
+/* ── Emoji reactions ─────────────────────────────────────────────────────────*/
+function rxHtml(pills){
+  if(!pills || !pills.length) return '';
+  return pills.map(function(p){
+    var mine=(p.user_ids||[]).indexOf(MY_ID)>=0?' mine':'';
+    return '<button type="button" class="sg-rx-pill'+mine+'" data-emoji="'+p.emoji+'">'+p.emoji+'<span class="c">'+p.count+'</span></button>';
+  }).join('');
+}
+function applyReactions(mid,pills){
+  var box=document.querySelector('.sg-rx[data-mid="'+mid+'"]');
+  if(box) box.innerHTML=rxHtml(pills);
+}
+async function reactMsg(mid,emoji){
+  try{
+    var r=await fetch('/study-groups/'+GROUP_ID+'/react',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message_id:mid,emoji:emoji})});
+    if(r.ok){var d=await r.json();applyReactions(d.message_id,d.reactions);}
+  }catch(e){}
+}
+(function(){
+  var palette=document.getElementById('rxPalette'), curMid=null;
+  function openPalette(btn,mid){
+    curMid=mid;
+    var r=btn.getBoundingClientRect();
+    palette.style.left=Math.max(8,Math.min(window.innerWidth-230,r.left-90))+'px';
+    palette.style.top=Math.max(8,r.top-46)+'px';
+    palette.classList.add('show');
+  }
+  function closePalette(){palette.classList.remove('show');curMid=null;}
+  var feed=document.getElementById('messages');
+  feed.addEventListener('click',function(e){
+    var add=e.target.closest('.sg-rx-add');
+    if(add){e.stopPropagation();openPalette(add,parseInt(add.dataset.mid,10));return;}
+    var pill=e.target.closest('.sg-rx-pill');
+    if(pill){var box=pill.closest('.sg-rx');if(box)reactMsg(parseInt(box.dataset.mid,10),pill.dataset.emoji);}
+  });
+  palette.addEventListener('click',function(e){
+    var b=e.target.closest('button[data-emoji]');
+    if(b&&curMid!=null){reactMsg(curMid,b.dataset.emoji);closePalette();}
+  });
+  document.addEventListener('click',function(e){
+    if(palette.classList.contains('show')&&!e.target.closest('#rxPalette')&&!e.target.closest('.sg-rx-add'))closePalette();
+  });
+})();
 
 function escHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 
@@ -694,6 +767,7 @@ function ensureSocket(){
 
   // A message was deleted — remove it for everyone.
   socket.on('sg_delete',function(d){ removeMessage(d.id); });
+  socket.on('sg_reaction',function(d){ applyReactions(d.message_id, d.reactions); });
 
   // Live presence: how many members are currently in the room.
   socket.on('sg_presence',function(d){

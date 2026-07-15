@@ -188,6 +188,8 @@ def room(group_id):
     messages = list(reversed(messages))
     ice = _ice_servers()
     note = StudyGroupNote.query.filter_by(group_id=group_id).first()
+    from services.reactions import summarize, ALLOWED
+    reactions_map = summarize("group", [m.id for m in messages])
     return render_template(
         "study_groups/room.html",
         group=group, messages=messages,
@@ -195,6 +197,8 @@ def room(group_id):
         ice_servers=json.dumps(ice),
         voice_has_turn=_servers_include_turn(ice),
         note_content=note.content if note else "",
+        reactions_map=reactions_map,
+        react_emojis=ALLOWED,
     )
 
 
@@ -297,6 +301,31 @@ def send_message(group_id):
     socketio.emit("sg_message", payload, to=f"collab_{group_id}")
 
     return jsonify(payload)
+
+
+# ── REACT TO A GROUP MESSAGE (emoji) ──────────────────────────────────────────
+@study_groups_bp.route("/<int:group_id>/react", methods=["POST"])
+@login_required
+def react_message(group_id):
+    from services.reactions import is_allowed, toggle
+    group = StudyGroup.query.get_or_404(group_id)
+    if not group.is_member(current_user.id):
+        return jsonify({"error": "Join the group first."}), 403
+    data = request.get_json(silent=True) or {}
+    try:
+        mid = int(data.get("message_id"))
+    except (TypeError, ValueError):
+        return jsonify({"error": "Bad message id."}), 400
+    emoji = (data.get("emoji") or "").strip()
+    if not is_allowed(emoji):
+        return jsonify({"error": "Unsupported emoji."}), 400
+    msg = StudyGroupMessage.query.filter_by(id=mid, group_id=group_id).first()
+    if msg is None:
+        return jsonify({"error": "Message not found."}), 404
+    pills = toggle("group", mid, current_user.id, emoji)
+    from extensions import socketio
+    socketio.emit("sg_reaction", {"message_id": mid, "reactions": pills}, to=f"collab_{group_id}")
+    return jsonify({"message_id": mid, "reactions": pills})
 
 
 # ── POLL NEW MESSAGES ────────────────────────────────────────────────────────
