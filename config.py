@@ -138,6 +138,14 @@ class Config:
     # Comma-separated allowed origins; read in create_app → socketio.init_app()
     CORS_ORIGINS = os.environ.get('CORS_ORIGINS', '')
 
+    # ── Landing-page stats ─────────────────────────────────────────────────────
+    # "Students & Growing" on the public home page. Real registrations drive the
+    # growth: the number shown is BASELINE + every non-admin account created
+    # since BASELINE_COUNT was taken, so it ticks up by one with each sign-up
+    # and never falls below the baseline.
+    LANDING_USER_BASELINE       = int(os.environ.get('LANDING_USER_BASELINE', 71))
+    LANDING_USER_BASELINE_COUNT = int(os.environ.get('LANDING_USER_BASELINE_COUNT', 8))
+
     # ── Logging ────────────────────────────────────────────────────────────────
     LOG_LEVEL = 'INFO'
 

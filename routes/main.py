@@ -162,13 +162,27 @@ def health():
 
 
 # ── HOME ──────────────────────────────────────────────────────────────────────
+def _landing_user_count() -> int:
+    """Number shown as "Students & Growing" on the public home page.
+
+    Recomputed on every request, so a new registration is reflected the next
+    time anyone loads the landing page. Admin accounts are excluded — they are
+    not students. The configured baseline is the floor; real sign-ups made after
+    the baseline snapshot add on top of it one by one.
+    """
+    real = User.query.filter(User.role != "admin").count()
+    baseline = current_app.config.get("LANDING_USER_BASELINE", 0)
+    baseline_at = current_app.config.get("LANDING_USER_BASELINE_COUNT", 0)
+    return max(real, baseline + max(0, real - baseline_at))
+
+
 @main_bp.route("/")
 def index():
     if current_user.is_authenticated:
         if current_user.role == "admin":
             return redirect(url_for("main.admin_dashboard"))
         return redirect(url_for("main.dashboard"))
-    total_users = User.query.count()
+    total_users = _landing_user_count()
     active_projects = Project.query.filter_by(status="open").count()
     return render_template("index.html", total_users=total_users, active_projects=active_projects)
 
