@@ -1533,7 +1533,9 @@ def edit_profile():
             ext      = avatar_file.filename.rsplit(".", 1)[1].lower()
             filename = secure_filename(f"user_{user.id}.{ext}")
             data     = avatar_file.read()
-            user.avatar_url = storage.save(data, filename, category="avatars")
+            url = storage.save(data, filename, category="avatars")
+            cache_bust = int(datetime.now(timezone.utc).timestamp())
+            user.avatar_url = f"{url}?v={cache_bust}"
 
         # Update skills
         UserSkill.query.filter_by(user_id=user.id).delete()

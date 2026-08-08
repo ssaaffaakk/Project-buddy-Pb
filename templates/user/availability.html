@@ -59,9 +59,10 @@ html.light-mode .av-cell.on{background:rgba(90,138,106,0.35);}
           <tr><th></th>{% for d in weekdays %}<th>{{ _(d) }}</th>{% endfor %}</tr>
         </thead>
         <tbody>
+          {% set block_emojis = ['🌅', '☀️', '🌙'] %}
           {% for bi in range(blocks|length) %}
           <tr>
-            <td class="av-rowlabel">{{ _(blocks[bi]) }}</td>
+            <td class="av-rowlabel">{{ block_emojis[bi] }} {{ _(blocks[bi]) }}</td>
             {% for di in range(weekdays|length) %}
               <td class="av-cell{% if grid[di][bi] %} on{% endif %}"
                   data-d="{{ di }}" data-b="{{ bi }}" role="button" aria-pressed="{{ 'true' if grid[di][bi] else 'false' }}"></td>

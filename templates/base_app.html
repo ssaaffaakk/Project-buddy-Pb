@@ -343,6 +343,24 @@ document.addEventListener('click', function(e){
 });
 </script>
 {% block extra_script %}{% endblock %}
+<script nonce="{{ csp_nonce }}">
+document.addEventListener('error',function(e){
+  var img=e.target;
+  if(img.tagName!=='IMG'||img.dataset.fallback)return;
+  img.dataset.fallback='1';
+  var wrap=img.parentElement;
+  if(!wrap)return;
+  var alt=img.alt||'';
+  var initials=alt.split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase()||'?';
+  var span=document.createElement('span');
+  span.textContent=initials;
+  span.style.cssText=img.style.cssText;
+  span.style.display='flex';span.style.alignItems='center';span.style.justifyContent='center';
+  span.style.background='var(--accent-dim)';span.style.color='var(--accent)';
+  span.style.fontSize='0.75em';span.style.fontWeight='600';
+  wrap.replaceChild(span,img);
+},true);
+</script>
 
 {% if current_user.is_authenticated %}
 <style nonce="{{ csp_nonce }}">
