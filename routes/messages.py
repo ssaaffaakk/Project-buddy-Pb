@@ -31,7 +31,7 @@ ALLOWED_EXT = {
     'pdf', 'txt', 'md',
     'png', 'jpg', 'jpeg', 'gif', 'webp',
     'doc', 'docx', 'ppt', 'pptx', 'xls', 'xlsx', 'csv',
-    'py', 'js', 'ts', 'html', 'css', 'json', 'yaml', 'yml',
+    'py', 'json', 'yaml', 'yml',
     'zip', 'tar', 'gz',
     'mp4', 'mp3', 'wav',
 }

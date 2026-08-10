@@ -112,12 +112,14 @@ targetInput.addEventListener('input', (e) => {
     const data = await response.json();
 
     if (data.results.length > 0) {
-      searchResults.innerHTML = data.results.map((item) => `
-        <div style="padding:10px;border-bottom:1px solid var(--border);cursor:pointer;"
-             onclick="selectResult('${item.id}', '${item.type}', '${item.name.replace(/'/g, "\\'")}')">
-          ${item.display}
-        </div>
-      `).join('');
+      searchResults.innerHTML = data.results.map((item) => {
+        var e=document.createElement('span');e.textContent=item.display;var safe=e.innerHTML;
+        var n=document.createElement('span');n.textContent=item.name;var safeName=n.innerHTML.replace(/'/g,"\\'");
+        return `<div style="padding:10px;border-bottom:1px solid var(--border);cursor:pointer;"
+             onclick="selectResult('${item.id}', '${item.type}', '${safeName}')">
+          ${safe}
+        </div>`;
+      }).join('');
       searchResults.style.display = 'block';
     } else {
       searchResults.innerHTML = '<div style="padding:10px;color:var(--muted);">{{ _('No results found') }}</div>';

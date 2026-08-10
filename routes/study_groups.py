@@ -90,7 +90,7 @@ ALLOWED_EXT = {
     'pdf', 'txt', 'md',
     'png', 'jpg', 'jpeg', 'gif', 'webp',
     'doc', 'docx', 'ppt', 'pptx', 'xls', 'xlsx', 'csv',
-    'py', 'js', 'ts', 'html', 'css', 'json', 'yaml', 'yml',
+    'py', 'json', 'yaml', 'yml',
     'zip', 'tar', 'gz',
     'mp4', 'mp3', 'wav',
 }
@@ -364,7 +364,9 @@ def poll_messages(group_id):
 
     Live delivery is over SocketIO ('sg_message'); this endpoint is now only a
     fallback the client calls on (re)connect and while the socket is down."""
-    StudyGroup.query.get_or_404(group_id)
+    group = StudyGroup.query.get_or_404(group_id)
+    if not group.is_member(current_user.id):
+        return jsonify({"error": "Join the group first."}), 403
     after_id = request.args.get("after", 0, type=int)
     msgs = (StudyGroupMessage.query
             .filter(StudyGroupMessage.group_id == group_id,
@@ -535,7 +537,9 @@ def upload_file(group_id):
 @study_groups_bp.route("/<int:group_id>/files")
 @login_required
 def list_files(group_id):
-    StudyGroup.query.get_or_404(group_id)
+    group = StudyGroup.query.get_or_404(group_id)
+    if not group.is_member(current_user.id):
+        return jsonify({"error": "Join the group first."}), 403
     files = (SharedFile.query
              .filter_by(group_id=group_id)
              .order_by(SharedFile.created_at.desc())

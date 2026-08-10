@@ -9,6 +9,7 @@ projects_bp = Blueprint("projects", __name__, url_prefix="/projects")
 
 
 @projects_bp.route("/", methods=["GET"])
+@login_required
 def list_projects():
     try:
         projects = Project.query.filter(Project.status == "open").all()
@@ -36,6 +37,7 @@ def recommended():
 
 
 @projects_bp.route("/<int:project_id>", methods=["GET"])
+@login_required
 def get_project(project_id):
     try:
         project = Project.query.get_or_404(project_id)

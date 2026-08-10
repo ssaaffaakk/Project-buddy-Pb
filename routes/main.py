@@ -21,10 +21,19 @@ from services import analytics
 
 ALLOWED_AVATAR_EXTENSIONS = {"jpg", "jpeg", "png", "webp"}
 MAX_AVATAR_BYTES = 2 * 1024 * 1024  # 2 MB
+_IMG_MAGIC = (
+    b'\xff\xd8\xff',        # JPEG
+    b'\x89PNG',             # PNG
+    b'RIFF',                # WebP (RIFF....WEBP)
+)
 
 
 def _allowed_avatar(filename):
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_AVATAR_EXTENSIONS
+
+
+def _valid_image_magic(data: bytes) -> bool:
+    return any(data[:12].startswith(m) for m in _IMG_MAGIC)
 
 
 def _save_user_avatar(user, avatar_file):
@@ -41,6 +50,11 @@ def _save_user_avatar(user, avatar_file):
 
     if file_size > MAX_AVATAR_BYTES:
         raise ValueError("Image must be under 2 MB.")
+
+    header = avatar_file.read(12)
+    avatar_file.seek(0)
+    if not _valid_image_magic(header):
+        raise ValueError("Invalid file content. Please upload a real image file.")
 
     ext = avatar_file.filename.rsplit(".", 1)[1].lower()
     filename = secure_filename(f"user_{user.id}.{ext}")
@@ -94,6 +108,10 @@ def _save_user_banner(user, banner_file):
     banner_file.seek(0)
     if size > MAX_BANNER_BYTES:
         raise ValueError("Banner must be under 4 MB.")
+    header = banner_file.read(12)
+    banner_file.seek(0)
+    if not _valid_image_magic(header):
+        raise ValueError("Invalid file content. Please upload a real image file.")
     ext = banner_file.filename.rsplit(".", 1)[1].lower()
     filename = secure_filename(f"banner_{user.id}.{ext}")
     data = banner_file.read()
@@ -1529,6 +1547,11 @@ def edit_profile():
             avatar_file.seek(0)
             if file_size > MAX_AVATAR_BYTES:
                 flash("Avatar image must be under 2MB.", "error")
+                return redirect(url_for("main.edit_profile"))
+            header = avatar_file.read(12)
+            avatar_file.seek(0)
+            if not _valid_image_magic(header):
+                flash("Invalid file content. Please upload a real image.", "error")
                 return redirect(url_for("main.edit_profile"))
             ext      = avatar_file.filename.rsplit(".", 1)[1].lower()
             filename = secure_filename(f"user_{user.id}.{ext}")
