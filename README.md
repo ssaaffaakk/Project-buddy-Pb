@@ -1,5 +1,9 @@
 # ProjectBuddy
 
+[![CI](https://github.com/ssaaffaakk/Project-buddy-Pb/actions/workflows/ci.yml/badge.svg)](https://github.com/ssaaffaakk/Project-buddy-Pb/actions/workflows/ci.yml)
+[![Python 3.9+](https://img.shields.io/badge/python-3.9%2B-blue.svg)](https://www.python.org/downloads/)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+
 **Find the right teammates. Build real projects. Earn your reputation.**
 
 ProjectBuddy is a web platform built for university students to find project collaborators, form teams, and build a verified reputation — without the chaos of WhatsApp groups.
@@ -31,24 +35,26 @@ The smart matching engine surfaces projects that fit your skills. The reputation
 I didn't want to work with just anyone anymore. So I built the tool that makes sure no one has to.
 I build things because I run into problems and refuse to accept that they can't be solved.
 
-The Problem
+## The Problem
+
 Finding project partners at university still means posting "anyone want to join?" in group chats. Nobody knows what anyone else can actually do, and there's no way to see who contributed what in past projects. ProjectBuddy fixes that.
 
-Features
-Projects
+## Features
+
+### Projects
 	∙	Post a project — set a title, description, required skills, topic tags, team size, course, and deadline
 	∙	Duplicate detection — as you draft, an advisory warning surfaces semantically similar open projects ("join instead?")
 	∙	Browse open projects — semantic search ranks by meaning, not just title text
 	∙	Smart recommendations — dashboard surfaces projects that match your skills and interests
 	∙	Task board — a per-project kanban (To Do / In Progress / Done) with drag-and-drop, assignees, and delete; members only
-Teammates & Matching
+### Teammates & Matching
 	∙	Teammate Finder — recommends *people* whose skills, courses, and interests complement yours, with explainable match reasons
 	∙	Applicant fit score — project owners see a fit % and reasons next to each applicant, sorted best-first
 	∙	Weekly digest — your top project match delivered as a scheduled notification + push
-Study Tools
+### Study Tools
 	∙	Quiz generator — paste notes, SSM-1.0 builds a practice quiz with instant scoring and explanations (notes never stored)
 	∙	AI meeting notes — opt-in recording in a study group is transcribed (Whisper) and summarized into the shared live notes
-Oversight & Reputation
+### Oversight & Reputation
 	∙	Contribution stats — each public profile shows messages, posts, files, and voice sessions (free-rider visibility)
 	∙	Instructor dashboard — course-level team-health flags (stalled teams, deadline risk, overdue); instructors/admins only
 	∙	Upvote / downvote — community can vote on projects to highlight the best ones
@@ -57,85 +63,86 @@ Oversight & Reputation
 	∙	Mark complete — owner marks the project done when it's finished; triggers badge awards for all members
 	∙	Auto-complete — projects past their deadline are automatically marked complete every hour
 	∙	Max 3 active projects — prevents commitment overload; enforced on both create and apply
-Team Management
+### Team Management
 	∙	Accept or reject incoming applications
 	∙	Remove members from your project
 	∙	Real-time team chat per project (powered by SocketIO)
-Reputation System
+### Reputation System
 	∙	Peer feedback — after project completion, teammates rate and review each other
 	∙	Skill endorsements — endorse specific skills of your teammates, visible on their public profile
 	∙	Badges — automatically awarded based on activity (e.g. completing projects, receiving endorsements)
 	∙	Public profile — every user has a profile page showing their skills, projects, feedback, endorsements, and badges
-Community Feed
+### Community Feed
 	∙	Post updates, ideas, or questions to the community
 	∙	Attach images or videos to posts
 	∙	Like and comment on posts
 	∙	Notifications for comments and mentions
-Study Groups
+### Study Groups
 	∙	Create public or private study groups by topic
 	∙	Real-time group chat (SocketIO) — live typing indicators, online presence, jump-to-latest, and message delete
 	∙	Voice rooms — WebRTC peer-to-peer voice calls inside study groups (no external service needed)
 	∙	Share files within the group
-AI Chatbot
+### AI Chatbot
 	∙	Built-in assistant to help navigate the platform
 	∙	Powered by Groq API (falls back to Anthropic, then built-in mock responses)
 	∙	RAG-grounded: every reply is grounded in live platform data (relevant open projects retrieved via the in-house LSA embedding space)
 	∙	Tool calling: the model can search projects/study groups, fetch the user's deadlines, and pull personalized recommendations before answering
 	∙	Eval harness: deterministic retrieval/tool-loop tests in CI + a live golden-set eval (`python -m scripts.eval_assistant`)
 	∙	Conversation history persisted per user (last 20 messages)
-Machine Learning & Experimentation
+### Machine Learning & Experimentation
 	∙	Trained recommender (logistic regression + LSA two-tower embeddings) with leakage-free cross-validation
 	∙	Ranking metrics — recall@5 and NDCG@10 per user — alongside ROC/PR-AUC, on a public model card (`/ml/recommender`)
 	∙	Live A/B experiment: users split 50/50 by hash between ML ranking and the rule-based baseline; impressions and clicks are logged per arm and CTR is compared on the model card
 	∙	Optional MLflow experiment tracking on `flask train-recommender`
-Product Analytics
+### Product Analytics
 	∙	Append-only event stream (logins, signups, project views, applications, rec impressions/clicks, group joins, chatbot use, voice joins)
 	∙	Admin dashboard: DAU/WAU/MAU, stickiness, activation funnel (signup → onboarded → applied → completed), weekly retention cohorts
-Observability
+### Observability
 	∙	Prometheus metrics at `/metrics` — request rate/latency/status by route plus domain gauges (token-protected in production)
 	∙	Optional Sentry error monitoring (`SENTRY_DSN`)
-JSON API (v1)
+### JSON API (v1)
 	∙	Versioned REST API at `/api/v1` — projects (paginated, filterable), recommendations, profile, study groups, applications
 	∙	Interactive OpenAPI docs at `/api/docs` (Swagger UI), spec at `/api/openapi.json`
 	∙	JWT Bearer auth (`POST /api/v1/auth/token`); browser sessions accepted on reads, writes require the token (CSRF-safe by design)
 	∙	Schema-validated requests (bad input → structured 422, never a 500)
-Task Queue
+### Task Queue
 	∙	Celery-backed background delivery for push notifications and email, with automatic retries
 	∙	Zero-config fallback: without a broker, tasks run in-process exactly like before — a broker-less deploy keeps working
 	∙	Worker ships in docker-compose: `celery -A celery_worker.celery worker --beat`
-Data Warehouse (ELT)
+### Data Warehouse (ELT)
 	∙	Nightly star-schema load (`dw_dim_user`, `dw_dim_project`, `dw_fact_daily_activity`, `dw_daily_metrics`) via `flask run-etl` / Celery beat
 	∙	Data-quality gates on every run: row parity, completeness vs the event stream, bounds — failures raise, bad numbers never land silently
-DBA & Reliability
+### DBA & Reliability
 	∙	Hot-path indexes on every heavily-joined foreign key (migration `c3e8f5a71d29`)
 	∙	Slow-query logging (statements only — parameters never logged, they can contain PII)
 	∙	`scripts/db_backup.sh`: pg_dump with rotation + documented restore drill
-MLOps
+### MLOps
 	∙	Every training run archives a versioned artifact (`flask model-versions`, `flask rollback-recommender <version>`)
 	∙	Weekly scheduled retraining; daily feature-drift check against the training snapshot (`flask check-drift`, Prometheus gauge, Grafana threshold panel)
-React Frontend (beta, feature-flagged)
+### React Frontend (beta, feature-flagged)
 	∙	`/beta/projects` — React 18 + TypeScript explorer (Vite) consuming `/api/v1` with typed clients, debounced search, pagination
 	∙	Gated by `FEATURE_SPA` (off in production by default) + login; typecheck/vitest/build enforced in CI
-Infrastructure as Code
+### Infrastructure as Code
 	∙	`render.yaml` Blueprint provisions web + PostgreSQL + Redis with health checks and generated secrets
 	∙	Local observability stack: `docker compose --profile observability up` → Prometheus + Grafana with a provisioned dashboard (request rate, p95 latency, 5xx, drift)
-Notifications
+### Notifications
 	∙	In-app notifications for: application received, accepted, rejected, new comment, mention
 	∙	Email notifications for key events (requires Gmail setup)
-Auth
+### Auth
 	∙	Email/password registration
 	∙	GitHub OAuth — sign in with GitHub in one click
 	∙	Password reset via email
 	∙	Student, instructor, and admin roles
-Admin Panel
+### Admin Panel
 	∙	Full user management — search, view, warn, ban, activate/deactivate
 	∙	Report handling and moderation queue
 	∙	Live support chat (admin ↔ user)
 	∙	Platform-wide statistics and analytics
 	∙	View AI chatbot conversation logs
 
-Quick Start
+## Quick Start
 
+```bash
 git clone https://github.com/ssaaffaakk/Project-buddy-Pb.git
 cd Project-buddy-Pb
 python -m venv venv && source venv/bin/activate   # Windows: venv\Scripts\activate
@@ -143,19 +150,21 @@ pip install -r requirements.txt
 cp .env.example .env   # fill in the required values below
 flask db upgrade       # apply database migrations
 python app.py          # open http://localhost:5001
-
+```
 
 On first run, the database, admin account, and (optionally) demo users are created automatically.
-Minimum .env to get running:
+Minimum `.env` to get running:
 
+```bash
 SECRET_KEY=        # python -c "import secrets; print(secrets.token_hex(32))"
 ADMIN_EMAIL=       # your admin login email
 ADMIN_PASSWORD=    # strong password
 FLASK_APP=app:create_app
+```
 
+### Demo Accounts
 
-Demo Accounts
-Set SEED_MOCK_DATA=true in .env before first run:
+Set `SEED_MOCK_DATA=true` in `.env` before first run:
 
 
 
@@ -166,9 +175,9 @@ Set SEED_MOCK_DATA=true in .env before first run:
 |Student|`leila.hadzic@ius.edu.ba`  |value of `MOCK_PASSWORD` |
 
 Admin panel: http://localhost:5001/auth/admin-login
-Set SEED_MOCK_DATA=false in production.
+Set `SEED_MOCK_DATA=false` in production.
 
-Configuration
+## Configuration
 
 
 
@@ -198,9 +207,7 @@ Configuration
 |`AWS_SECRET_ACCESS_KEY`   |Production     |AWS IAM secret                                                                |
 |`AWS_CLOUDFRONT_URL`      |Production     |Optional CDN prefix for uploaded files                                        |
 
-Tech Stack
-
-
+## Tech Stack
 
 |Layer       |Technology                                                     |
 |------------|---------------------------------------------------------------|
@@ -229,8 +236,9 @@ Tech Stack
 |Testing     |pytest (130+ tests) + vitest · coverage gate in CI            |
 |CI/CD       |GitHub Actions (ruff + pytest 3.9/3.11 + frontend build) · Docker|
 
-Project Structure
+## Project Structure
 
+```
 ProjectBuddy/
 ├── app.py                  # App factory, security headers, scheduler startup
 ├── config.py               # Environment configuration (Dev / Test / Prod)
@@ -293,9 +301,9 @@ ProjectBuddy/
 ├── static/                 # CSS, JS, images
 ├── migrations/             # Alembic database migrations
 └── logs/                   # Rotating application logs
+```
 
-
-Engineering Workflow
+## Engineering Workflow
 
 ```bash
 # Lint + tests (same as CI)
@@ -327,11 +335,16 @@ python -m scripts.eval_assistant
 CI runs on every push/PR (`.github/workflows/ci.yml`): ruff lint + pytest with a
 coverage floor, on Python 3.9 (dev floor) and 3.11 (production runtime).
 
-Documentation
+## Documentation
 
 - [docs/WHITEPAPER.md](docs/WHITEPAPER.md) — the academic white paper (design, evaluation, v3.1 work)
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — engineering architecture notes
-- [CONTRIBUTING.md](CONTRIBUTING.md) · [SECURITY.md](SECURITY.md) · [CHANGELOG.md](CHANGELOG.md)
+- [CONTRIBUTING.md](CONTRIBUTING.md) | [SECURITY.md](SECURITY.md) | [CHANGELOG.md](CHANGELOG.md)
 
-License
-MIT — Safak Surmeli
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for setup instructions, coding conventions, and PR guidelines.
+
+## License
+
+This project is licensed under the [MIT License](LICENSE) — Safak Surmeli.

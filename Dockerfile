@@ -23,5 +23,8 @@ USER appuser
 
 EXPOSE 5001
 
+HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
+  CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:${PORT}/health')" || exit 1
+
 # Same command as the Procfile (Render/Heroku) so dev == prod.
 CMD ["sh", "-c", "gunicorn --worker-class eventlet -w 1 --timeout 120 --bind 0.0.0.0:${PORT} wsgi:app"]

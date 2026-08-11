@@ -2,12 +2,14 @@
 .github
 .claude
 .pytest_cache
+.ruff_cache
 __pycache__
 *.pyc
 venv
 .venv
 .env
 .env.*
+!.env.example
 instance
 logs
 static/uploads
@@ -15,3 +17,17 @@ htmlcov
 .coverage
 mlruns
 .DS_Store
+
+# Documentation and meta files (not needed in production image)
+docs/
+tests/
+scripts/
+*.md
+LICENSE
+Dockerfile
+docker-compose.yml
+rr.json
+
+# Frontend build artifacts and dependencies
+frontend/node_modules
+frontend/dist

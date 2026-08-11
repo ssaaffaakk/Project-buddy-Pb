@@ -6,6 +6,7 @@ services:
     build: .
     ports:
       - "5001:5001"
+    restart: unless-stopped
     environment:
       SECRET_KEY: ${SECRET_KEY:-dev-only-change-me}
       FLASK_ENV: production
@@ -17,15 +18,22 @@ services:
       MOCK_PASSWORD: ${MOCK_PASSWORD:-Mock@123}
       CELERY_BROKER_URL: redis://redis:6379/1
       METRICS_TOKEN: ${METRICS_TOKEN:-local-dev-token}
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5001/health')"]
+      interval: 30s
+      timeout: 5s
+      start_period: 15s
+      retries: 3
     depends_on:
       db:
         condition: service_healthy
       redis:
-        condition: service_started
+        condition: service_healthy
 
   worker:
     build: .
     command: celery -A celery_worker.celery worker --beat --loglevel=info
+    restart: unless-stopped
     environment:
       SECRET_KEY: ${SECRET_KEY:-dev-only-change-me}
       FLASK_ENV: production
@@ -37,10 +45,11 @@ services:
       db:
         condition: service_healthy
       redis:
-        condition: service_started
+        condition: service_healthy
 
   db:
     image: postgres:16-alpine
+    restart: unless-stopped
     environment:
       POSTGRES_USER: projectbuddy
       POSTGRES_PASSWORD: projectbuddy
@@ -55,11 +64,18 @@ services:
 
   redis:
     image: redis:7-alpine
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
 
   # ── Observability (opt-in): docker compose --profile observability up ──────
   prometheus:
     image: prom/prometheus:v2.53.0
     profiles: ["observability"]
+    restart: unless-stopped
     volumes:
       - ./ops/prometheus.yml:/etc/prometheus/prometheus.yml:ro
     ports:
@@ -68,6 +84,7 @@ services:
   grafana:
     image: grafana/grafana:11.1.0
     profiles: ["observability"]
+    restart: unless-stopped
     environment:
       GF_SECURITY_ADMIN_USER: admin
       GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-admin}

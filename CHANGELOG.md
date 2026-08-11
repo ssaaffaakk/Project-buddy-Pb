@@ -1,7 +1,8 @@
 # Changelog
 
 All notable changes to this project are documented here. The format is based on
-[Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
+[Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
@@ -19,7 +20,7 @@ All notable changes to this project are documented here. The format is based on
 - Documentation moved under `docs/` (white paper, architecture); added community
   health files (`CONTRIBUTING`, `SECURITY`, this changelog, GitHub templates).
 
-## [3.0.0]
+## [3.0.0] - 2025-07-11
 
 ### Added
 - Versioned, OpenAPI-documented JSON API (`/api/v1`) with JWT auth and schema validation.
@@ -34,7 +35,7 @@ All notable changes to this project are documented here. The format is based on
   project search with duplicate detection, contribution analytics, instructor dashboard,
   per-project kanban board, AI quiz generator, and AI meeting notes.
 
-## [2.1.0]
+## [2.1.0] - 2025-06-15
 
 ### Added
 - Live collaboration rooms (WebRTC voice/video/screen share) with a live-synced shared notepad.
@@ -42,8 +43,13 @@ All notable changes to this project are documented here. The format is based on
 - Social/identity layer: interdisciplinary interest taxonomy, first-run onboarding,
   public profile walls, and in-chat file attachments.
 
-## [1.x]
+## [1.0.0] - 2025-05-14
 
 ### Added
 - Initial platform: project posting and applications, team formation, peer feedback and
   endorsements, badges, community feed, study groups, admin/moderation, and an AI chatbot.
+
+[Unreleased]: https://github.com/ssaaffaakk/Project-buddy-Pb/compare/v3.0.0...HEAD
+[3.0.0]: https://github.com/ssaaffaakk/Project-buddy-Pb/compare/v2.1.0...v3.0.0
+[2.1.0]: https://github.com/ssaaffaakk/Project-buddy-Pb/compare/v1.0.0...v2.1.0
+[1.0.0]: https://github.com/ssaaffaakk/Project-buddy-Pb/releases/tag/v1.0.0

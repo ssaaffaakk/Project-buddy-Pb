@@ -3,7 +3,13 @@
 Thanks for your interest in improving ProjectBuddy. This guide covers the
 local setup and the conventions the project follows.
 
+Please note that this project follows a [Code of Conduct](https://www.contributor-covenant.org/version/2/1/code_of_conduct/).
+By participating, you agree to abide by its terms.
+
 ## Development setup
+
+**Prerequisites:** Python 3.9+ (production runs 3.11), Git, and optionally
+Docker for the full stack.
 
 ```bash
 # 1. Clone and create a virtualenv
