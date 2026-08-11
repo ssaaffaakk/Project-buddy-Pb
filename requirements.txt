@@ -16,7 +16,7 @@ redis==5.2.1
 boto3==1.35.99
 
 # ── Machine learning (teammate recommender) ──
-numpy==2.0.2
+numpy==2.4.6
 scikit-learn==1.6.1
 joblib==1.5.3
 pywebpush==2.1.2
