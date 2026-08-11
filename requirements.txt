@@ -17,7 +17,7 @@ boto3==1.35.99
 
 # ── Machine learning (teammate recommender) ──
 numpy==2.0.2
-scikit-learn==1.6.1
+scikit-learn==1.9.0
 joblib==1.5.3
 pywebpush==2.1.2
 
