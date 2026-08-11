@@ -3,21 +3,41 @@ Main page routes — renders all HTML templates.
 """
 
 import os
-from datetime import datetime, timezone, timedelta
-from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app, jsonify
-from flask_login import login_required, current_user
+from datetime import datetime, timedelta, timezone
+
+from flask import Blueprint, current_app, flash, jsonify, redirect, render_template, request, url_for
+from flask_login import current_user, login_required
 from werkzeug.utils import secure_filename
+
 from extensions import db, limiter
 from models import (
-    User, Project, ProjectMember, Application, Feedback, Endorsement,
-    UserBadge, Report, Chat, AdminMessage, UserInterest, UserSkill, UserCourse,
-    ProjectMessage, ProjectVote, CommunityPost, CommunityComment, CommunityLike,
-    Notification, ProfileComment, ProfileCommentLike, PushSubscription
+    AdminMessage,
+    Application,
+    Chat,
+    CommunityComment,
+    CommunityLike,
+    CommunityPost,
+    Endorsement,
+    Feedback,
+    Notification,
+    ProfileComment,
+    ProfileCommentLike,
+    Project,
+    ProjectMember,
+    ProjectMessage,
+    ProjectVote,
+    PushSubscription,
+    Report,
+    User,
+    UserBadge,
+    UserCourse,
+    UserInterest,
+    UserSkill,
 )
-from services.recommendation_service import get_recommendations_with_variant
+from services import analytics
 from services.badge_service import check_and_award_badges
 from services.file_storage import storage
-from services import analytics
+from services.recommendation_service import get_recommendations_with_variant
 
 ALLOWED_AVATAR_EXTENSIONS = {"jpg", "jpeg", "png", "webp"}
 MAX_AVATAR_BYTES = 2 * 1024 * 1024  # 2 MB
@@ -244,7 +264,7 @@ def robots():
 def service_worker():
     """Serve the service worker from the site root so its scope covers the whole
     app (a worker served from /static/ could only control /static/ URLs)."""
-    from flask import send_from_directory, current_app
+    from flask import current_app, send_from_directory
     resp = send_from_directory(
         os.path.join(current_app.root_path, "static"),
         "sw.js",
@@ -257,7 +277,7 @@ def service_worker():
 
 @main_bp.route("/manifest.webmanifest")
 def manifest():
-    from flask import send_from_directory, current_app
+    from flask import current_app, send_from_directory
     return send_from_directory(
         os.path.join(current_app.root_path, "static"),
         "manifest.webmanifest",
@@ -491,7 +511,7 @@ def _presence_touch():
 @login_required
 def presence_heartbeat():
     """Client pings this while a tab is open; returns who is currently online."""
-    from services.presence import touch, online_ids
+    from services.presence import online_ids, touch
     touch(current_user.id)
     return jsonify({"online": online_ids()})
 
@@ -1085,7 +1105,7 @@ def toggle_saved_project(project_id):
 @login_required
 def saved_projects():
     """The user's bookmarks — projects and community posts, newest first."""
-    from models import SavedProject, SavedPost
+    from models import SavedPost, SavedProject
     rows = (SavedProject.query
             .filter_by(user_id=current_user.id)
             .order_by(SavedProject.created_at.desc())
@@ -1603,6 +1623,7 @@ def edit_profile():
 def set_language(lang):
     """Persist the chosen UI language in the session and return where we came from."""
     from flask import session
+
     from services.i18n import LANGUAGES
     if lang in LANGUAGES:
         session["lang"] = lang
@@ -1622,7 +1643,7 @@ def quiz_page():
 def quiz_generate():
     """Generate a practice quiz from pasted notes. LLM-backed, rate-limited,
     input length-capped; notes are never persisted."""
-    from services.quiz_service import generate_quiz, QuizError, extract_text_from_upload
+    from services.quiz_service import QuizError, extract_text_from_upload, generate_quiz
 
     # Notes can arrive as an uploaded file (.txt/.md/.pdf) or pasted JSON text.
     upload = request.files.get("file")
@@ -1844,11 +1865,11 @@ def report_issue():
             flash("Invalid target selected.", "error")
             return redirect(url_for("main.report_issue"))
 
-        report_kwargs = dict(
-            reporter_id=current_user.id,
-            reason=reason,
-            description=description or None,
-        )
+        report_kwargs = {
+            "reporter_id": current_user.id,
+            "reason": reason,
+            "description": description or None,
+        }
 
         if target_type == "user":
             if current_user.id == target_id:

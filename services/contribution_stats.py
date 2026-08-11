@@ -18,8 +18,12 @@ from sqlalchemy import func
 
 from extensions import db
 from models import (
-    ActivityEvent, CommunityComment, CommunityPost, ProjectMessage,
-    SharedFile, StudyGroupMessage,
+    ActivityEvent,
+    CommunityComment,
+    CommunityPost,
+    ProjectMessage,
+    SharedFile,
+    StudyGroupMessage,
 )
 
 logger = logging.getLogger(__name__)

@@ -10,12 +10,14 @@ Groq = LLaMA running in the cloud for free. No Ollama needed on the server.
 Get your key at: https://console.groq.com/keys
 """
 
-import random
 import logging
-import requests
+import random
+
 import eventlet.tpool
-from flask import Blueprint, render_template, request, jsonify, current_app
-from flask_login import login_required, current_user
+import requests
+from flask import Blueprint, current_app, jsonify, render_template, request
+from flask_login import current_user, login_required
+
 from extensions import db, limiter
 from models import ChatbotSession
 
@@ -113,6 +115,7 @@ def _groq_reply(history: list, user_message: str, system_prompt: str, user_id: i
     ~14,400 requests/day on llama-3.1-8b-instant.
     """
     import json as _json
+
     from services.assistant_tools import TOOL_SPECS, run_tool
 
     model = current_app.config.get("GROQ_MODEL", "llama-3.1-8b-instant")

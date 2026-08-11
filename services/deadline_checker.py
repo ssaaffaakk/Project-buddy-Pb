@@ -1,6 +1,7 @@
 from datetime import datetime, timezone
-from models import Project
+
 from extensions import db
+from models import Project
 
 
 def flag_overdue_projects():

@@ -3,12 +3,11 @@ SSM-1.0 — Project Buddy
 Local LLaMA agent via Ollama | pb development
 """
 
-import json
 import datetime
+import json
 from typing import Callable
 
 import ollama
-
 
 # ── Identity ──────────────────────────────────────────────────────────────────
 

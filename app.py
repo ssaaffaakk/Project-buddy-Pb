@@ -5,11 +5,13 @@ This module creates and configures the Flask application instance
 using the application factory pattern.
 """
 
-import os
 import logging
+import os
 from logging.handlers import RotatingFileHandler
+
 from flask import Flask
-from extensions import db, login_manager, socketio, migrate
+
+from extensions import db, login_manager, migrate, socketio
 
 
 def create_app(config_class=None):
@@ -166,8 +168,8 @@ def _init_sentry(app: Flask) -> None:
 
 def _initialize_extensions(app: Flask) -> None:
     """Initialize Flask extensions with the app."""
-    from extensions import limiter, csrf
     import models  # noqa: F401 — side-effect import: registers all models before migrate sees them
+    from extensions import csrf, limiter
 
     db.init_app(app)
     migrate.init_app(app, db)
@@ -209,6 +211,7 @@ def _initialize_extensions(app: Flask) -> None:
 
     # ── Per-request CSP nonce ─────────────────────────────────────────────────
     import secrets as _secrets
+
     from flask import g as _g
 
     @app.before_request
@@ -289,7 +292,10 @@ def _initialize_extensions(app: Flask) -> None:
         return response
 
     # ── Rate-limit exceeded: return flash+redirect instead of raw JSON ─────────
-    from flask import request as _req, redirect as _redir, flash as _flash, url_for as _url_for
+    from flask import flash as _flash
+    from flask import redirect as _redir
+    from flask import request as _req
+    from flask import url_for as _url_for
     from flask_limiter.errors import RateLimitExceeded
 
     @app.errorhandler(RateLimitExceeded)
@@ -311,8 +317,10 @@ def _initialize_extensions(app: Flask) -> None:
     # who walks away with a tab open still gets signed out, while any real
     # click/navigation keeps the session alive.
     from time import time as _now
+
     from flask import session as _session
-    from flask_login import current_user as _cu, logout_user as _logout_user
+    from flask_login import current_user as _cu
+    from flask_login import logout_user as _logout_user
 
     _IDLE_EXEMPT_ENDPOINTS = {
         'main.get_notifications',       # polled every 30s from every page
@@ -355,17 +363,18 @@ def _initialize_extensions(app: Flask) -> None:
 
 def _register_blueprints(app: Flask) -> None:
     """Register Flask blueprints."""
-    from routes.main import main_bp
-    from routes.auth import auth_bp
-    from routes.projects import projects_bp
-    from routes.users import users_bp
     from routes.admin import admin_bp
+    from routes.auth import auth_bp
     from routes.chat import chat_bp
-    from routes.community import community_bp
-    from routes.study_groups import study_groups_bp
     from routes.chatbot import chatbot_bp
+    from routes.community import community_bp
+    from routes.main import main_bp
+
     # Importing routes.messages also registers its @socketio.on('join_dm') handler.
     from routes.messages import messages_bp
+    from routes.projects import projects_bp
+    from routes.study_groups import study_groups_bp
+    from routes.users import users_bp
 
     app.register_blueprint(main_bp)
     app.register_blueprint(auth_bp)
@@ -414,8 +423,9 @@ def _register_api(app: Flask) -> None:
     cannot attach — so the exemption doesn't reopen CSRF.
     """
     from flask_smorest import Api
-    from routes.api_v1 import blp as api_blp
+
     from extensions import csrf
+    from routes.api_v1 import blp as api_blp
 
     api = Api(app)
     api.spec.components.security_scheme(
@@ -449,7 +459,8 @@ def _apply_schema(app: Flask) -> None:
     - Existing DB, development: failures stay non-fatal.
     - Testing: create_all() only — conftest wants a migration-free schema.
     """
-    from flask_migrate import stamp as db_stamp, upgrade as db_upgrade
+    from flask_migrate import stamp as db_stamp
+    from flask_migrate import upgrade as db_upgrade
     from sqlalchemy import inspect as sa_inspect
 
     if app.config.get("TESTING"):
@@ -488,7 +499,8 @@ def _ensure_feature_columns(app: Flask) -> None:
     500s essentially every page. This idempotently adds those columns so the
     app self-heals on the next restart regardless of migration state.
     """
-    from sqlalchemy import inspect as sa_inspect, String, DateTime, Integer, Boolean
+    from sqlalchemy import Boolean, DateTime, Integer, String
+    from sqlalchemy import inspect as sa_inspect
 
     # (table, column, SQLAlchemy type) for every column this app added to a
     # pre-existing table. New TABLES are handled by create_all and need no entry.
@@ -540,7 +552,9 @@ def _sync_avatar_urls() -> None:
     """Backfill avatar_url when a file exists on disk but the DB row is empty."""
     import os
     import re
+
     from flask import current_app
+
     from models import User
 
     project_root = os.path.dirname(os.path.abspath(__file__))
@@ -568,6 +582,7 @@ def _sync_avatar_urls() -> None:
 def _sync_admin() -> None:
     """Create or update the admin account from .env credentials."""
     from flask import current_app
+
     from models import User
     email = current_app.config.get('ADMIN_EMAIL')
     password = current_app.config.get('ADMIN_PASSWORD')
@@ -607,6 +622,7 @@ def _fix_broken_passwords() -> None:
     unsupported hash algorithm (e.g. scrypt on Python 3.9 / LibreSSL).
     Safe to run every startup — only re-hashes when the password doesn't verify."""
     from flask import current_app
+
     from models import User
     mock_password = current_app.config.get('MOCK_PASSWORD', 'Mock@123')
     mock_suffix = current_app.config.get('MOCK_EMAIL_SUFFIX', '@mock.projectbuddy.local')
@@ -628,7 +644,7 @@ def _register_context_processors(app: Flask) -> None:
     """Inject variables available in every template."""
 
     # i18n: expose _() for translation plus locale metadata in every template.
-    from services.i18n import translate, get_locale, LANGUAGES
+    from services.i18n import LANGUAGES, get_locale, translate
     app.jinja_env.globals["_"] = translate
 
     @app.context_processor
@@ -651,7 +667,7 @@ def _register_context_processors(app: Flask) -> None:
         from flask_login import current_user
         if not current_user.is_authenticated or not current_user.is_admin():
             return {}
-        from models import Report, Chat
+        from models import Chat, Report
         return {
             "admin_pending_reports": Report.query.filter_by(status="pending").count(),
             "admin_open_chat_count": Chat.query.filter_by(status="open").count(),

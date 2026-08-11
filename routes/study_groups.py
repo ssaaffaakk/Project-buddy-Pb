@@ -2,14 +2,16 @@
 Study Groups — mini Discord-style group chat rooms.
 """
 
-import os
 import json
+import os
 import uuid
-from flask import Blueprint, render_template, request, jsonify, redirect, url_for, flash, send_from_directory
-from flask_login import login_required, current_user
+
+from flask import Blueprint, flash, jsonify, redirect, render_template, request, send_from_directory, url_for
+from flask_login import current_user, login_required
 from werkzeug.utils import secure_filename
+
 from extensions import db, limiter
-from models import StudyGroup, StudyGroupMember, StudyGroupMessage, StudyGroupNote, SharedFile
+from models import SharedFile, StudyGroup, StudyGroupMember, StudyGroupMessage, StudyGroupNote
 from services.file_storage import storage
 
 
@@ -46,9 +48,10 @@ def _ice_servers():
     channel = os.environ.get("XIRSYS_CHANNEL", "")
     if ident and secret and channel:
         try:
-            import requests as _req
             import base64
+
             import eventlet.tpool
+            import requests as _req
             token = base64.b64encode(f"{ident}:{secret}".encode()).decode()
             resp = eventlet.tpool.execute(
                 _req.put,
@@ -188,7 +191,7 @@ def room(group_id):
     messages = list(reversed(messages))
     ice = _ice_servers()
     note = StudyGroupNote.query.filter_by(group_id=group_id).first()
-    from services.reactions import summarize, ALLOWED
+    from services.reactions import ALLOWED, summarize
     reactions_map = summarize("group", [m.id for m in messages])
     return render_template(
         "study_groups/room.html",
@@ -429,7 +432,7 @@ def transcribe_meeting(group_id):
         return jsonify({"error": "Unsupported audio format."}), 400
     audio_bytes = f.read()
 
-    from services.meeting_notes import transcribe_and_summarize, MeetingNotesError, MAX_AUDIO_BYTES
+    from services.meeting_notes import MAX_AUDIO_BYTES, MeetingNotesError, transcribe_and_summarize
     if len(audio_bytes) > MAX_AUDIO_BYTES:
         return jsonify({"error": "Recording too large (max 25 MB)."}), 400
 

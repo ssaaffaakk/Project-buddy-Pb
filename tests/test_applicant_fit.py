@@ -1,8 +1,14 @@
 """Tests for applicant→project fit scoring (services/applicant_fit.py)."""
 from extensions import db
 from models import (
-    Application, Project, ProjectSkill, ProjectTag, User, UserCourse,
-    UserInterest, UserSkill,
+    Application,
+    Project,
+    ProjectSkill,
+    ProjectTag,
+    User,
+    UserCourse,
+    UserInterest,
+    UserSkill,
 )
 from services.applicant_fit import score_applicant
 

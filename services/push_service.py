@@ -31,7 +31,7 @@ def notify_user(user_id: int, title: str, body: str,
         return 0
 
     try:
-        from pywebpush import webpush, WebPushException
+        from pywebpush import WebPushException, webpush
     except ImportError:
         logger.warning("pywebpush not installed — push skipped")
         return 0

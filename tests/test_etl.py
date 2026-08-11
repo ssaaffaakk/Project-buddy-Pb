@@ -4,10 +4,14 @@ import pytest
 
 from extensions import db
 from models import (
-    DwDailyMetrics, DwDimProject, DwDimUser, DwFactDailyActivity, User,
+    DwDailyMetrics,
+    DwDimProject,
+    DwDimUser,
+    DwFactDailyActivity,
+    User,
 )
 from services import analytics
-from services.etl import DataQualityError, freshness, run_pipeline, _quality_checks, _today
+from services.etl import DataQualityError, _quality_checks, _today, freshness, run_pipeline
 
 
 @pytest.fixture

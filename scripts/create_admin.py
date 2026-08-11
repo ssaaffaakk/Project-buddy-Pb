@@ -5,8 +5,8 @@ This script creates an initial admin user for the application.
 Uses environment variables from .env file for admin credentials.
 """
 
-import sys
 import os
+import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 

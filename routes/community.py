@@ -4,14 +4,13 @@ Community learning feed — posts, comments, likes, @mentions.
 
 import secrets
 from datetime import datetime, timezone
+
+from flask import Blueprint, flash, jsonify, redirect, render_template, request, url_for
+from flask_login import current_user, login_required
 from werkzeug.utils import secure_filename
-from flask import (
-    Blueprint, render_template, request, jsonify,
-    redirect, url_for, flash
-)
-from flask_login import login_required, current_user
+
 from extensions import db
-from models import CommunityPost, CommunityComment, CommunityLike, Notification
+from models import CommunityComment, CommunityLike, CommunityPost, Notification
 from services.file_storage import storage
 
 community_bp = Blueprint("community", __name__, url_prefix="/community")

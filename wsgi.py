@@ -12,6 +12,7 @@ Never import DevelopmentConfig here; use `python app.py` for local dev.
 """
 
 import eventlet
+
 eventlet.monkey_patch()
 
 # ── Diagnostic: capture full traceback for eventlet blocking errors ──────────
@@ -24,6 +25,7 @@ eventlet.monkey_patch()
 # Remove this block once the root cause is confirmed and fixed.
 import sys as _sys
 import traceback as _tb
+
 
 def _dump(label, exc_tb=None):
     print(f"\n[WSGI DIAG] BLOCKING FROM MAINLOOP ({label}):", file=_sys.stderr, flush=True)
@@ -42,8 +44,8 @@ def _is_mainloop():
         return False
 
 try:
-    import eventlet.hubs as _hubs
     import eventlet.event as _ev_mod
+    import eventlet.hubs as _hubs
     import eventlet.semaphore as _sem_mod
     from greenlet import getcurrent as _getcurrent
 

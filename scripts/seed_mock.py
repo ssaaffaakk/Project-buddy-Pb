@@ -3,24 +3,41 @@ Mock Data Seeder for ProjectBuddy
 Run: python scripts/seed_mock.py
 Clears existing non-admin data and seeds fresh realistic IUS mock data.
 """
-import sys
-import os
 import io
+import os
+import sys
+
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
 # Allow running as `python scripts/seed_mock.py` from the repo root.
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import random
+from datetime import datetime, timedelta
+
 from app import create_app
 from extensions import db
 from models import (
-    User, UserInterest, UserSkill, UserCourse,
-    Project, ProjectTag, ProjectSkill, ProjectMember, Application,
-    Feedback, Endorsement, Badge, UserBadge,
-    StudyGroup, StudyGroupMember, StudyGroupMessage,
-    CommunityPost, CommunityComment, CommunityLike,
-    Notification, ChatbotSession
+    Application,
+    Badge,
+    ChatbotSession,
+    CommunityComment,
+    CommunityLike,
+    CommunityPost,
+    Endorsement,
+    Feedback,
+    Notification,
+    Project,
+    ProjectMember,
+    ProjectSkill,
+    ProjectTag,
+    StudyGroup,
+    StudyGroupMember,
+    StudyGroupMessage,
+    User,
+    UserBadge,
+    UserCourse,
+    UserInterest,
+    UserSkill,
 )
-from datetime import datetime, timedelta
-import random
 
 app = create_app()
 
@@ -425,7 +442,7 @@ def seed():
 
         # ── Create students ───────────────────────────────────────────────
         users = []
-        for i, (first, last, email, dept, bio, skills, interests, courses) in enumerate(STUDENTS):
+        for _i, (first, last, email, dept, bio, skills, interests, courses) in enumerate(STUDENTS):
             u = User(first_name=first, last_name=last, email=email,
                      department=dept, bio=bio, role="student")
             u.set_password(MOCK_PASSWORD)

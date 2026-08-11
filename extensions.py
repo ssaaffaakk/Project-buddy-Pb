@@ -6,16 +6,17 @@ to an application instance (using the application factory pattern).
 """
 
 import os
-from flask_sqlalchemy import SQLAlchemy
-from flask_migrate import Migrate
-from flask_login import LoginManager, current_user
+from functools import wraps
+from typing import Any, Callable
+
+from flask import flash, redirect, url_for
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
-from flask_wtf.csrf import CSRFProtect
+from flask_login import LoginManager, current_user
+from flask_migrate import Migrate
 from flask_socketio import SocketIO
-from flask import redirect, url_for, flash
-from functools import wraps
-from typing import Callable, Any
+from flask_sqlalchemy import SQLAlchemy
+from flask_wtf.csrf import CSRFProtect
 
 # Initialize extensions
 db = SQLAlchemy()

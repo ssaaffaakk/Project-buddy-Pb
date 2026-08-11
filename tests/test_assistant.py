@@ -9,7 +9,7 @@ import json
 import pytest
 
 from extensions import db
-from models import Project, ProjectTag, ProjectSkill, UserInterest
+from models import Project, ProjectSkill, ProjectTag, UserInterest
 from services import assistant_tools
 
 

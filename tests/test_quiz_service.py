@@ -49,9 +49,8 @@ def test_validate_rejects_empty():
 
 
 def test_generate_requires_min_length(app):
-    with app.test_request_context():
-        with pytest.raises(QuizError):
-            generate_quiz("too short")
+    with app.test_request_context(), pytest.raises(QuizError):
+        generate_quiz("too short")
 
 
 def test_generate_without_key_is_graceful(app, monkeypatch):
@@ -99,7 +98,7 @@ def test_extract_rejects_unknown_ext():
 
 
 def test_extract_rejects_oversize():
-    from services.quiz_service import extract_text_from_upload, MAX_UPLOAD_BYTES
+    from services.quiz_service import MAX_UPLOAD_BYTES, extract_text_from_upload
     text, err = extract_text_from_upload(_Upload("big.txt", b"x" * (MAX_UPLOAD_BYTES + 1)))
     assert text is None and "too large" in err.lower()
 
@@ -107,7 +106,8 @@ def test_extract_rejects_oversize():
 def test_extract_real_pdf():
     """Round-trip a generated PDF through pypdf extraction."""
     import io
-    from pypdf import PdfWriter, PdfReader  # noqa: F401
+
+    from pypdf import PdfReader, PdfWriter  # noqa: F401
     try:
         from reportlab.pdfgen import canvas  # optional; skip if unavailable
     except Exception:

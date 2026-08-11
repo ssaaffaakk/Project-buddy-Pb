@@ -5,16 +5,16 @@ Loads the fitted pipeline once (cached). If no model artifact exists yet, the
 public functions return None so callers can fall back to the rule-based scorer.
 """
 
-import os
 import json
 import logging
+import os
 from datetime import datetime, timezone
 
 import numpy as np
 
-from models import User, Project, ProjectMember, Application, UserInterest, UserSkill, UserCourse
-from services.ml.features import pair_features, build_user_profile, build_project_profile
+from models import Application, Project, ProjectMember, User, UserCourse, UserInterest, UserSkill
 from services.ml import embeddings
+from services.ml.features import build_project_profile, build_user_profile, pair_features
 
 logger = logging.getLogger(__name__)
 

@@ -1,10 +1,13 @@
-from flask import Blueprint, request, jsonify, current_app
-from flask_login import login_required, current_user
-from extensions import db
-from models import Project, ProjectTag, ProjectSkill, ProjectMember, Application, Feedback, Endorsement, User
 from datetime import datetime, timezone
+
+from flask import Blueprint, current_app, jsonify, request
+from flask_login import current_user, login_required
+
+from extensions import db
+from models import Application, Endorsement, Feedback, Project, ProjectMember, ProjectSkill, ProjectTag, User
 from services.badge_service import check_and_award_badges
 from services.recommendation_service import get_recommended_projects
+
 projects_bp = Blueprint("projects", __name__, url_prefix="/projects")
 
 

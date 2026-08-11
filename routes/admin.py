@@ -1,6 +1,7 @@
-from flask import Blueprint, request, jsonify, render_template, current_app
-from extensions import db, admin_required
-from models import Report, User, Project, Application, Badge, AdminMessage
+from flask import Blueprint, current_app, jsonify, render_template, request
+
+from extensions import admin_required, db
+from models import AdminMessage, Application, Badge, Project, Report, User
 
 admin_bp = Blueprint("admin", __name__, url_prefix="/admin")
 

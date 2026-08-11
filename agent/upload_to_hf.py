@@ -11,8 +11,8 @@ Requirements:
     pip install huggingface_hub
 """
 
-import sys
 import subprocess
+import sys
 from pathlib import Path
 
 # ── Config ────────────────────────────────────────────────────────────────────

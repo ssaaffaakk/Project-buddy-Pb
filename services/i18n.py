@@ -14,7 +14,7 @@ Bosnian was written to the best of the author's ability and is a good-faith
 translation; a native pass can refine it later without touching any template.
 """
 
-from flask import session, request, has_request_context
+from flask import has_request_context, request, session
 
 LANGUAGES = {
     "en": {"label": "English",  "flag": "\U0001F1EC\U0001F1E7"},   # 🇬🇧

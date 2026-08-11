@@ -11,14 +11,13 @@ in the same thread.
 import uuid
 from datetime import datetime, timezone
 
-from flask import Blueprint, render_template, request, jsonify, url_for, abort, send_from_directory
-from flask_login import login_required, current_user
-from flask_socketio import join_room, emit
+from flask import Blueprint, abort, jsonify, render_template, request, send_from_directory, url_for
+from flask_login import current_user, login_required
+from flask_socketio import emit, join_room
 from werkzeug.utils import secure_filename
 
 from extensions import db, limiter, socketio
-from models import (User, Conversation, DirectMessage, DmAttachment,
-                    ProjectMember, StudyGroupMember)
+from models import Conversation, DirectMessage, DmAttachment, ProjectMember, StudyGroupMember, User
 from services import analytics
 from services.file_storage import storage
 
@@ -316,10 +315,11 @@ def thread(user_id):
 
     # ICE servers for the 1:1 voice/video call (same helper the group rooms use)
     import json
+
     from routes.study_groups import _ice_servers, _servers_include_turn
     ice = _ice_servers()
 
-    from services.reactions import summarize, ALLOWED
+    from services.reactions import ALLOWED, summarize
     reactions_map = summarize("dm", [m.id for m in msgs])
 
     # Conversation list for the left rail so opening a chat stays on one screen.

@@ -4,10 +4,12 @@ Database Models
 
 from datetime import datetime, timedelta, timezone
 from typing import Optional
-from sqlalchemy.orm import Mapped, mapped_column
-from sqlalchemy import String, Integer, Text, Boolean, DateTime, CheckConstraint
-from werkzeug.security import generate_password_hash, check_password_hash
+
 from flask_login import UserMixin
+from sqlalchemy import Boolean, CheckConstraint, DateTime, Integer, String, Text
+from sqlalchemy.orm import Mapped, mapped_column
+from werkzeug.security import check_password_hash, generate_password_hash
+
 from extensions import db
 
 

@@ -1,12 +1,14 @@
-import re
-import hmac
 import hashlib
-import time
+import hmac
+import re
 import secrets
-import requests as http_requests
+import time
+
 import eventlet.tpool
-from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app
-from flask_login import login_user, logout_user, login_required, current_user
+import requests as http_requests
+from flask import Blueprint, current_app, flash, redirect, render_template, request, url_for
+from flask_login import current_user, login_required, login_user, logout_user
+
 from extensions import db, limiter
 from models import User, UserInterest
 
@@ -219,7 +221,7 @@ def forgot_password():
         if user:
             # Generate and save reset token
             from models import PasswordReset
-            from routes.email import send_password_reset_email, generate_reset_token
+            from routes.email import generate_reset_token, send_password_reset_email
 
             # Delete old tokens for this user
             PasswordReset.query.filter_by(user_id=user.id).delete()
@@ -252,8 +254,8 @@ def reset_password(token):
     if current_user.is_authenticated:
         return redirect(url_for('main.dashboard'))
 
-    from models import PasswordReset
     from config import Config
+    from models import PasswordReset
 
     # Find reset token
     reset_record = PasswordReset.query.filter_by(token=token).first()

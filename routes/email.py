@@ -1,6 +1,7 @@
 import logging
-from flask import current_app
 import secrets
+
+from flask import current_app
 
 logger = logging.getLogger(__name__)
 

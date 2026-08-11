@@ -16,7 +16,7 @@ from datetime import datetime, timedelta, timezone
 from sqlalchemy import func
 
 from extensions import db
-from models import ActivityEvent, User, Application, Project, ProjectMember
+from models import ActivityEvent, Application, Project, ProjectMember, User
 
 logger = logging.getLogger(__name__)
 

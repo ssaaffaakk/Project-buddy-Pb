@@ -1,8 +1,13 @@
 """Tests for per-user contribution stats (services/contribution_stats.py)."""
 from extensions import db
 from models import (
-    CommunityPost, Project, ProjectMessage, SharedFile, StudyGroup,
-    StudyGroupMessage, User,
+    CommunityPost,
+    Project,
+    ProjectMessage,
+    SharedFile,
+    StudyGroup,
+    StudyGroupMessage,
+    User,
 )
 from services import analytics
 from services.contribution_stats import contribution_stats

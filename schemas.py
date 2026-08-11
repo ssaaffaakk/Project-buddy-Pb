@@ -8,7 +8,6 @@ that renders at /api/docs.
 
 from marshmallow import Schema, fields, validate
 
-
 # ── Auth ──────────────────────────────────────────────────────────────────────
 
 class TokenRequestSchema(Schema):

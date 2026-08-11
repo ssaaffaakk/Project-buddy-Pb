@@ -13,10 +13,18 @@ from sqlalchemy import or_
 from extensions import db, limiter
 from models import Application, Project, ProjectMember, ProjectTag, StudyGroup, User
 from schemas import (
-    ApplyArgsSchema, MeSchema, MessageSchema, ProjectDetailSchema,
-    ProjectListArgsSchema, ProjectPageSchema, PaginationArgsSchema,
-    RecommendationsResponseSchema, StudyGroupPageSchema,
-    TeammatesResponseSchema, TokenRequestSchema, TokenResponseSchema,
+    ApplyArgsSchema,
+    MeSchema,
+    MessageSchema,
+    PaginationArgsSchema,
+    ProjectDetailSchema,
+    ProjectListArgsSchema,
+    ProjectPageSchema,
+    RecommendationsResponseSchema,
+    StudyGroupPageSchema,
+    TeammatesResponseSchema,
+    TokenRequestSchema,
+    TokenResponseSchema,
 )
 from services import analytics
 from services.api_auth import auth_required, issue_token

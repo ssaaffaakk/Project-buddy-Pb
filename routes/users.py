@@ -1,7 +1,8 @@
-from flask import Blueprint, request, jsonify, current_app
-from flask_login import login_required, current_user
+from flask import Blueprint, current_app, jsonify, request
+from flask_login import current_user, login_required
+
 from extensions import db
-from models import User, UserSkill, UserInterest, Report, Project
+from models import Project, Report, User, UserInterest, UserSkill
 
 users_bp = Blueprint("users", __name__, url_prefix="/users")
 

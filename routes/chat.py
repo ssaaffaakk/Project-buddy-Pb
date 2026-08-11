@@ -1,8 +1,10 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
-from flask_login import login_required, current_user
-from extensions import db, admin_required
-from models import Chat, ChatMessage
 from datetime import datetime, timezone
+
+from flask import Blueprint, flash, jsonify, redirect, render_template, request, url_for
+from flask_login import current_user, login_required
+
+from extensions import admin_required, db
+from models import Chat, ChatMessage
 
 chat_bp = Blueprint('chat', __name__, url_prefix='/chat')
 

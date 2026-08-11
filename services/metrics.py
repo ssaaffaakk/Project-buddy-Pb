@@ -11,13 +11,17 @@ Flask reloader) never double-register on the default registry.
 """
 
 import hmac
+import logging
 import os
 import time
-import logging
 
 from flask import Response, g, request
 from prometheus_client import (
-    CONTENT_TYPE_LATEST, Counter, Gauge, Histogram, generate_latest,
+    CONTENT_TYPE_LATEST,
+    Counter,
+    Gauge,
+    Histogram,
+    generate_latest,
 )
 
 logger = logging.getLogger(__name__)

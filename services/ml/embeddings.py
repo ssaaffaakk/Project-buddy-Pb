@@ -12,17 +12,17 @@ tower into one shared space; matching is cosine similarity.
 Artifact: services/ml/artifacts/embeddings.joblib
 """
 
-import os
 import logging
+import os
 
-import numpy as np
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.decomposition import TruncatedSVD
-from sklearn.preprocessing import Normalizer
-from sklearn.pipeline import make_pipeline
 import joblib
+import numpy as np
+from sklearn.decomposition import TruncatedSVD
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import Normalizer
 
-from models import User, Project, UserInterest, UserSkill, UserCourse
+from models import Project, User, UserCourse, UserInterest, UserSkill
 
 logger = logging.getLogger(__name__)
 

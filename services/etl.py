@@ -21,15 +21,24 @@ shows freshness/row counts.
 
 import logging
 import time
-from datetime import date as date_type, datetime, timedelta, timezone
+from datetime import date as date_type
+from datetime import datetime, timedelta, timezone
 
 from sqlalchemy import func
 
 from extensions import db
 from models import (
-    ActivityEvent, Application, CommunityPost, Project, User,
-    UserInterest, UserSkill,
-    DwDailyMetrics, DwDimProject, DwDimUser, DwFactDailyActivity,
+    ActivityEvent,
+    Application,
+    CommunityPost,
+    DwDailyMetrics,
+    DwDimProject,
+    DwDimUser,
+    DwFactDailyActivity,
+    Project,
+    User,
+    UserInterest,
+    UserSkill,
 )
 
 logger = logging.getLogger(__name__)

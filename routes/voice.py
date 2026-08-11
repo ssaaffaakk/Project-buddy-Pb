@@ -13,12 +13,14 @@ Voice room state storage:
   - Otherwise: stored in an in-process dict (dev / single-worker only)
 """
 
-import os
 import json
 import logging
+import os
+
 from flask import request
-from flask_socketio import emit, join_room, leave_room
 from flask_login import current_user
+from flask_socketio import emit, join_room, leave_room
+
 from extensions import socketio
 
 logger = logging.getLogger(__name__)

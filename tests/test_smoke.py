@@ -5,8 +5,7 @@ role-based authorization, and the study-group voice gate end-to-end so that a
 regression in any of them fails loudly instead of silently.
 """
 from extensions import db
-from models import Application, StudyGroup, StudyGroupMember, PushSubscription
-
+from models import Application, PushSubscription, StudyGroup, StudyGroupMember
 
 # ── Auth ──────────────────────────────────────────────────────────────────────
 

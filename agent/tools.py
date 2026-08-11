@@ -3,16 +3,16 @@ Built-in tools for SSM-1.0 (pb development).
 Add custom tools by calling agent.tools.register(name, fn).
 """
 
+import datetime
 import os
 import subprocess
-import datetime
 
 
 def read_file(path: str) -> str:
     path = os.path.expanduser(path)
     if not os.path.exists(path):
         return f"[ERROR] File not found: {path}"
-    with open(path, "r", encoding="utf-8", errors="replace") as f:
+    with open(path, encoding="utf-8", errors="replace") as f:
         return f.read()
 
 

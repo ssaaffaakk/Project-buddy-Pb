@@ -142,7 +142,7 @@ def match_reason(user, project):
         names = shared_skills[:2]
         return "Matches your {} skill{}".format(" and ".join(names), "s" if len(names) > 1 else "")
     if course_match:
-        return "From your course {}".format(project.course)
+        return f"From your course {project.course}"
     if shared_topics:
         names = [t.title() for t in shared_topics[:2]]
         return "Fits your interest in {}".format(" and ".join(names))

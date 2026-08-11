@@ -15,25 +15,28 @@ Run standalone:      python -m services.ml.train_recommender
 Or via Flask CLI:    flask train-recommender
 """
 
-import os
 import json
+import os
 import random
 from datetime import datetime, timezone
 
+import joblib
 import numpy as np
-from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import StandardScaler
 from sklearn.feature_selection import VarianceThreshold
 from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import average_precision_score, roc_auc_score
 from sklearn.model_selection import StratifiedKFold, cross_val_predict
-from sklearn.metrics import roc_auc_score, average_precision_score
-import joblib
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
 
-from models import User, Project, ProjectMember, Application, UserInterest, UserSkill, UserCourse
-from services.ml.features import (
-    FEATURE_NAMES, pair_features, build_user_profile, build_project_profile,
-)
+from models import Application, Project, ProjectMember, User, UserCourse, UserInterest, UserSkill
 from services.ml import embeddings
+from services.ml.features import (
+    FEATURE_NAMES,
+    build_project_profile,
+    build_user_profile,
+    pair_features,
+)
 
 ARTIFACT_DIR = os.path.join(os.path.dirname(__file__), "artifacts")
 MODEL_PATH = os.path.join(ARTIFACT_DIR, "recommender.joblib")

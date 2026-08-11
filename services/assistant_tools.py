@@ -13,8 +13,8 @@ Two capabilities, both provider-agnostic and unit-testable without an LLM:
    JSON-serializable dict.
 """
 
-import re
 import logging
+import re
 from datetime import datetime, timezone
 
 from models import Project, ProjectMember, StudyGroup

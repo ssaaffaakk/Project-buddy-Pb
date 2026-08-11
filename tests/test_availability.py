@@ -3,7 +3,7 @@ calendar (.ics) deadline export."""
 from datetime import datetime
 
 from extensions import db as _db
-from models import User, Project, UserAvailability
+from models import Project, User, UserAvailability
 
 
 def test_save_and_render_availability(app, client, login, make_user):

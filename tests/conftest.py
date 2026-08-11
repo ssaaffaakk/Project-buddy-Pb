@@ -7,8 +7,9 @@ import pytest
 
 from app import create_app
 from config import TestingConfig
-from extensions import db as _db, socketio as _socketio
-from models import User, Project
+from extensions import db as _db
+from extensions import socketio as _socketio
+from models import Project, User
 
 
 @pytest.fixture(scope="session")

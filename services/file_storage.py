@@ -27,8 +27,8 @@ Usage:
     # S3    → pre-signed URL string
 """
 
-import os
 import logging
+import os
 
 logger = logging.getLogger(__name__)
 

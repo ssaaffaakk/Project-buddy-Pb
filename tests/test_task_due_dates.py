@@ -1,5 +1,5 @@
 """End-to-end tests for kanban task due dates + overdue flagging."""
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta, timezone
 
 
 def test_create_task_with_due_and_overdue_flag(client, login, make_user, make_project):

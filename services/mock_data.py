@@ -1,6 +1,8 @@
 from datetime import datetime, timedelta, timezone
+
 from sqlalchemy import or_
 
+from config import Config
 from extensions import db
 from models import (
     Application,
@@ -19,9 +21,7 @@ from models import (
     UserInterest,
     UserSkill,
 )
-from config import Config
 from services.badge_service import check_and_award_badges
-
 
 MOCK_PASSWORD = Config.MOCK_PASSWORD
 ADMIN_EMAIL = Config.ADMIN_EMAIL
