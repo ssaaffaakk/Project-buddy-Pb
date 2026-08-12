@@ -8,6 +8,12 @@ updates:
     labels:
       - dependencies
       - python
+    ignore:
+      # gunicorn majors past 23 removed the eventlet worker class that the
+      # Flask-SocketIO stack depends on (Procfile/render.yaml use
+      # `--worker-class eventlet`). Bumping past 23.x crashes the deploy.
+      - dependency-name: gunicorn
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: npm
     directory: /frontend
