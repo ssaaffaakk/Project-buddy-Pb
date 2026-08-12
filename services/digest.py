@@ -33,10 +33,12 @@ def _recently_notified(user_id):
 
 def send_weekly_digest(limit_users=None):
     """Deliver the digest to eligible users. Returns a summary dict."""
+    from sqlalchemy import or_
     users = (User.query
              .filter(User.role != "admin",
                      User.is_banned == False,     # noqa: E712
-                     User.is_active == True)       # noqa: E712
+                     User.is_active == True,       # noqa: E712
+                     or_(User.is_demo.is_(None), User.is_demo == False))  # noqa: E712
              .all())
     if limit_users:
         users = users[:limit_users]

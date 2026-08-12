@@ -74,6 +74,11 @@ class Config:
     MOCK_EMAIL_SUFFIX = os.environ.get('MOCK_EMAIL_SUFFIX', '@mock.projectbuddy.local')
     SEED_MOCK_DATA    = _env_bool('SEED_MOCK_DATA', True)
 
+    # ── Demo sandbox ──────────────────────────────────────────────────────────
+    DEMO_TTL_HOURS        = int(os.environ.get('DEMO_TTL_HOURS', 24))
+    DEMO_EMAIL_SUFFIX     = '@demo.projectbuddy.local'
+    DEMO_RATE_LIMIT       = os.environ.get('DEMO_RATE_LIMIT', '5 per hour')
+
     # ── GitHub OAuth ─────────────────────────────────────────────────────────────
     GITHUB_CLIENT_ID     = os.environ.get('GITHUB_CLIENT_ID', '')
     GITHUB_CLIENT_SECRET = os.environ.get('GITHUB_CLIENT_SECRET', '')

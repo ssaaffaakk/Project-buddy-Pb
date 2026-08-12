@@ -119,6 +119,13 @@ def create_app(config_class=None):
         from services.digest import send_weekly_digest
         print(f"digest: {send_weekly_digest()}")
 
+    @app.cli.command("purge-demos")
+    def purge_demos_cmd():
+        """Delete expired demo sandbox accounts."""
+        from services.demo_service import purge_expired_demos
+        count = purge_expired_demos()
+        print(f"Purged {count} expired demo account(s).")
+
     @app.route("/favicon.ico")
     def favicon():
         from flask import send_from_directory
@@ -368,6 +375,7 @@ def _register_blueprints(app: Flask) -> None:
     from routes.chat import chat_bp
     from routes.chatbot import chatbot_bp
     from routes.community import community_bp
+    from routes.demo import demo_bp
     from routes.main import main_bp
 
     # Importing routes.messages also registers its @socketio.on('join_dm') handler.
@@ -377,6 +385,7 @@ def _register_blueprints(app: Flask) -> None:
     from routes.users import users_bp
 
     app.register_blueprint(main_bp)
+    app.register_blueprint(demo_bp)
     app.register_blueprint(auth_bp)
     app.register_blueprint(projects_bp)
     app.register_blueprint(users_bp)

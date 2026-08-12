@@ -22,9 +22,11 @@ def search():
     
     if target_type in ["", "user"]:
         # Search users
+        from sqlalchemy import or_
         users = User.query.filter(
             (User.first_name.ilike(f"%{query}%")) |
-            (User.last_name.ilike(f"%{query}%"))
+            (User.last_name.ilike(f"%{query}%")),
+            or_(User.is_demo.is_(None), User.is_demo == False),  # noqa: E712
         ).limit(10).all()
 
         for user in users:

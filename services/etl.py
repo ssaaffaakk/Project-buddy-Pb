@@ -85,8 +85,9 @@ def _load_dim_user():
         UserSkill.user_id, func.count(UserSkill.id)
     ).group_by(UserSkill.user_id).all())
 
+    from sqlalchemy import or_
     DwDimUser.query.delete()
-    for u in User.query.all():
+    for u in User.query.filter(or_(User.is_demo.is_(None), User.is_demo == False)).all():  # noqa: E712
         db.session.add(DwDimUser(
             user_id=u.id,
             full_name=u.get_full_name(),
@@ -99,7 +100,7 @@ def _load_dim_user():
             n_skills=skill_counts.get(u.id, 0),
         ))
     db.session.flush()
-    return User.query.count()
+    return User.query.filter(or_(User.is_demo.is_(None), User.is_demo == False)).count()  # noqa: E712
 
 
 def _load_dim_project():

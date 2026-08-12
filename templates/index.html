@@ -173,6 +173,10 @@ html.lm nav.sc{background:rgba(247,245,241,.95);}
 .btn-dk:hover::before{opacity:1;}
 .btn-dk .ar{display:inline-block;transition:transform .3s cubic-bezier(.16,1,.3,1);color:var(--gold);}
 .btn-dk:hover .ar{transform:translateX(4px);}
+.btn-demo{font-size:.78rem;padding:1rem 2.5rem;border-radius:99px;background:var(--gold);color:#0B1430;font-weight:700;border:none;transition:box-shadow .3s,transform .15s;}
+.btn-demo:hover{box-shadow:0 0 28px rgba(124,155,255,.45);transform:translateY(-1px);}
+.btn-demo-nav{font-size:.66rem;padding:.5rem 1.2rem;border-radius:99px;background:var(--gold);color:#0B1430;font-weight:600;border:none;transition:box-shadow .3s;}
+.btn-demo-nav:hover{box-shadow:0 0 18px rgba(124,155,255,.4);}
 .btn-lg::after,.btn-au::after{content:'';position:absolute;top:0;left:-120%;width:55%;height:100%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.5),transparent);transform:skewX(-18deg);animation:bshimmer 4.5s ease-in-out infinite;}
 @keyframes bshimmer{0%,100%{left:-120%;}55%,70%{left:130%;}}
 /* click ripple */
@@ -760,6 +764,7 @@ html.lm .mob-nav{background:rgba(247,245,241,.99);}
     </div>
     <button id="themeToggle" class="btn-th" aria-label="Toggle theme" data-light="{{ _('Light') }}" data-dark="{{ _('Dark') }}"><span class="ti">{{ _('Light') }}</span></button>
     <a href="/auth/login" class="btn btn-gs">{{ _('Sign In') }}</a>
+    <a href="/demo" class="btn btn-demo-nav">{{ _('Demo') }}</a>
     <a href="/auth/register" class="btn btn-au">{{ _('Get Started') }}</a>
     <button class="n-ham" id="n-ham" aria-label="Open menu" onclick="openNav()">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
@@ -781,6 +786,7 @@ document.addEventListener('click',function(e){
   <a href="#demo-s" onclick="closeNav()">{{ _('Demo') }}</a>
   <a href="#roles-s" onclick="closeNav()">{{ _('Roles') }}</a>
   <a href="/auth/login" onclick="closeNav()">{{ _('Sign In') }}</a>
+  <a href="/demo" onclick="closeNav()" style="color:var(--gold);font-weight:600;">{{ _('Try the demo') }}</a>
   <a href="/auth/register" onclick="closeNav()" style="color:var(--gold);">{{ _('Get Started') }} →</a>
 </div>
 
@@ -801,6 +807,7 @@ document.addEventListener('click',function(e){
       <div class="h-phases"><span class="ph">{{ _('Find') }}</span><i>→</i><span class="ph">{{ _('Match') }}</span><i>→</i><span class="ph">{{ _('Build') }}</span><i>→</i><span class="ph">{{ _('Ship') }}</span></div>
       <div class="h-act">
         <a href="/auth/register" class="btn btn-lg btn-mag">{{ _('Start Matching') }}</a>
+        <a href="/demo" class="btn btn-lg btn-demo">{{ _('Try the demo') }}</a>
         <a href="/projects-page" class="btn btn-dk btn-mag">{{ _('Browse Projects') }} <span class="ar">→</span></a>
       </div>
     </div>

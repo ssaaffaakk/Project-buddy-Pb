@@ -204,11 +204,15 @@ def _landing_user_count() -> int:
     """Number shown as "Students & Growing" on the public home page.
 
     Recomputed on every request, so a new registration is reflected the next
-    time anyone loads the landing page. Admin accounts are excluded — they are
-    not students. The configured baseline is the floor; real sign-ups made after
-    the baseline snapshot add on top of it one by one.
+    time anyone loads the landing page. Admin and demo accounts are excluded.
+    The configured baseline is the floor; real sign-ups made after the baseline
+    snapshot add on top of it one by one.
     """
-    real = User.query.filter(User.role != "admin").count()
+    from sqlalchemy import or_
+    real = User.query.filter(
+        User.role != "admin",
+        or_(User.is_demo.is_(None), User.is_demo == False),  # noqa: E712
+    ).count()
     baseline = current_app.config.get("LANDING_USER_BASELINE", 0)
     baseline_at = current_app.config.get("LANDING_USER_BASELINE_COUNT", 0)
     return max(real, baseline + max(0, real - baseline_at))
@@ -238,6 +242,7 @@ def robots():
         "Allow: /privacy\n"
         "Allow: /static/\n"
         "\n"
+        "Disallow: /demo\n"
         "Disallow: /dashboard\n"
         "Disallow: /admin\n"
         "Disallow: /profile\n"
@@ -1898,7 +1903,12 @@ def admin_dashboard():
         flash("Access denied. Admins only.", "error")
         return redirect(url_for("main.dashboard"))
 
-    total_users = User.query.filter(User.role != "admin").count()
+    from sqlalchemy import or_
+    total_users = User.query.filter(
+        User.role != "admin",
+        or_(User.is_demo.is_(None), User.is_demo == False),  # noqa: E712
+    ).count()
+    demo_users = User.query.filter(User.is_demo == True).count()  # noqa: E712
     total_projects = Project.query.count()
     open_projects = Project.query.filter_by(status="open").count()
     completed_projects = Project.query.filter_by(status="completed").count()
@@ -1931,6 +1941,7 @@ def admin_dashboard():
     return render_template(
         "admin/dashboard.html",
         total_users=total_users,
+        demo_users=demo_users,
         total_projects=total_projects,
         open_projects=open_projects,
         completed_projects=completed_projects,

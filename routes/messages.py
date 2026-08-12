@@ -193,9 +193,11 @@ def _people_suggestions(limit=8):
                 return suggestions
 
     # 3) Fill with newest members
+    from sqlalchemy import or_
     newest = (User.query
               .filter(User.id != me, User.is_banned == False,  # noqa: E712
-                      User.is_active == True)  # noqa: E712
+                      User.is_active == True,  # noqa: E712
+                      or_(User.is_demo.is_(None), User.is_demo == False))  # noqa: E712
               .order_by(User.created_at.desc())
               .limit(20).all())
     for u in newest:
