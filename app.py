@@ -515,6 +515,8 @@ def _ensure_feature_columns(app: Flask) -> None:
     # pre-existing table. New TABLES are handled by create_all and need no entry.
     wanted = [
         ("users", "timezone", String(64)),
+        ("users", "is_demo", Boolean()),
+        ("users", "demo_expires_at", DateTime()),
         ("project_tasks", "due_date", DateTime()),
         ("direct_messages", "attachment_id", Integer()),
         ("direct_messages", "shared_post_id", Integer()),
