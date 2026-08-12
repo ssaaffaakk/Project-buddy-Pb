@@ -27,7 +27,7 @@ sentry-sdk[flask]==2.66.1
 
 # ── JSON API (/api/v1) + task queue ──
 flask-smorest==0.46.2
-marshmallow==4.0.1
+marshmallow==4.3.1
 PyJWT==2.13.0
 celery==5.6.3
 
