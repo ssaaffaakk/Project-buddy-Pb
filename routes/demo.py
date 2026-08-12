@@ -5,7 +5,7 @@ Demo sandbox routes — one-click access to a fully populated trial account.
 import functools
 import logging
 
-from flask import Blueprint, abort, current_app, flash, redirect, url_for
+from flask import Blueprint, current_app, flash, redirect, url_for
 from flask_login import current_user, login_user
 
 from extensions import limiter

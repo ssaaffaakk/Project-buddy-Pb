@@ -266,10 +266,21 @@ def _delete_demo_user(user):
     UserCourse.query.filter_by(user_id=uid).delete()
 
     from models import (
-        ActivityEvent, ChatbotSession, Conversation, DirectMessage,
-        DmAttachment, Endorsement, Feedback, MessageReaction,
-        ProfileComment, ProfileCommentLike, SavedPost, SavedProject,
-        StudyGroupMember, UserAvailability, UserBadge,
+        ActivityEvent,
+        ChatbotSession,
+        Conversation,
+        DirectMessage,
+        DmAttachment,
+        Endorsement,
+        Feedback,
+        MessageReaction,
+        ProfileComment,
+        ProfileCommentLike,
+        SavedPost,
+        SavedProject,
+        StudyGroupMember,
+        UserAvailability,
+        UserBadge,
     )
     ActivityEvent.query.filter_by(user_id=uid).delete()
     ChatbotSession.query.filter_by(user_id=uid).delete()
