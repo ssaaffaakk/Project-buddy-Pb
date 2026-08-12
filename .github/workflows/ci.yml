@@ -24,8 +24,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # 3.9 = local dev floor, 3.11 = production runtime (runtime.txt)
-        python-version: ["3.9", "3.11"]
+        # 3.11 = production runtime (runtime.txt), 3.12 = local dev
+        python-version: ["3.11", "3.12"]
     env:
       SECRET_KEY: ci-only-secret-key-not-used-anywhere
       SEED_MOCK_DATA: "false"

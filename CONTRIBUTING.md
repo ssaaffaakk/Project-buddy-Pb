@@ -8,7 +8,7 @@ By participating, you agree to abide by its terms.
 
 ## Development setup
 
-**Prerequisites:** Python 3.9+ (production runs 3.11), Git, and optionally
+**Prerequisites:** Python 3.11+ (production runs 3.11), Git, and optionally
 Docker for the full stack.
 
 ```bash
