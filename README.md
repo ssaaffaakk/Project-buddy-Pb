@@ -1,7 +1,7 @@
 # ProjectBuddy
 
 [![CI](https://github.com/ssaaffaakk/Project-buddy-Pb/actions/workflows/ci.yml/badge.svg)](https://github.com/ssaaffaakk/Project-buddy-Pb/actions/workflows/ci.yml)
-[![Python 3.9+](https://img.shields.io/badge/python-3.9%2B-blue.svg)](https://www.python.org/downloads/)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
 **Find the right teammates. Build real projects. Earn your reputation.**
@@ -211,7 +211,7 @@ Set `SEED_MOCK_DATA=false` in production.
 
 |Layer       |Technology                                                     |
 |------------|---------------------------------------------------------------|
-|Backend     |Python 3.9 · Flask 3.1                                         |
+|Backend     |Python 3.11 · Flask 3.1                                        |
 |Database    |SQLAlchemy 2.0 ORM · SQLite (dev) / PostgreSQL (prod)          |
 |Migrations  |Flask-Migrate (Alembic)                                        |
 |Frontend    |Jinja2 · HTML · CSS · JavaScript                               |
@@ -234,7 +234,7 @@ Set `SEED_MOCK_DATA=false` in production.
 |Frontend (beta)|React 18 + TypeScript + Vite (feature-flagged SPA on /api/v1)|
 |IaC         |render.yaml Blueprint · Prometheus + Grafana compose profile   |
 |Testing     |pytest (130+ tests) + vitest · coverage gate in CI            |
-|CI/CD       |GitHub Actions (ruff + pytest 3.9/3.11 + frontend build) · Docker|
+|CI/CD       |GitHub Actions (ruff + pytest 3.11/3.12 + frontend build) · Docker|
 
 ## Project Structure
 
@@ -333,7 +333,7 @@ python -m scripts.eval_assistant
 ```
 
 CI runs on every push/PR (`.github/workflows/ci.yml`): ruff lint + pytest with a
-coverage floor, on Python 3.9 (dev floor) and 3.11 (production runtime).
+coverage floor, on Python 3.11 (production runtime) and 3.12.
 
 ## Documentation
 

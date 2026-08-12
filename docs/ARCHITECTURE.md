@@ -7,7 +7,7 @@ ProjectBuddy is a university project collaboration platform where students and i
 **Live:** [https://project-buddy-pb.onrender.com](https://project-buddy-pb.onrender.com)
 
 **Tech Stack:**
-- Backend: Python 3.9 · Flask 3.1
+- Backend: Python 3.11 · Flask 3.1
 - Database: SQLAlchemy 2.0 ORM (SQLite dev / PostgreSQL prod)
 - Frontend: Jinja2 · HTML · CSS · JavaScript
 - Real-time: Flask-SocketIO + eventlet · WebRTC (voice)
