@@ -165,3 +165,12 @@ def dispatch_email(recipient, subject, body, is_html=False):
             _run_in_thread(send_email_task, (recipient, subject, body, is_html))
     except Exception:
         logger.exception("dispatch_email failed")
+
+
+@celery.task(name="tasks.purge_expired_demos", ignore_result=True)
+def purge_expired_demos_task():
+    with _flask_context():
+        from services.demo_service import purge_expired_demos
+        count = purge_expired_demos()
+        if count:
+            logger.info("Purged %d expired demo accounts", count)

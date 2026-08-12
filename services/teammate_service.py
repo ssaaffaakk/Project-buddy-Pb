@@ -64,11 +64,13 @@ def find_teammates(user_id, limit=12):
     my_vec = _embed_user(me, my_interests, my_skills, my_courses)
 
     # Pre-bucket other users' interests/skills/courses in bulk to avoid N queries.
+    from sqlalchemy import or_
     others = (User.query
               .filter(User.id != user_id,
                       User.role != "admin",
                       User.is_banned == False,      # noqa: E712
-                      User.is_active == True)       # noqa: E712
+                      User.is_active == True,       # noqa: E712
+                      or_(User.is_demo.is_(None), User.is_demo == False))  # noqa: E712
               .all())
     if not others:
         return []

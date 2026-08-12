@@ -98,14 +98,23 @@ def event_count(event, days=None):
     return q.scalar() or 0
 
 
+def _real_user_filter():
+    """Exclude admin and demo accounts from analytics."""
+    from sqlalchemy import or_
+    return [
+        User.role != "admin",
+        or_(User.is_demo.is_(None), User.is_demo == False),  # noqa: E712
+    ]
+
+
 def activation_funnel():
     """Lifetime activation funnel: signup → onboarded → applied → completed a project.
 
     Sourced from the core tables (not events) so it covers users who signed
     up before instrumentation existed.
     """
-    total = User.query.filter(User.role != "admin").count()
-    onboarded = User.query.filter(User.role != "admin", User.onboarded == True).count()  # noqa: E712
+    total = User.query.filter(*_real_user_filter()).count()
+    onboarded = User.query.filter(*_real_user_filter(), User.onboarded == True).count()  # noqa: E712
     applied = (db.session.query(func.count(func.distinct(Application.applicant_id)))
                .scalar() or 0)
     completed = (db.session.query(func.count(func.distinct(ProjectMember.user_id)))
@@ -134,7 +143,7 @@ def retention_cohorts(weeks=6):
         end = now - timedelta(weeks=w)
         user_ids = [uid for (uid,) in db.session.query(User.id)
                     .filter(User.created_at >= start, User.created_at < end,
-                            User.role != "admin").all()]
+                            *_real_user_filter()).all()]
         row = {"cohort": start.strftime("%b %d"), "size": len(user_ids), "weeks": []}
         for k in range(w + 1):
             k_start = start + timedelta(weeks=k)

@@ -53,6 +53,10 @@ def init_celery(app):
                 "task": "tasks.send_weekly_digest",
                 "schedule": crontab(day_of_week=1, hour=8, minute=0),
             },
+            "purge-expired-demos": {
+                "task": "tasks.purge_expired_demos",
+                "schedule": 3600.0,
+            },
         },
     )
     return celery

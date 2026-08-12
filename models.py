@@ -35,6 +35,8 @@ class User(UserMixin, db.Model):
     onboarded: Mapped[bool] = mapped_column(Boolean, default=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     is_banned: Mapped[bool] = mapped_column(Boolean, default=False)
+    is_demo: Mapped[Optional[bool]] = mapped_column(Boolean, default=None, index=True)
+    demo_expires_at: Mapped[Optional[datetime]] = mapped_column(DateTime, default=None)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     interest_tags = db.relationship("UserInterest", lazy=True, cascade="all, delete-orphan")
