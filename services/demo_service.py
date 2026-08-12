@@ -152,8 +152,8 @@ def _seed_own_project(user, now):
     tasks = [
         ("Set up Flask backend", "done", None),
         ("Design database schema", "done", None),
-        ("Build recommendation API", "in_progress", user.id),
-        ("Create project detail page", "in_progress", user.id),
+        ("Build recommendation API", "doing", user.id),
+        ("Create project detail page", "doing", user.id),
         ("Write unit tests", "todo", None),
         ("Deploy to Render", "todo", None),
     ]
