@@ -32,4 +32,4 @@ PyJWT==2.13.0
 celery==5.6.3
 
 # ── Quiz generator: PDF note extraction ──
-pypdf==6.15.0
+pypdf==6.16.1
