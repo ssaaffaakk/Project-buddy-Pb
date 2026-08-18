@@ -10,7 +10,7 @@ SQLAlchemy==2.0.51
 Werkzeug==3.1.8
 psycopg2-binary==2.9.12
 requests==2.32.5
-eventlet==0.40.4
+eventlet==0.41.2
 gunicorn==23.0.0
 redis==5.2.1
 boto3==1.43.67
