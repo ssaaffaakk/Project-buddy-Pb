@@ -4,9 +4,9 @@
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
-**Find the right teammates. Build real projects. Earn your reputation.**
+**Find teammates. Build real projects. Earn a verified reputation.**
 
-ProjectBuddy is a web platform built for university students to find project collaborators, form teams, and build a verified reputation — without the chaos of WhatsApp groups.
+ProjectBuddy is a web platform for university students to find project collaborators — without the chaos of WhatsApp groups. Semantic matching recommends projects and people by skill, a RAG-grounded assistant answers from live platform data, and every finished project leaves ratings, endorsements and badges behind. Flask + PostgreSQL + Socket.IO.
 
 ---
 
