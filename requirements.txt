@@ -19,7 +19,7 @@ boto3==1.43.67
 numpy==2.0.2
 scikit-learn==1.6.1
 joblib==1.5.3
-pywebpush==2.1.2
+pywebpush==2.5.0
 
 # ── Observability ──
 prometheus-client==0.26.0
