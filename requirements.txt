@@ -23,7 +23,7 @@ pywebpush==2.1.2
 
 # ── Observability ──
 prometheus-client==0.26.0
-sentry-sdk[flask]==2.66.1
+sentry-sdk[flask]==2.68.1
 
 # ── JSON API (/api/v1) + task queue ──
 flask-smorest==0.47.0
