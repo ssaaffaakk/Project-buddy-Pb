@@ -85,8 +85,8 @@ def create_demo_sandbox():
 
     _seed_profile(user, profile, now)
     _seed_project_memberships(user, now)
-    _seed_own_project(user, now)
-    _seed_notifications(user, now)
+    project = _seed_own_project(user, now)
+    _seed_notifications(user, project, now)
 
     db.session.commit()
     return user
@@ -172,6 +172,7 @@ def _seed_own_project(user, now):
     ))
 
     _seed_applications(project, now)
+    return project
 
 
 def _seed_applications(project, now):
@@ -201,11 +202,16 @@ def _seed_applications(project, now):
         ))
 
 
-def _seed_notifications(user, now):
-    """Pre-fill a few notifications so the bell is not empty."""
+def _seed_notifications(user, project, now):
+    """Pre-fill a few notifications so the bell is not empty.
+
+    Links must point at rendered pages ("/my-projects", "/project/<id>"),
+    never at the ``/projects`` blueprint root — that is the JSON API and
+    a browser would show the raw payload instead of a page.
+    """
     notifs = [
-        ("apply", "New application on your demo project", "/projects"),
-        ("comment", "Emir commented on Course Planner Rebuild", "/projects"),
+        ("apply", f"New application on {project.title}", "/my-projects"),
+        ("comment", f"Emir commented on {project.title}", f"/project/{project.id}"),
         ("system", "Welcome to ProjectBuddy!", "/dashboard"),
     ]
     for ntype, message, link in notifs:
