@@ -225,7 +225,9 @@ def index():
             return redirect(url_for("main.admin_dashboard"))
         return redirect(url_for("main.dashboard"))
     total_users = _landing_user_count()
-    active_projects = Project.query.filter_by(status="open").count()
+    from services.demo_service import exclude_demo_owned
+    active_projects = exclude_demo_owned(
+        Project.query.filter_by(status="open")).count()
     return render_template("index.html", total_users=total_users, active_projects=active_projects)
 
 
@@ -531,7 +533,8 @@ def projects_page():
         from services.project_search import semantic_search
         projects = semantic_search(search_query, limit=60)
     else:
-        projects = (Project.query.filter_by(status="open")
+        from services.demo_service import exclude_demo_owned
+        projects = (exclude_demo_owned(Project.query.filter_by(status="open"))
                     .order_by(Project.created_at.desc()).all())
 
     user_votes = {}

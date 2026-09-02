@@ -45,7 +45,13 @@ auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
 @limiter.limit("20 per minute; 100 per hour", methods=["POST"])
 def login():
     if current_user.is_authenticated:
-        return redirect(url_for('main.dashboard'))
+        # A demo visitor is logged in as a sandbox user. Bouncing them to the
+        # dashboard would trap them in the demo with no way to sign up, so drop
+        # the sandbox session and let the form render.
+        if getattr(current_user, 'is_demo', False):
+            logout_user()
+        else:
+            return redirect(url_for('main.dashboard'))
 
     if request.method == 'POST':
         email    = request.form.get('email', '').strip().lower()
@@ -83,7 +89,12 @@ def login():
 @limiter.limit("10 per hour", methods=["POST"])
 def register():
     if current_user.is_authenticated:
-        return redirect(url_for('main.dashboard'))
+        # Same as login(): the demo banner's "Create a real account" link lands
+        # here while the sandbox session is still active.
+        if getattr(current_user, 'is_demo', False):
+            logout_user()
+        else:
+            return redirect(url_for('main.dashboard'))
 
     if request.method == 'POST':
         first_name       = request.form.get('first_name', '').strip()

@@ -80,8 +80,10 @@ def rank_open_projects(user_id, limit=None):
     # Eager-load tags/skills so project_text() doesn't N+1, and batch-embed all
     # candidates in one transform (this path runs on every dashboard load).
     from sqlalchemy.orm import joinedload
+
+    from services.demo_service import exclude_demo_owned
     candidates = [
-        p for p in (Project.query.filter_by(status="open")
+        p for p in (exclude_demo_owned(Project.query.filter_by(status="open"))
                     .options(joinedload(Project.topic_tags),
                              joinedload(Project.required_skills),
                              joinedload(Project.members)).all())

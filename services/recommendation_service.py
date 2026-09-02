@@ -79,7 +79,9 @@ def _rule_based_recommendations(user_id):
 
     # Eager-load tags so the per-project tag read below doesn't N+1 (dashboard path).
     from sqlalchemy.orm import joinedload
-    open_projects = (Project.query.filter_by(status="open")
+
+    from services.demo_service import exclude_demo_owned
+    open_projects = (exclude_demo_owned(Project.query.filter_by(status="open"))
                      .options(joinedload(Project.topic_tags)).all())
 
     recommendations = []

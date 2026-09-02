@@ -34,7 +34,7 @@ DEMO_BLOCKED_ENDPOINTS = frozenset({
     "study_groups.upload_file",
     # Actions that modify real users' data
     "community.add_comment",
-    "projects.create_project",
+    "projects.create_project",  # also in DEMO_SIGNUP_ENDPOINTS — fail-safe
     "study_groups.create_group",
     "study_groups.join_group",
     "main.apply_to_project",
@@ -44,6 +44,14 @@ DEMO_BLOCKED_ENDPOINTS = frozenset({
     "main.submit_review",
     "projects.endorse_skill",
     "projects.submit_feedback",
+})
+
+
+# Endpoints where the right answer is not "no" but "sign up first". The demo
+# lets visitors walk the whole flow; only the final write is swapped for an
+# invitation to open a real account.
+DEMO_SIGNUP_ENDPOINTS = frozenset({
+    "projects.create_project",
 })
 
 
@@ -68,6 +76,10 @@ def _enforce_demo_restrictions():
     if not is_demo_user():
         return None
     from flask import request
+    if request.endpoint in DEMO_SIGNUP_ENDPOINTS:
+        flash("Demo projects are not published. Create a free account to post "
+              "this project for real.", "warning")
+        return redirect(url_for("auth.register"))
     if request.endpoint in DEMO_BLOCKED_ENDPOINTS:
         flash("This action is not available in demo mode.", "warning")
         return redirect(url_for("main.dashboard"))

@@ -276,12 +276,12 @@ select{
 
     <!-- TABS -->
     <div class="auth-tabs">
-      <button class="auth-tab active" onclick="switchTab('login')">{{ _('Log In') }}</button>
-      <button class="auth-tab" onclick="switchTab('register')">{{ _('Create Account') }}</button>
+      <button class="auth-tab{% if action != 'register' %} active{% endif %}" onclick="switchTab('login')">{{ _('Log In') }}</button>
+      <button class="auth-tab{% if action == 'register' %} active{% endif %}" onclick="switchTab('register')">{{ _('Create Account') }}</button>
     </div>
 
     <!-- LOGIN PANEL -->
-    <div class="panel active" id="panel-login">
+    <div class="panel{% if action != 'register' %} active{% endif %}" id="panel-login">
       <div class="auth-title">{{ _('Welcome back') }} </div>
       <div class="auth-sub">{{ _('Sign in to your ProjectBuddy account') }}</div>
 
@@ -319,7 +319,7 @@ select{
     </div>
 
     <!-- REGISTER PANEL -->
-    <div class="panel" id="panel-register">
+    <div class="panel{% if action == 'register' %} active{% endif %}" id="panel-register">
       <!-- Step 1: Basic info -->
       <div class="panel active" id="reg-step-1">
         <div class="step-indicator">

@@ -11,6 +11,7 @@ import secrets
 from datetime import datetime, timedelta, timezone
 
 from flask import current_app
+from sqlalchemy import or_
 
 from extensions import db
 from models import (
@@ -32,10 +33,10 @@ logger = logging.getLogger(__name__)
 
 DEMO_PROFILES = [
     {
-        "first_name": "Deniz",
-        "last_name": "Yilmaz",
+        "first_name": "Guest",
+        "last_name": "User",
         "department": "Computer Engineering",
-        "bio": "Full-stack developer interested in campus tools and ML.",
+        "bio": "Exploring ProjectBuddy — try every feature without signing up!",
         "interests": ["Python", "React", "Machine Learning", "Cloud Computing", "Data Analysis"],
         "skills": [
             ("Python", "advanced"), ("React", "intermediate"),
@@ -219,6 +220,20 @@ def _seed_notifications(user, project, now):
             user_id=user.id, type=ntype, message=message,
             link=link, is_read=False, created_at=now - timedelta(hours=1),
         ))
+
+
+def exclude_demo_owned(query):
+    """Drop sandbox-owned projects from a Project query.
+
+    A demo visitor is not a real user: their seeded project exists so they have
+    something to look at in "My Projects", but it must never surface in the
+    shared pool (Browse Projects, search, recommendations) where real users and
+    other visitors would see it. ``User.is_demo`` is nullable, so real accounts
+    match either NULL or False — the same predicate used elsewhere in the app.
+    """
+    return (query
+            .join(User, Project.owner_id == User.id)
+            .filter(or_(User.is_demo.is_(None), User.is_demo == False)))  # noqa: E712
 
 
 def purge_expired_demos():

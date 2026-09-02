@@ -15,7 +15,9 @@ projects_bp = Blueprint("projects", __name__, url_prefix="/projects")
 @login_required
 def list_projects():
     try:
-        projects = Project.query.filter(Project.status == "open").all()
+        from services.demo_service import exclude_demo_owned
+        projects = exclude_demo_owned(
+            Project.query.filter(Project.status == "open")).all()
         return jsonify([{"id": p.id, "title": p.title, "description": p.description,
                          "team_size": p.team_size, "status": p.status,
                          "deadline": p.deadline.isoformat() if p.deadline else None}

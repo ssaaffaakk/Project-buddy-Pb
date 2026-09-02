@@ -26,7 +26,8 @@ logger = logging.getLogger(__name__)
 def _open_projects_with_tags():
     """Open projects with tags+skills eager-loaded — avoids an N+1 lazy load
     when project_text() reads those relationships for every project."""
-    return (Project.query.filter_by(status="open")
+    from services.demo_service import exclude_demo_owned
+    return (exclude_demo_owned(Project.query.filter_by(status="open"))
             .options(joinedload(Project.topic_tags),
                      joinedload(Project.required_skills))
             .all())

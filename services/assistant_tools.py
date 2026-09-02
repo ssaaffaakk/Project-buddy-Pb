@@ -68,7 +68,8 @@ def search_projects(query, limit=3):
     query = (query or "").strip()
     if not query:
         return []
-    projects = Project.query.filter_by(status="open").all()
+    from services.demo_service import exclude_demo_owned
+    projects = exclude_demo_owned(Project.query.filter_by(status="open")).all()
     if not projects:
         return []
 
