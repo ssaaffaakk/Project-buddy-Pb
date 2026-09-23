@@ -18,7 +18,7 @@ boto3==1.43.93
 # ── Machine learning (teammate recommender) ──
 numpy==2.0.2
 scikit-learn==1.6.1
-joblib==1.5.3
+joblib==1.6.0
 pywebpush==2.1.2
 
 # ── Observability ──
