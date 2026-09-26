@@ -15,6 +15,7 @@ from sqlalchemy import func
 
 from extensions import db
 from models import Project, ProjectMember, ProjectMessage
+from services.demo_service import exclude_demo_owned
 
 logger = logging.getLogger(__name__)
 
@@ -58,7 +59,7 @@ def course_overview():
     """Active projects grouped by course with health. Returns
     [{course, projects: [...], risk_count}, ...] sorted by risk first."""
     now = _now_naive()
-    projects = (Project.query
+    projects = (exclude_demo_owned(Project.query)
                 .filter(Project.status.in_(["open", "closed"]))
                 .all())
     if not projects:

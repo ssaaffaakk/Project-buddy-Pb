@@ -52,3 +52,45 @@ def test_demo_seed_fits_string_column_limits(app):
                             f"{model.__name__}.{col.key} = {value!r} "
                             f"({len(value)} chars) exceeds String({col.type.length})"
                         )
+
+
+def test_demo_projects_stay_out_of_shared_pool(app, client, make_user, make_project):
+    """A sandbox's seeded project is private to that visitor: it must not show
+    up in search/browse, the instructor dashboard, or the JSON API list."""
+    from services.instructor_view import course_overview
+    from services.project_search import _open_projects_with_tags
+
+    owner = make_user("real-owner@example.com")
+    make_project(owner, title="Real Project")
+    with app.app_context():
+        create_demo_sandbox()
+
+        pool = {p.title for p in _open_projects_with_tags()}
+        assert pool == {"Real Project"}
+
+        instructor = {p["title"] for c in course_overview() for p in c["projects"]}
+        assert instructor == {"Real Project"}
+
+    tok = client.post("/api/v1/auth/token", json={
+        "email": "real-owner@example.com", "password": "Test1234!",
+    }).get_json()["access_token"]
+    body = client.get("/api/v1/projects",
+                      headers={"Authorization": f"Bearer {tok}"}).get_json()
+    assert [p["title"] for p in body["items"]] == ["Real Project"]
+
+
+def test_demo_visitor_can_open_signup_form(client):
+    """The banner's "Create a real account" link must render the register
+    form — not bounce the still-logged-in sandbox back to the dashboard."""
+    assert client.get("/demo").status_code == 302
+    resp = client.get("/auth/register")
+    assert resp.status_code == 200
+    assert 'class="panel active" id="panel-register"' in resp.get_data(as_text=True)
+
+
+def test_demo_create_project_invites_signup(client):
+    """Posting a project from the demo is swapped for a signup invitation."""
+    client.get("/demo")
+    resp = client.post("/projects/", data={"title": "x"})
+    assert resp.status_code == 302
+    assert resp.headers["Location"].endswith("/auth/register")

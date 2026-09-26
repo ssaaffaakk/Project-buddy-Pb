@@ -28,6 +28,7 @@ from schemas import (
 )
 from services import analytics
 from services.api_auth import auth_required, issue_token
+from services.demo_service import exclude_demo_owned
 
 blp = Blueprint(
     "api_v1", __name__, url_prefix="/api/v1",
@@ -84,7 +85,7 @@ def get_me():
 @auth_required()
 def list_projects(args):
     """Paginated project list, filterable by status, tag, and free-text search."""
-    query = Project.query.filter_by(status=args["status"])
+    query = exclude_demo_owned(Project.query.filter_by(status=args["status"]))
     if args["q"]:
         needle = f"%{args['q']}%"
         query = query.filter(or_(Project.title.ilike(needle),
