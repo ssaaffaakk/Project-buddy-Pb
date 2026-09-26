@@ -5,25 +5,25 @@ Flask-SQLAlchemy==3.1.1
 Flask-Limiter==3.11.0
 Flask-WTF==1.3.0
 Flask-SocketIO==5.6.1
-python-dotenv==1.2.2
-SQLAlchemy==2.0.51
+python-dotenv==1.2.3
+SQLAlchemy==2.0.54
 Werkzeug==3.1.8
-psycopg2-binary==2.9.12
+psycopg2-binary==2.9.13
 requests==2.32.5
-eventlet==0.40.4
+eventlet==0.41.2
 gunicorn==23.0.0
 redis==5.2.1
-boto3==1.43.67
+boto3==1.43.93
 
 # ── Machine learning (teammate recommender) ──
 numpy==2.0.2
 scikit-learn==1.6.1
-joblib==1.5.3
-pywebpush==2.1.2
+joblib==1.6.0
+pywebpush==2.5.0
 
 # ── Observability ──
 prometheus-client==0.26.0
-sentry-sdk[flask]==2.66.1
+sentry-sdk[flask]==2.69.1
 
 # ── JSON API (/api/v1) + task queue ──
 flask-smorest==0.47.0
@@ -32,4 +32,4 @@ PyJWT==2.13.0
 celery==5.6.3
 
 # ── Quiz generator: PDF note extraction ──
-pypdf==6.15.0
+pypdf==6.18.1
