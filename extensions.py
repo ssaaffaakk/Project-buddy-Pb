@@ -52,10 +52,15 @@ def load_user(user_id: str) -> Any:
         user_id: User ID string from session
         
     Returns:
-        User object or None if not found
+        User object, or None if not found or banned. Returning None for a
+        banned user signs them out on their very next request (HTTP and
+        Socket.IO alike) instead of letting an open session run until expiry.
     """
     from models import User
-    return User.query.get(int(user_id))
+    user = db.session.get(User, int(user_id))
+    if user is None or user.is_banned:
+        return None
+    return user
 
 
 def admin_required(f: Callable) -> Callable:

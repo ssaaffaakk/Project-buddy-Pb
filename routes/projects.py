@@ -487,6 +487,7 @@ def endorse_skill():
     Endorse a skill of another user.
     - Both users must have completed at least 1 project together
     - Cannot endorse yourself
+    - One endorsement per skill per giver (rules: services/reputation.py)
     - Trigger badge check after endorsement (via badge_service)
     """
     try:
@@ -495,35 +496,24 @@ def endorse_skill():
         
         if not data or "user_id" not in data or "skill" not in data:
             return jsonify({"error": "user_id and skill are required."}), 400
-        
-        user_id_to_endorse = data.get("user_id")
-        skill_to_endorse = data.get("skill")
-        
-        if user_id == user_id_to_endorse:
-            return jsonify({"error": "You cannot endorse yourself."}), 400
-        
+
+        try:
+            user_id_to_endorse = int(data.get("user_id"))
+        except (TypeError, ValueError):
+            return jsonify({"error": "user_id must be an integer."}), 400
+        skill_to_endorse = str(data.get("skill") or "").strip()
+
         # Verify user exists
         user_to_endorse = User.query.get(user_id_to_endorse)
         if not user_to_endorse:
             return jsonify({"error": "User not found."}), 404
-        
-        shared_projects = db.session.query(ProjectMember.project_id).join(
-            Project, Project.id == ProjectMember.project_id
-        ).filter(
-            ProjectMember.user_id == user_id,
-            ProjectMember.removed == False,
-            Project.status == "completed"
-        ).subquery()
-        
-        common_projects = db.session.query(ProjectMember).filter(
-            ProjectMember.user_id == user_id_to_endorse,
-            ProjectMember.removed == False,
-            ProjectMember.project_id.in_(shared_projects)
-        ).count()
-        
-        if common_projects == 0:
-            return jsonify({"error": "You can only endorse users you have completed a project with."}), 400
-        
+
+        # Shared completed project + no duplicate (same rules as the profile form)
+        from services.reputation import endorsement_error
+        error = endorsement_error(user_id, user_id_to_endorse, skill_to_endorse)
+        if error:
+            return jsonify({"error": error}), 400
+
         endorsement = Endorsement(
             giver_id=user_id,
             receiver_id=user_id_to_endorse,

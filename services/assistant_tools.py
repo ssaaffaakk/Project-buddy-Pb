@@ -103,12 +103,12 @@ def search_projects(query, limit=3):
 
 
 def search_study_groups(query, limit=3):
-    """Keyword search over study groups (name, topic, description)."""
+    """Keyword search over public study groups (name, topic, description)."""
     terms = [t for t in re.split(r"\W+", (query or "").lower()) if len(t) > 2]
     if not terms:
         return []
     scored = []
-    for g in StudyGroup.query.all():
+    for g in StudyGroup.query.filter_by(is_private=False).all():
         blob = " ".join([g.name or "", g.topic or "", g.description or ""])
         score = _keyword_score(blob, terms)
         if score > 0:

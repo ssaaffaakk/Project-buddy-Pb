@@ -764,9 +764,6 @@ def withdraw_application(project_id):
 @login_required
 def project_detail(project_id):
     project = Project.query.get_or_404(project_id)
-    proj_messages = ProjectMessage.query.filter_by(
-        project_id=project_id
-    ).order_by(ProjectMessage.created_at.asc()).all()
 
     # Active members excluding the owner
     team_members = [
@@ -795,6 +792,14 @@ def project_detail(project_id):
             user_id=current_user.id, project_id=project_id
         ).first() is not None
 
+    # The team chat is private to the team (admins can read it for moderation).
+    can_view_chat = is_owner or is_member or current_user.role == "admin"
+    proj_messages = []
+    if can_view_chat:
+        proj_messages = ProjectMessage.query.filter_by(
+            project_id=project_id
+        ).order_by(ProjectMessage.created_at.asc()).all()
+
     vote_score = project.vote_score
     user_vote = None
     existing_vote = ProjectVote.query.filter_by(
@@ -821,6 +826,7 @@ def project_detail(project_id):
         "projects/detail.html",
         project=project,
         messages=proj_messages,
+        can_view_chat=can_view_chat,
         team_members=team_members,
         assignable_members=assignable,
         is_owner=is_owner,
@@ -1299,45 +1305,15 @@ def user_profile(user_id):
         "reviews_count": len(feedbacks),
     }
 
-    # Can current user leave a review?
-    # Must share a completed project and not have already reviewed them
+    # Can current user review / endorse? Same rules the POST handlers enforce
+    # (services/reputation.py), so the UI never offers a form the server rejects.
+    from services.reputation import review_error, shared_completed_project_id
     can_leave_review = False
-    if current_user.id != profile_user.id and profile_user.role != "admin":
-        shared_completed = (
-            db.session.query(ProjectMember)
-            .join(Project, Project.id == ProjectMember.project_id)
-            .filter(
-                ProjectMember.user_id == current_user.id,
-                ProjectMember.removed == False,
-                Project.status == "completed",
-                Project.id.in_(
-                    db.session.query(ProjectMember.project_id)
-                    .filter(ProjectMember.user_id == profile_user.id, ProjectMember.removed == False)
-                )
-            ).count()
-        )
-        already_reviewed = Feedback.query.filter_by(
-            giver_id=current_user.id, receiver_id=profile_user.id
-        ).first()
-        can_leave_review = shared_completed > 0 and not already_reviewed
-
-    # Can current user endorse?
-    # Must share any project (active or completed)
     can_endorse = False
     already_endorsed_skills = []
     if current_user.id != profile_user.id and profile_user.role != "admin":
-        shared_any = (
-            db.session.query(ProjectMember)
-            .filter(
-                ProjectMember.user_id == current_user.id,
-                ProjectMember.removed == False,
-                ProjectMember.project_id.in_(
-                    db.session.query(ProjectMember.project_id)
-                    .filter(ProjectMember.user_id == profile_user.id, ProjectMember.removed == False)
-                )
-            ).count()
-        )
-        can_endorse = shared_any > 0
+        can_leave_review = review_error(current_user.id, profile_user.id) is None
+        can_endorse = shared_completed_project_id(current_user.id, profile_user.id) is not None
         already_endorsed_skills = [
             e.skill for e in Endorsement.query.filter_by(
                 giver_id=current_user.id, receiver_id=profile_user.id
@@ -1390,30 +1366,15 @@ def submit_review(user_id):
         flash("Comment must be at least 10 characters.", "error")
         return redirect(url_for("main.user_profile", user_id=user_id))
 
-    already = Feedback.query.filter_by(giver_id=current_user.id, receiver_id=profile_user.id).first()
-    if already:
-        flash("You have already reviewed this user.", "error")
+    # Server-side gate: a shared completed project and no earlier review.
+    from services.reputation import review_error, shared_completed_project_id
+    error = review_error(current_user.id, profile_user.id)
+    if error:
+        flash(error, "error")
         return redirect(url_for("main.user_profile", user_id=user_id))
 
-    # Find a shared completed project to attach the feedback to
-    shared = (
-        db.session.query(ProjectMember)
-        .join(Project, Project.id == ProjectMember.project_id)
-        .filter(
-            ProjectMember.user_id == current_user.id,
-            ProjectMember.removed == False,
-            Project.status == "completed",
-            Project.id.in_(
-                db.session.query(ProjectMember.project_id)
-                .filter(ProjectMember.user_id == profile_user.id, ProjectMember.removed == False)
-            )
-        ).first()
-    )
-
-    project_id = shared.project_id if shared else None
-
     feedback = Feedback(
-        project_id=project_id,
+        project_id=shared_completed_project_id(current_user.id, profile_user.id),
         giver_id=current_user.id,
         receiver_id=profile_user.id,
         rating=int(rating),
@@ -1427,24 +1388,15 @@ def submit_review(user_id):
 
 
 @main_bp.route("/user/<int:user_id>/endorse", methods=["POST"])
-@login_required# Submit endorsement for another user (only if shared any project and not already endorsed that skill)
+@login_required# Submit endorsement for another user (only if shared completed project and not already endorsed that skill)
 def submit_endorse(user_id):
     profile_user = User.query.get_or_404(user_id)
 
-    if current_user.id == profile_user.id:
-        flash("You cannot endorse yourself.", "error")
-        return redirect(url_for("main.user_profile", user_id=user_id))
-
     skill = request.form.get("skill", "").strip()
-    if not skill:
-        flash("Skill is required.", "error")
-        return redirect(url_for("main.user_profile", user_id=user_id))
-
-    already = Endorsement.query.filter_by(
-        giver_id=current_user.id, receiver_id=profile_user.id, skill=skill
-    ).first()
-    if already:
-        flash(f"You already endorsed '{skill}' for this user.", "error")
+    from services.reputation import endorsement_error
+    error = endorsement_error(current_user.id, profile_user.id, skill)
+    if error:
+        flash(error, "error")
         return redirect(url_for("main.user_profile", user_id=user_id))
 
     endorsement = Endorsement(

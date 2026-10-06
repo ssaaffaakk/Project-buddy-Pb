@@ -242,67 +242,122 @@ def purge_expired_demos():
 
 
 def _delete_demo_user(user):
-    """Remove a demo user and every row they own across all tables."""
-    uid = user.id
+    """Remove a demo user and every row that references them.
 
-    ProjectTask.query.filter_by(assignee_id=uid).update({"assignee_id": None})
-
-    owned_projects = Project.query.filter_by(owner_id=uid).all()
-    for project in owned_projects:
-        ProjectTask.query.filter_by(project_id=project.id).delete()
-        ProjectMessage.query.filter_by(project_id=project.id).delete()
-        Application.query.filter_by(project_id=project.id).delete()
-        ProjectMember.query.filter_by(project_id=project.id).delete()
-        ProjectTag.query.filter_by(project_id=project.id).delete()
-        ProjectSkill.query.filter_by(project_id=project.id).delete()
-        db.session.delete(project)
-
-    ProjectMember.query.filter_by(user_id=uid).delete()
-    Application.query.filter_by(applicant_id=uid).delete()
-    ProjectMessage.query.filter_by(sender_id=uid).delete()
-    Notification.query.filter_by(user_id=uid).delete()
-    UserInterest.query.filter_by(user_id=uid).delete()
-    UserSkill.query.filter_by(user_id=uid).delete()
-    UserCourse.query.filter_by(user_id=uid).delete()
-
+    Bulk query deletes bypass ORM cascades, so dependents go first (children
+    before parents) — that order is what lets the final user delete pass
+    PostgreSQL's foreign-key checks. Other members' rows that hang off the
+    demo's own project or conversations (their votes, bookmarks, replies) go
+    too. Study-group content needs no cleanup: demo accounts can't join or
+    create groups (routes/demo.py).
+    """
     from models import (
         ActivityEvent,
+        AdminMessage,
+        Chat,
         ChatbotSession,
+        ChatMessage,
+        CommunityComment,
+        CommunityLike,
+        CommunityPost,
         Conversation,
         DirectMessage,
         DmAttachment,
         Endorsement,
         Feedback,
         MessageReaction,
+        PasswordReset,
         ProfileComment,
         ProfileCommentLike,
+        ProjectVote,
+        PushSubscription,
+        Report,
         SavedPost,
         SavedProject,
         StudyGroupMember,
         UserAvailability,
         UserBadge,
     )
-    ActivityEvent.query.filter_by(user_id=uid).delete()
-    ChatbotSession.query.filter_by(user_id=uid).delete()
-    UserBadge.query.filter_by(user_id=uid).delete()
-    SavedProject.query.filter_by(user_id=uid).delete()
-    SavedPost.query.filter_by(user_id=uid).delete()
-    UserAvailability.query.filter_by(user_id=uid).delete()
-    StudyGroupMember.query.filter_by(user_id=uid).delete()
+    uid = user.id
+
+    # ── the demo's own project(s) and everything attached to them ───────────
+    owned_ids = [p.id for p in Project.query.filter_by(owner_id=uid).all()]
+    for model in (ProjectTask, ProjectMessage, Application, ProjectMember,
+                  ProjectTag, ProjectSkill, ProjectVote, SavedProject):
+        model.query.filter(model.project_id.in_(owned_ids)).delete()
+    Report.query.filter(Report.target_project_id.in_(owned_ids)).delete()
+    Project.query.filter(Project.id.in_(owned_ids)).delete()
+
+    # ── the demo's activity on other people's projects ──────────────────────
+    ProjectTask.query.filter_by(assignee_id=uid).update({"assignee_id": None})
+    ProjectTask.query.filter_by(created_by=uid).delete()
+    ProjectMember.query.filter_by(user_id=uid).delete()
+    Application.query.filter_by(applicant_id=uid).delete()
+    ProjectMessage.query.filter_by(sender_id=uid).delete()
+    ProjectVote.query.filter_by(user_id=uid).delete()
+
+    # ── profile wall: comments by the demo and comments on the demo's wall ──
+    wall_ids = [c.id for c in ProfileComment.query.filter(
+        (ProfileComment.author_id == uid) | (ProfileComment.profile_id == uid)).all()]
+    ProfileCommentLike.query.filter(
+        (ProfileCommentLike.user_id == uid) | ProfileCommentLike.comment_id.in_(wall_ids)
+    ).delete(synchronize_session="fetch")
+    ProfileComment.query.filter(ProfileComment.id.in_(wall_ids)).delete()
+
+    # ── community feed ───────────────────────────────────────────────────────
+    post_ids = [p.id for p in CommunityPost.query.filter_by(author_id=uid).all()]
+    CommunityLike.query.filter(
+        (CommunityLike.user_id == uid) | CommunityLike.post_id.in_(post_ids)
+    ).delete(synchronize_session="fetch")
+    CommunityComment.query.filter(
+        (CommunityComment.author_id == uid) | CommunityComment.post_id.in_(post_ids)
+    ).delete(synchronize_session="fetch")
+    SavedPost.query.filter(
+        (SavedPost.user_id == uid) | SavedPost.post_id.in_(post_ids)
+    ).delete(synchronize_session="fetch")
+    CommunityPost.query.filter(CommunityPost.id.in_(post_ids)).delete()
+
+    # ── direct messages: the whole thread, both sides (messages → files) ────
+    conv_ids = [c.id for c in Conversation.query.filter(
+        (Conversation.user_a_id == uid) | (Conversation.user_b_id == uid)).all()]
+    dm_ids = [m.id for m in DirectMessage.query.filter(
+        DirectMessage.conversation_id.in_(conv_ids)).all()]
+    # Reactions point at messages by plain id (no FK), so clear them explicitly.
+    MessageReaction.query.filter(
+        (MessageReaction.user_id == uid)
+        | ((MessageReaction.scope == "dm") & MessageReaction.message_id.in_(dm_ids))
+    ).delete(synchronize_session="fetch")
+    DirectMessage.query.filter(DirectMessage.id.in_(dm_ids)).delete()
+    DmAttachment.query.filter(DmAttachment.conversation_id.in_(conv_ids)).delete()
+    Conversation.query.filter(Conversation.id.in_(conv_ids)).delete()
+
+    # ── support chat and moderation ──────────────────────────────────────────
+    chat_ids = [c.id for c in Chat.query.filter_by(user_id=uid).all()]
+    ChatMessage.query.filter(
+        ChatMessage.chat_id.in_(chat_ids) | (ChatMessage.sender_id == uid)
+    ).delete(synchronize_session="fetch")
+    Chat.query.filter(Chat.id.in_(chat_ids)).delete()
+    AdminMessage.query.filter(
+        (AdminMessage.user_id == uid) | (AdminMessage.sender_id == uid)
+    ).delete(synchronize_session="fetch")
+    Report.query.filter(
+        (Report.reporter_id == uid) | (Report.target_user_id == uid)
+    ).delete(synchronize_session="fetch")
+
+    # ── reputation ───────────────────────────────────────────────────────────
     Endorsement.query.filter(
         (Endorsement.giver_id == uid) | (Endorsement.receiver_id == uid),
     ).delete(synchronize_session="fetch")
     Feedback.query.filter(
         (Feedback.giver_id == uid) | (Feedback.receiver_id == uid),
     ).delete(synchronize_session="fetch")
-    ProfileCommentLike.query.filter_by(user_id=uid).delete()
-    ProfileComment.query.filter_by(user_id=uid).delete()
-    MessageReaction.query.filter_by(user_id=uid).delete()
-    DirectMessage.query.filter_by(sender_id=uid).delete()
-    DmAttachment.query.filter_by(uploader_id=uid).delete()
-    Conversation.query.filter(
-        (Conversation.user_a_id == uid) | (Conversation.user_b_id == uid),
-    ).delete(synchronize_session="fetch")
+    UserBadge.query.filter_by(user_id=uid).delete()
+
+    # ── everything else keyed only by user_id ───────────────────────────────
+    for model in (Notification, UserInterest, UserSkill, UserCourse, ActivityEvent,
+                  ChatbotSession, SavedProject, UserAvailability, StudyGroupMember,
+                  PushSubscription, PasswordReset):
+        model.query.filter_by(user_id=uid).delete()
 
     db.session.delete(user)
     db.session.commit()

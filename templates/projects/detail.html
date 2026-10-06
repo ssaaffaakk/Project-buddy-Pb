@@ -206,7 +206,9 @@
       <h3 style="font-family:'DM Serif Display',serif;font-size:1.1rem;margin-top:32px;margin-bottom:16px;">{{ _('Project Chat') }}</h3>
       <div class="chat-container">
         <div class="chat-messages" id="chat-messages">
-          {% if messages %}
+          {% if not can_view_chat %}
+            <div class="empty-messages">{{ _('Only team members can read the project chat.') }}</div>
+          {% elif messages %}
             {% for msg in messages %}
               <div class="message {% if msg.sender_id == current_user.id %}sent{% else %}received{% endif %}">
                 <div class="msg-author">{{ msg.sender.first_name }} {{ msg.sender.last_name }}</div>

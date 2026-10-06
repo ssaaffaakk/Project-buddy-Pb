@@ -73,6 +73,21 @@ def test_quality_gate_catches_missing_rows(app, seeded):
             _quality_checks(_today())
 
 
+def test_demo_accounts_do_not_trip_the_parity_gate(app, seeded):
+    """dim_user leaves demo sandboxes out; the parity check must count the
+    same population, or one live demo account fails every nightly run."""
+    with app.app_context():
+        demo = User(first_name="Demo", last_name="User", is_demo=True,
+                    email="demo-etl@demo.projectbuddy.local")
+        demo.set_password("Test1234!")
+        db.session.add(demo)
+        db.session.commit()
+
+        summary = run_pipeline()   # raised DataQualityError before the fix
+        assert summary["dim_user"] == 2
+        assert DwDimUser.query.filter_by(user_id=demo.id).count() == 0
+
+
 def test_freshness_never_raises(app):
     with app.app_context():
         info = freshness()

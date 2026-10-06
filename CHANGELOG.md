@@ -19,6 +19,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Documentation moved under `docs/` (white paper, architecture); added community
   health files (`CONTRIBUTING`, `SECURITY`, this changelog, GitHub templates).
+- Endorsing from a profile now requires a shared *completed* project, the same
+  rule the JSON endpoint already applied.
+
+### Fixed
+- Reviews and endorsements are enforced server-side by one rule set
+  (`services/reputation.py`): the profile review form no longer accepts a review
+  without a shared completed project, and one person can't endorse the same
+  skill twice.
+- The nightly ELT no longer fails its row-parity gate when demo accounts exist.
+- The expired-demo purge now deletes accounts (it failed on a wrong column and
+  returned 0), removing dependent rows in an order PostgreSQL's foreign keys accept.
+
+### Security
+- Project team chat is shown to the team and admins only.
+- Private study groups are hidden from non-members and can't be self-joined; the
+  assistant's group search lists public groups only.
+- A ban now ends the user's open session on their next request.
 
 ## [3.0.0] - 2025-07-11
 

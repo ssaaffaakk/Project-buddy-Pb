@@ -6,7 +6,7 @@ import json
 import os
 import uuid
 
-from flask import Blueprint, flash, jsonify, redirect, render_template, request, send_from_directory, url_for
+from flask import Blueprint, abort, flash, jsonify, redirect, render_template, request, send_from_directory, url_for
 from flask_login import current_user, login_required
 from werkzeug.utils import secure_filename
 
@@ -157,6 +157,9 @@ def create_group():
 @login_required
 def join_group(group_id):
     group = StudyGroup.query.get_or_404(group_id)
+    if group.is_private:
+        # No invite flow yet, so a private group can't be self-joined.
+        return jsonify({"error": "This group is private."}), 403
     existing = StudyGroupMember.query.filter_by(group_id=group_id, user_id=current_user.id).first()
     if existing:
         return jsonify({"error": "Already a member."}), 400
@@ -183,6 +186,10 @@ def leave_group(group_id):
 def room(group_id):
     group = StudyGroup.query.get_or_404(group_id)
     is_member = group.is_member(current_user.id)
+    # Public groups have a read-only guest view; private ones don't exist for
+    # outsiders (404, so the id doesn't confirm the group exists).
+    if group.is_private and not is_member and current_user.role != "admin":
+        abort(404)
     # Load last 60 messages
     messages = (StudyGroupMessage.query
                 .filter_by(group_id=group_id)

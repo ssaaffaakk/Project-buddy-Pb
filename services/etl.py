@@ -77,6 +77,15 @@ def _as_date(value):
 
 # ── dimensions (full refresh) ─────────────────────────────────────────────────
 
+def _warehouse_users():
+    """Users the warehouse tracks: everyone except throwaway demo sandboxes.
+
+    The load and the row-parity check must both use this, or a single live
+    demo account makes the parity gate fail every night."""
+    from sqlalchemy import or_
+    return User.query.filter(or_(User.is_demo.is_(None), User.is_demo == False))  # noqa: E712
+
+
 def _load_dim_user():
     interest_counts = dict(db.session.query(
         UserInterest.user_id, func.count(UserInterest.id)
@@ -85,9 +94,8 @@ def _load_dim_user():
         UserSkill.user_id, func.count(UserSkill.id)
     ).group_by(UserSkill.user_id).all())
 
-    from sqlalchemy import or_
     DwDimUser.query.delete()
-    for u in User.query.filter(or_(User.is_demo.is_(None), User.is_demo == False)).all():  # noqa: E712
+    for u in _warehouse_users().all():
         db.session.add(DwDimUser(
             user_id=u.id,
             full_name=u.get_full_name(),
@@ -100,7 +108,7 @@ def _load_dim_user():
             n_skills=skill_counts.get(u.id, 0),
         ))
     db.session.flush()
-    return User.query.filter(or_(User.is_demo.is_(None), User.is_demo == False)).count()  # noqa: E712
+    return _warehouse_users().count()
 
 
 def _load_dim_project():
@@ -213,7 +221,7 @@ def _quality_checks(since_date):
     failures = []
 
     # 1. Row parity: dimensions must mirror the source tables exactly.
-    if DwDimUser.query.count() != User.query.count():
+    if DwDimUser.query.count() != _warehouse_users().count():
         failures.append("dim_user count != users count")
     if DwDimProject.query.count() != Project.query.count():
         failures.append("dim_project count != projects count")
