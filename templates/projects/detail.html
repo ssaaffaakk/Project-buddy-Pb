@@ -210,7 +210,7 @@
             <div class="empty-messages">{{ _('Only team members can read the project chat.') }}</div>
           {% elif messages %}
             {% for msg in messages %}
-              <div class="message {% if msg.sender_id == current_user.id %}sent{% else %}received{% endif %}">
+              <div class="message {% if msg.sender_id == current_user.id %}sent{% else %}received{% endif %}" data-id="{{ msg.id }}">
                 <div class="msg-author">{{ msg.sender.first_name }} {{ msg.sender.last_name }}</div>
                 <div class="msg-bubble">{{ msg.content }}</div>
                 <div class="msg-time">{{ msg.created_at.strftime('%H:%M') if msg.created_at else '' }}</div>
@@ -353,6 +353,9 @@
 {% endblock %}
 
 {% block extra_script %}
+{% if can_view_chat %}
+<script src="https://cdn.jsdelivr.net/npm/socket.io-client@4.7.5/dist/socket.io.min.js"></script>
+{% endif %}
 <script nonce="{{ csp_nonce }}">
 /* ── DETAIL PAGE VOTE ── */
 async function detailVote(dir) {
@@ -375,6 +378,36 @@ async function detailVote(dir) {
 // Auto-scroll chat to bottom
 var chatMessages = document.getElementById('chat-messages');
 if (chatMessages) chatMessages.scrollTop = chatMessages.scrollHeight;
+
+/* ── Real-time project chat ── */
+// Idempotent by message id: the sender's own echo from the socket and the
+// POST response both arrive, but each message is drawn once.
+function appendProjectMessage(m) {
+  if (!chatMessages || chatMessages.querySelector('.message[data-id="' + m.id + '"]')) return;
+  var empty = chatMessages.querySelector('.empty-messages');
+  if (empty) empty.remove();
+  var row = document.createElement('div');
+  row.className = 'message ' + (m.sender_id === {{ current_user.id }} ? 'sent' : 'received');
+  row.dataset.id = m.id;
+  [['msg-author', m.sender_name], ['msg-bubble', m.content], ['msg-time', m.time]].forEach(function(part) {
+    var el = document.createElement('div');
+    el.className = part[0];
+    el.textContent = part[1];
+    row.appendChild(el);
+  });
+  chatMessages.appendChild(row);
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+{% if can_view_chat %}
+if (window.io) {
+  var projectSocket = io();
+  // (Re)join on every connect — the server drops room membership on disconnect.
+  projectSocket.on('connect', function() {
+    projectSocket.emit('join_project', {project_id: {{ project.id }}});
+  });
+  projectSocket.on('project_message', appendProjectMessage);
+}
+{% endif %}
 
 /* ── Save / bookmark toggle ── */
 window.pbToggleSave = async function(pid){
@@ -404,7 +437,7 @@ if (messageForm) {
       });
       if (response.ok) {
         document.getElementById('msg-input').value = '';
-        location.reload();
+        appendProjectMessage(await response.json());
       }
     } catch(err) {
       console.error('Error sending message:', err);

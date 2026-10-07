@@ -7,9 +7,10 @@ from datetime import datetime, timedelta, timezone
 
 from flask import Blueprint, current_app, flash, jsonify, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
+from flask_socketio import join_room
 from werkzeug.utils import secure_filename
 
-from extensions import db, limiter
+from extensions import db, limiter, socketio
 from models import (
     AdminMessage,
     Application,
@@ -923,7 +924,36 @@ def send_project_message(project_id):
     )
     db.session.add(msg)
     db.session.commit()
-    return jsonify({"message": "Message sent"}), 201
+
+    payload = {
+        "id":          msg.id,
+        "content":     content,
+        "sender_id":   current_user.id,
+        "sender_name": f"{current_user.first_name} {current_user.last_name}",
+        "time":        msg.created_at.strftime("%H:%M"),
+    }
+    # Push to everyone viewing the project page. The sender's own browser gets
+    # the echo too; the client dedupes by message id.
+    socketio.emit("project_message", payload, to=f"project_{project_id}")
+    return jsonify(payload), 201
+
+
+@socketio.on("join_project")
+def on_join_project(data):
+    """Join a project's chat room — the same audience that can read the chat
+    on the page: the owner, active members, and admins."""
+    if not current_user.is_authenticated:
+        return
+    try:
+        project_id = int(data.get("project_id", 0))
+    except (TypeError, ValueError):
+        return
+    project = db.session.get(Project, project_id) if project_id else None
+    if project is None:
+        return
+    is_member = any(m.user_id == current_user.id and not m.removed for m in project.members)
+    if project.owner_id == current_user.id or is_member or current_user.role == "admin":
+        join_room(f"project_{project_id}")
 
 
 # ── PROJECT TASK BOARD (kanban) ───────────────────────────────────────────────

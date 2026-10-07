@@ -198,7 +198,7 @@ Set `SEED_MOCK_DATA=false` in production.
 |`GITHUB_CLIENT_SECRET`    |OAuth          |GitHub OAuth secret                                                           |
 |`GITHUB_REDIRECT_URI`     |OAuth          |Must match your GitHub app callback URL                                       |
 |`GROQ_API_KEY`            |Chatbot        |Optional — falls back to Anthropic then mock responses                        |
-|`ANTHROPIC_API_KEY`       |Chatbot        |Optional — used if GROQ_API_KEY is not set                                    |
+|`ANTHROPIC_API_KEY`       |Chatbot        |Optional — used if GROQ_API_KEY is not set or a Groq call fails               |
 |`CORS_ORIGINS`            |Production     |Comma-separated allowed origins for SocketIO                                  |
 |`REDIS_URL`               |Production     |Redis connection URL — required for multi-worker rate limiting and voice rooms |
 |`AWS_S3_BUCKET`           |Production     |S3 bucket name for file uploads — falls back to local disk if not set         |

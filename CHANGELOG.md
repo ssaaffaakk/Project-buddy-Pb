@@ -21,6 +21,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   health files (`CONTRIBUTING`, `SECURITY`, this changelog, GitHub templates).
 - Endorsing from a profile now requires a shared *completed* project, the same
   rule the JSON endpoint already applied.
+- Project team chat is real-time: a sent message is broadcast over SocketIO to
+  the project's room (team and admins only) instead of needing a page reload.
+- The chatbot now really falls back: if Groq errors or returns nothing, the
+  request goes to Anthropic (when configured), then to the built-in replies.
 
 ### Fixed
 - Reviews and endorsements are enforced server-side by one rule set

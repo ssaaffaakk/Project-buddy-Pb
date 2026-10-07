@@ -1,7 +1,8 @@
 """
 SSM-1.0 — ProjectBuddy AI assistant.
 
-Provider priority (first key found in .env wins):
+Provider chain — every provider with a key in .env is tried in this order;
+if one errors (timeout, 5xx, bad key) or returns nothing, the next answers:
   1. Groq       — free tier, fast LLaMA models      (GROQ_API_KEY)
   2. Anthropic  — secondary provider, Claude models (ANTHROPIC_API_KEY)
   3. Fallback   — built-in keyword-based responses  (no key needed)
@@ -191,13 +192,26 @@ def _get_reply(history: list, user_message: str, user_id: int) -> str:
     from services.assistant_tools import platform_context
     system_prompt = _SYSTEM_PROMPT + platform_context(user_message, user_id)
 
+    providers = []
     if current_app.config.get("GROQ_API_KEY"):
-        logger.info("chatbot: using Groq provider (tools enabled)")
-        return _groq_reply(history, user_message, system_prompt, user_id)
+        providers.append(("Groq", lambda: _groq_reply(history, user_message, system_prompt, user_id)))
     if current_app.config.get("ANTHROPIC_API_KEY"):
-        logger.info("chatbot: using Anthropic provider")
-        return _anthropic_reply(history, user_message, system_prompt)
-    logger.warning("chatbot: no API key found (GROQ_API_KEY / ANTHROPIC_API_KEY) — using mock responses")
+        providers.append(("Anthropic", lambda: _anthropic_reply(history, user_message, system_prompt)))
+
+    for name, call in providers:
+        try:
+            reply = call()
+        except Exception:
+            logger.exception("chatbot: %s failed — falling back to the next provider", name)
+            continue
+        if reply:
+            return reply
+        logger.warning("chatbot: %s returned an empty reply — falling back to the next provider", name)
+
+    if providers:
+        logger.warning("chatbot: every configured provider failed — using mock responses")
+    else:
+        logger.warning("chatbot: no API key found (GROQ_API_KEY / ANTHROPIC_API_KEY) — using mock responses")
     return _mock_reply(user_message)
 
 
