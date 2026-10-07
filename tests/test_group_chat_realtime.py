@@ -204,3 +204,16 @@ def test_presence_counts_distinct_members(app):
     assert presence and presence[-1]["args"][0]["count"] == 2
     sa.disconnect()
     sb.disconnect()
+
+
+# ── Voice: closing the tab must clear the participant ────────────────────────────
+
+def test_disconnect_removes_voice_participant(app):
+    from routes import voice
+    gid, _ = _group_with_member(app, "vc-dc@example.com")
+    sc = socketio.test_client(app, flask_test_client=_login_client(app, "vc-dc@example.com"))
+    sc.emit("join_voice", {"group_id": gid})
+    assert len(voice._get_participants(gid)) == 1
+
+    sc.disconnect()                                    # tab closed, no leave_voice
+    assert voice._get_participants(gid) == {}

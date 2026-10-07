@@ -801,7 +801,7 @@ function toggleLike(postId) {
   var cntEl = document.getElementById('like-count-' + postId);
   btn.style.pointerEvents = 'none';
   fetch('/community/' + postId + '/like', {method:'POST'})
-  .then(function(r) { return r.json(); })
+  .then(function(r) { if (!r.ok) throw new Error(r.status); return r.json(); })
   .then(function(d) {
     cntEl.textContent = d.count;
     btn.classList.toggle('liked', d.liked);
@@ -815,7 +815,7 @@ function toggleSavePost(postId) {
   var btn = document.getElementById('save-btn-' + postId);
   btn.style.pointerEvents = 'none';
   fetch('/community/' + postId + '/save', {method:'POST'})
-  .then(function(r) { return r.json(); })
+  .then(function(r) { if (!r.ok) throw new Error(r.status); return r.json(); })
   .then(function(d) {
     btn.classList.toggle('saved', d.saved);
     btn.setAttribute('aria-pressed', d.saved ? 'true' : 'false');

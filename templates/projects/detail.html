@@ -208,7 +208,7 @@
         <div class="chat-messages" id="chat-messages">
           {% if messages %}
             {% for msg in messages %}
-              <div class="message {% if msg.sender_id == current_user.id %}sent{% else %}received{% endif %}">
+              <div class="message {% if msg.sender_id == current_user.id %}sent{% else %}received{% endif %}" data-mid="{{ msg.id }}">
                 <div class="msg-author">{{ msg.sender.first_name }} {{ msg.sender.last_name }}</div>
                 <div class="msg-bubble">{{ msg.content }}</div>
                 <div class="msg-time">{{ msg.created_at.strftime('%H:%M') if msg.created_at else '' }}</div>
@@ -351,6 +351,9 @@
 {% endblock %}
 
 {% block extra_script %}
+{% if is_owner or is_member %}
+<script src="https://cdn.jsdelivr.net/npm/socket.io-client@4.7.5/dist/socket.io.min.js"></script>
+{% endif %}
 <script nonce="{{ csp_nonce }}">
 /* ── DETAIL PAGE VOTE ── */
 async function detailVote(dir) {
@@ -387,28 +390,70 @@ window.pbToggleSave = async function(pid){
   } catch(e){ showToast('Network error', 'error'); }
 };
 
-// Send message
+/* ── PROJECT CHAT — sent over fetch, delivered live over SocketIO ── */
+var PROJECT_ID = {{ project.id }};
+var ME = {{ current_user.id }};
+
+function appendChatMessage(m){
+  // Idempotent by id: the sender gets both the POST response and the echo.
+  if (!chatMessages || chatMessages.querySelector('[data-mid="' + m.id + '"]')) return;
+  var empty = chatMessages.querySelector('.empty-messages');
+  if (empty) empty.remove();
+  var el = document.createElement('div');
+  el.className = 'message ' + (m.sender_id === ME ? 'sent' : 'received');
+  el.dataset.mid = m.id;
+  [['msg-author', m.sender_name], ['msg-bubble', m.content], ['msg-time', m.time]].forEach(function(p){
+    var d = document.createElement('div');
+    d.className = p[0];
+    d.textContent = p[1];
+    el.appendChild(d);
+  });
+  chatMessages.appendChild(el);
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
 var messageForm = document.getElementById('message-form');
 if (messageForm) {
+  var msgInput = document.getElementById('msg-input');
+  var sendBtn = messageForm.querySelector('.btn-send');
   messageForm.addEventListener('submit', async function(e) {
     e.preventDefault();
-    var content = document.getElementById('msg-input').value.trim();
+    var content = msgInput.value.trim();
     if (!content) return;
+    sendBtn.disabled = true;
     try {
-      var response = await fetch('/project/{{ project.id }}/message', {
+      var response = await fetch('/project/' + PROJECT_ID + '/message', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({content: content})
       });
-      if (response.ok) {
-        document.getElementById('msg-input').value = '';
-        location.reload();
+      // Only a JSON body with an id means "sent". An HTML page here is a
+      // followed redirect (expired session) — keep the text, show the error.
+      var isJson = (response.headers.get('Content-Type') || '').indexOf('application/json') !== -1;
+      var data = isJson ? await response.json() : null;
+      if (response.ok && data && data.id) {
+        msgInput.value = '';
+        appendChatMessage(data);
+      } else {
+        showToast((data && data.error) || {{ _("Session expired. Refresh the page and try again.")|tojson }}, 'error');
       }
     } catch(err) {
-      console.error('Error sending message:', err);
+      showToast({{ _("Network error — message not sent.")|tojson }}, 'error');
+    } finally {
+      sendBtn.disabled = false;
     }
   });
 }
+
+{% if is_owner or is_member %}
+(function(){
+  if (typeof io === 'undefined') return;   // CDN blocked: sending still works, just not live
+  var socket = io();
+  // 'connect' also fires after every reconnect, so the room is re-joined.
+  socket.on('connect', function(){ socket.emit('join_project', {project_id: PROJECT_ID}); });
+  socket.on('project_message', function(m){ if (m.project_id === PROJECT_ID) appendChatMessage(m); });
+})();
+{% endif %}
 
 /* ── TASK BOARD ── */
 (function(){
