@@ -300,14 +300,25 @@ def _initialize_extensions(app: Flask) -> None:
 
     # ── Rate-limit exceeded: return flash+redirect instead of raw JSON ─────────
     from flask import flash as _flash
+    from flask import jsonify as _jsonify
     from flask import redirect as _redir
     from flask import request as _req
     from flask import url_for as _url_for
     from flask_limiter.errors import RateLimitExceeded
 
+    def _wants_json():
+        """fetch()/XHR callers can't act on a flash+redirect: fetch follows it,
+        gets a 200 HTML page and the failure looks like success. Browsers mark
+        programmatic requests with Sec-Fetch-Mode != 'navigate'; a JSON body is
+        a second signal. Plain form posts (navigate) keep the redirect."""
+        return _req.is_json or _req.headers.get('Sec-Fetch-Mode', 'navigate') != 'navigate'
+
     @app.errorhandler(RateLimitExceeded)
     def ratelimit_handler(e):
-        _flash('Too many attempts. Please wait a moment and try again.', 'error')
+        msg = 'Too many attempts. Please wait a moment and try again.'
+        if _wants_json():
+            return _jsonify({'error': msg}), 429
+        _flash(msg, 'error')
         return _redir(_req.referrer or _url_for('auth.login'))
 
     # ── CSRF failure: redirect with flash instead of raw 400 JSON ─────────────
@@ -315,6 +326,8 @@ def _initialize_extensions(app: Flask) -> None:
 
     @app.errorhandler(CSRFError)
     def csrf_error(e):
+        if _wants_json():
+            return _jsonify({'error': 'Session expired. Refresh the page and try again.'}), 400
         _flash('Session expired. Please try again.', 'error')
         return _redir(_req.referrer or _url_for('auth.login'))
 
@@ -395,6 +408,17 @@ def _register_blueprints(app: Flask) -> None:
     app.register_blueprint(study_groups_bp)
     app.register_blueprint(chatbot_bp)
     app.register_blueprint(messages_bp)
+
+    # Without this, an exception in a socket handler only shows up as a bare
+    # engineio traceback with no event name. Args are not logged (message
+    # bodies, notes — PII).
+    from flask import request as _sio_req
+
+    @socketio.on_error_default
+    def _socketio_error(e):
+        event = (getattr(_sio_req, 'event', None) or {}).get('message')
+        logging.getLogger(__name__).error(
+            "socketio handler %r failed", event, exc_info=(type(e), e, e.__traceback__))
 
     # Register SocketIO voice-chat event handlers
     import routes.voice  # noqa: F401  — side-effect: registers @socketio.on handlers

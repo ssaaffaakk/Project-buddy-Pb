@@ -449,6 +449,7 @@ async function postWall(){
 async function likeWall(id,el){
   try{
     var r=await fetch('/wall/'+id+'/like',{method:'POST'});
+    if(!r.ok) return;
     var d=await r.json();
     el.classList.toggle('liked',d.liked);
     el.querySelector('.lc').textContent=d.likes;

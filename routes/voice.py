@@ -204,7 +204,9 @@ def on_leave_voice(data):
 
 
 @socketio.on('disconnect')
-def on_disconnect():
+def on_disconnect(reason=None):
+    # Flask-SocketIO >= 5.5 passes a disconnect reason; without the parameter
+    # this raised TypeError on every disconnect and the cleanup never ran.
     _remove_sid(request.sid)
     _drop_collab_presence(request.sid)
 

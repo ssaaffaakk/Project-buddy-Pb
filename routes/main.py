@@ -7,9 +7,11 @@ from datetime import datetime, timedelta, timezone
 
 from flask import Blueprint, current_app, flash, jsonify, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
+from flask_socketio import join_room
+from sqlalchemy.orm import joinedload
 from werkzeug.utils import secure_filename
 
-from extensions import db, limiter
+from extensions import db, limiter, socketio
 from models import (
     AdminMessage,
     Application,
@@ -764,9 +766,11 @@ def withdraw_application(project_id):
 @login_required
 def project_detail(project_id):
     project = Project.query.get_or_404(project_id)
-    proj_messages = ProjectMessage.query.filter_by(
-        project_id=project_id
-    ).order_by(ProjectMessage.created_at.asc()).all()
+    proj_messages = (ProjectMessage.query
+                     .options(joinedload(ProjectMessage.sender))
+                     .filter_by(project_id=project_id)
+                     .order_by(ProjectMessage.created_at.asc())
+                     .all())
 
     # Active members excluding the owner
     team_members = [
@@ -802,6 +806,13 @@ def project_detail(project_id):
     ).first()
     if existing_vote:
         user_vote = existing_vote.direction
+
+    if is_owner or is_member:
+        if Notification.query.filter_by(
+            user_id=current_user.id, type="project_chat",
+            link=url_for("main.project_detail", project_id=project_id), is_read=False,
+        ).update({"is_read": True}, synchronize_session=False):
+            db.session.commit()
 
     analytics.track("project_view", current_user.id, "project", project_id, commit=True)
 
@@ -900,14 +911,10 @@ def complete_project_page(project_id):
 @login_required
 def send_project_message(project_id):
     project = Project.query.get_or_404(project_id)
-    is_member = any(
-        m.user_id == current_user.id and not m.removed
-        for m in project.members
-    )
-    if not is_member and project.owner_id != current_user.id:
+    if _project_if_member(project_id) is None:
         return jsonify({"error": "Not a project member"}), 403
     data = request.get_json(silent=True) or {}
-    content = data.get("content", "").strip()
+    content = str(data.get("content") or "").strip()
     if not content:
         return jsonify({"error": "Message cannot be empty"}), 400
     msg = ProjectMessage(
@@ -916,8 +923,62 @@ def send_project_message(project_id):
         content=content
     )
     db.session.add(msg)
+    _notify_project_chat(project)
     db.session.commit()
-    return jsonify({"message": "Message sent"}), 201
+
+    # Commit first, then broadcast: everything that reads ProjectMessage
+    # (contribution stats, instructor last-activity) sees exactly what the
+    # chat shows. The sender's own echo is deduped client-side by message id.
+    payload = _project_message_json(msg)
+    socketio.emit("project_message", payload, to=f"project_{project_id}")
+    return jsonify(payload), 201
+
+
+def _project_message_json(msg):
+    return {
+        "id": msg.id,
+        "project_id": msg.project_id,
+        "sender_id": msg.sender_id,
+        "sender_name": f"{msg.sender.first_name} {msg.sender.last_name}",
+        "content": msg.content,
+        "time": msg.created_at.strftime("%H:%M") if msg.created_at else "",
+    }
+
+
+def _notify_project_chat(project):
+    """In-app + push notice for every other participant. Coalesced: anyone who
+    still has an unread chat notice for this project doesn't get another per
+    message — that would be a push for every line of chat."""
+    link = url_for("main.project_detail", project_id=project.id)
+    recipients = {m.user_id for m in project.active_members()} | {project.owner_id}
+    recipients.discard(current_user.id)
+    if not recipients:
+        return
+    already = {uid for (uid,) in db.session.query(Notification.user_id).filter(
+        Notification.user_id.in_(recipients),
+        Notification.type == "project_chat",
+        Notification.link == link,
+        Notification.is_read == False,  # noqa: E712
+    )}
+    text = f"💬 {current_user.get_full_name()} in {project.title}"[:300]
+    for uid in recipients - already:
+        create_notification(uid, text, link=link, type="project_chat")
+
+
+@socketio.on("join_project")
+def on_join_project(data):
+    """Join a project's chat room — same gate as sending (owner or active
+    member). Returns the result as the ack so the client can tell."""
+    if not current_user.is_authenticated or not isinstance(data, dict):
+        return False
+    try:
+        project_id = int(data.get("project_id", 0))
+    except (TypeError, ValueError):
+        return False
+    if not project_id or _project_if_member(project_id) is None:
+        return False
+    join_room(f"project_{project_id}")
+    return True
 
 
 # ── PROJECT TASK BOARD (kanban) ───────────────────────────────────────────────
